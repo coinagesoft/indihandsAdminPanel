@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "app/layout.js", "app/page.js", "components/layout/Header.js", "components/layout/Sidebar.js", "components/ui/EmptyState.js", "components/ui/Loaderui.js", "app/admin/layout.js"  ],
   "exclude": ["node_modules"]
 }
