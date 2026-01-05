@@ -147,6 +147,16 @@ const Page = () => {
                   </select>
                   <label htmlFor="category">Category</label>
                 </div>
+                <div className="form-floating form-floating-outline mb-4">
+                  <select className="form-select" id="type">
+                    <option value="">Select Type</option>
+                    <option>Festive</option>
+                    <option>Onboarding</option>
+                    <option>Corporate Gifting</option>
+                  </select>
+                  <label htmlFor="type">Product Type</label>
+                </div>
+
 
                 <div className="form-floating form-floating-outline">
                   <select className="form-select" id="status">

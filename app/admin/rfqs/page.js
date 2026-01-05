@@ -1,38 +1,19 @@
 "use client";
 import React, { useState } from "react";
 
-interface Product {
-  id: number;
-  name: string;
-  quantity: number;
-}
-
-interface Client {
-  id: number;
-  name: string;
-}
-
-interface RFQ {
-  id: number;
-  clientId: number;
-  products: Product[];
-  status: "Submitted" | "Reviewed" | "Rejected";
-  submittedAt: string;
-}
-
-const RFQPage: React.FC = () => {
-  const [clients] = useState<Client[]>([
+const RFQPage = () => {
+  const [clients] = useState([
     { id: 1, name: "Client A" },
     { id: 2, name: "Client B" },
   ]);
 
-  const [products] = useState<Product[]>([
-    { id: 1, name: "Product X", quantity: 0 },
-    { id: 2, name: "Product Y", quantity: 0 },
-    { id: 3, name: "Product Z", quantity: 0 },
+  const [products] = useState([
+    { id: 1, name: "Product X" },
+    { id: 2, name: "Product Y" },
+    { id: 3, name: "Product Z" },
   ]);
 
-  const [rfqs, setRfqs] = useState<RFQ[]>([
+  const [rfqs, setRfqs] = useState([
     {
       id: 101,
       clientId: 1,
@@ -46,47 +27,46 @@ const RFQPage: React.FC = () => {
     {
       id: 102,
       clientId: 2,
-      products: [
-        { id: 1, name: "Product X", quantity: 2 },
-      ],
+      products: [{ id: 1, name: "Product X", quantity: 2 }],
       status: "Submitted",
       submittedAt: "2026-01-01 11:30 AM",
     },
     {
       id: 103,
       clientId: 1,
-      products: [
-        { id: 3, name: "Product Z", quantity: 7 },
-      ],
+      products: [{ id: 3, name: "Product Z", quantity: 7 }],
       status: "Reviewed",
       submittedAt: "2026-01-01 12:15 PM",
     },
   ]);
 
   // Filters
-  const [selectedClient, setSelectedClient] = useState<number | "all">("all");
-  const [selectedProduct, setSelectedProduct] = useState<number | "all">("all");
-  const [selectedStatus, setSelectedStatus] = useState<"all" | RFQ["status"]>("all");
+  const [selectedClient, setSelectedClient] = useState("all");
+  const [selectedProduct, setSelectedProduct] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
 
-  // Change RFQ status
-  const updateStatus = (rfqId: number, status: "Reviewed" | "Rejected") => {
+  const updateStatus = (rfqId, status) => {
     setRfqs((prev) =>
       prev.map((r) => (r.id === rfqId ? { ...r, status } : r))
     );
   };
 
-  const getClientName = (clientId: number) => {
+  const getClientName = (clientId) => {
     const client = clients.find((c) => c.id === clientId);
     return client ? client.name : "Unknown Client";
   };
 
-  // Apply filters
   const filteredRfqs = rfqs.filter((rfq) => {
-    const clientMatch = selectedClient === "all" || rfq.clientId === selectedClient;
-    const statusMatch = selectedStatus === "all" || rfq.status === selectedStatus;
+    const clientMatch =
+      selectedClient === "all" || rfq.clientId === Number(selectedClient);
+
+    const statusMatch =
+      selectedStatus === "all" || rfq.status === selectedStatus;
+
     const productMatch =
       selectedProduct === "all" ||
-      rfq.products.some((p) => p.id === selectedProduct);
+      rfq.products.some((p) => p.id === Number(selectedProduct));
+
     return clientMatch && statusMatch && productMatch;
   });
 
@@ -101,9 +81,7 @@ const RFQPage: React.FC = () => {
           <select
             className="form-select"
             value={selectedClient}
-            onChange={(e) =>
-              setSelectedClient(e.target.value === "all" ? "all" : Number(e.target.value))
-            }
+            onChange={(e) => setSelectedClient(e.target.value)}
           >
             <option value="all">All Clients</option>
             {clients.map((c) => (
@@ -113,14 +91,13 @@ const RFQPage: React.FC = () => {
             ))}
           </select>
         </div>
+
         <div className="col-md-4">
           <label className="form-label">Filter by Product</label>
           <select
             className="form-select"
             value={selectedProduct}
-            onChange={(e) =>
-              setSelectedProduct(e.target.value === "all" ? "all" : Number(e.target.value))
-            }
+            onChange={(e) => setSelectedProduct(e.target.value)}
           >
             <option value="all">All Products</option>
             {products.map((p) => (
@@ -130,14 +107,13 @@ const RFQPage: React.FC = () => {
             ))}
           </select>
         </div>
+
         <div className="col-md-4">
           <label className="form-label">Filter by Status</label>
           <select
             className="form-select"
             value={selectedStatus}
-            onChange={(e) =>
-              setSelectedStatus(e.target.value as "all" | RFQ["status"])
-            }
+            onChange={(e) => setSelectedStatus(e.target.value)}
           >
             <option value="all">All Statuses</option>
             <option value="Submitted">Submitted</option>
@@ -147,7 +123,6 @@ const RFQPage: React.FC = () => {
         </div>
       </div>
 
-      {/* RFQ Cards */}
       {filteredRfqs.length === 0 && (
         <p className="text-muted">No RFQs match the selected filters.</p>
       )}
@@ -155,27 +130,27 @@ const RFQPage: React.FC = () => {
       {filteredRfqs.map((rfq) => (
         <div key={rfq.id} className="card mb-4 shadow-sm">
           <div className="card-header d-flex justify-content-between align-items-center">
-            <div>
-              <strong>RFQ #{rfq.id}</strong> - {getClientName(rfq.clientId)}
-            </div>
-            <div>
-              <span
-                className={`badge ${
-                  rfq.status === "Submitted"
-                    ? "bg-label-primary"
-                    : rfq.status === "Reviewed"
-                    ? "bg-label-success"
-                    : "bg-label-danger"
-                }`}
-              >
-                {rfq.status}
-              </span>
-            </div>
+            <strong>
+              RFQ #{rfq.id} — {getClientName(rfq.clientId)}
+            </strong>
+            <span
+              className={`badge ${
+                rfq.status === "Submitted"
+                  ? "bg-label-primary"
+                  : rfq.status === "Reviewed"
+                  ? "bg-label-success"
+                  : "bg-label-danger"
+              }`}
+            >
+              {rfq.status}
+            </span>
           </div>
-          <div className="card-body">
-            <p className="mb-2 text-muted">Submitted at: {rfq.submittedAt}</p>
 
-            {/* Products Table */}
+          <div className="card-body">
+            <p className="text-muted">
+              Submitted at: {rfq.submittedAt}
+            </p>
+
             <table className="table table-striped">
               <thead>
                 <tr>
@@ -193,25 +168,22 @@ const RFQPage: React.FC = () => {
               </tbody>
             </table>
 
-            {/* Action Buttons */}
-            <div className="mt-3 d-flex gap-2">
-              {rfq.status === "Submitted" && (
-                <>
-                  <button
-                    className="btn btn-success btn-sm"
-                    onClick={() => updateStatus(rfq.id, "Reviewed")}
-                  >
-                    Mark as Reviewed
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => updateStatus(rfq.id, "Rejected")}
-                  >
-                    Reject RFQ
-                  </button>
-                </>
-              )}
-            </div>
+            {rfq.status === "Submitted" && (
+              <div className="d-flex gap-2 mt-3">
+                <button
+                  className="btn btn-success btn-sm"
+                  onClick={() => updateStatus(rfq.id, "Reviewed")}
+                >
+                  Mark Reviewed
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => updateStatus(rfq.id, "Rejected")}
+                >
+                  Reject
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ))}

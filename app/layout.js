@@ -6,8 +6,10 @@ import Header from '../components/layout/Header';
 import Sidebar from '../components/layout/Sidebar';
 
 export default function RootLayout({ children }) {
+
+  
   return (
-    <html lang="en" >
+    <html lang="en" suppressHydrationWarning>
      <head>
   {/* 1️⃣ Meta / Fonts */}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -127,6 +129,20 @@ export default function RootLayout({ children }) {
 
 
     {/* 1️⃣ Core helpers (MUST be first) */}
+
+    <Script id="materialize-global-fix" strategy="beforeInteractive">
+  {`
+    window.templateCustomizer = window.templateCustomizer || {};
+    window.templateCustomizer.settings = window.templateCustomizer.settings || {};
+    window.Helpers = window.Helpers || {};
+    window.Helpers.settings = window.Helpers.settings || {};
+  `}
+</Script>
+
+<Script src="/materialize/assets/vendor/js/helpers.js" strategy="beforeInteractive" />
+<Script src="/materialize/assets/vendor/js/template-customizer.js" strategy="beforeInteractive" />
+<Script src="/materialize/assets/js/config.js" strategy="beforeInteractive" />
+
 <Script
   src="/materialize/assets/vendor/js/helpers.js"
   strategy="beforeInteractive"

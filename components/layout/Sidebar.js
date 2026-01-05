@@ -174,14 +174,14 @@ const Sidebar = () => {
         </li>
         <li className={`menu-item ${pathname === "/admin/clients/clientDetails/address_billing" ? "active" : ""}`}>
           <Link href="/admin/clients/clientDetails/address_billing" className="menu-link">
-            <div>Address & Billing</div>
+            <div>Shipping Address</div>
           </Link>
         </li>
-        <li className={`menu-item ${pathname === "/admin/clients/clientDetails/notifications" ? "active" : ""}`}>
+        {/* <li className={`menu-item ${pathname === "/admin/clients/clientDetails/notifications" ? "active" : ""}`}>
           <Link href="/admin/clients/clientDetails/notifications" className="menu-link">
             <div>Notifications</div>
           </Link>
-        </li>
+        </li> */}
       </ul>
     </li>
   </ul>

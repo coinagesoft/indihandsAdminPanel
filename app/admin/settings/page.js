@@ -70,14 +70,14 @@ const SettingsPage = () => {
             Pricing Defaults
           </button>
         </li>
-        <li className="nav-item">
+        {/* <li className="nav-item">
           <button
             className={`nav-link ${activeTab === "security" ? "active" : ""}`}
             onClick={() => setActiveTab("security")}
           >
             Security
           </button>
-        </li>
+        </li> */}
       </ul>
 
       <div className="tab-content">
@@ -210,45 +210,7 @@ const SettingsPage = () => {
           </div>
         )}
 
-        {/* Security */}
-        {activeTab === "security" && (
-          <div>
-            <h5>Security Settings</h5>
-            <div className="form-check mb-3">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                checked={securitySettings.enable2FA}
-                onChange={(e) =>
-                  setSecuritySettings({ ...securitySettings, enable2FA: e.target.checked })
-                }
-              />
-              <label className="form-check-label">Enable 2FA for Admins</label>
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Password Expiry (days)</label>
-              <input
-                type="number"
-                className="form-control"
-                value={securitySettings.passwordExpiryDays}
-                onChange={(e) =>
-                  setSecuritySettings({ ...securitySettings, passwordExpiryDays: Number(e.target.value) })
-                }
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Session Timeout (minutes)</label>
-              <input
-                type="number"
-                className="form-control"
-                value={securitySettings.sessionTimeoutMinutes}
-                onChange={(e) =>
-                  setSecuritySettings({ ...securitySettings, sessionTimeoutMinutes: Number(e.target.value) })
-                }
-              />
-            </div>
-          </div>
-        )}
+     
       </div>
 
       <div className="mt-4 text-end">
