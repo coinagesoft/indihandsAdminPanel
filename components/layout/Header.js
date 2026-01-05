@@ -81,7 +81,7 @@ const Header = () => {
                   </a>
                 </li>
 
-                <li className="nav-item dropdown-language dropdown">
+                {/* <li className="nav-item dropdown-language dropdown">
                   <a
                     className="nav-link btn btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow"
                     href="javascript:void(0);"
@@ -110,8 +110,8 @@ const Header = () => {
                       </a>
                     </li>
                   </ul>
-                </li>
-                <li className="nav-item dropdown-style-switcher dropdown me-1 me-xl-0">
+                </li> */}
+                {/* <li className="nav-item dropdown-style-switcher dropdown me-1 me-xl-0">
                   <a
                     className="nav-link btn btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow"
                     href="javascript:void(0);"
@@ -135,9 +135,9 @@ const Header = () => {
                       </a>
                     </li>
                   </ul>
-                </li>
+                </li> */}
 
-                <li className="nav-item dropdown-shortcuts navbar-dropdown dropdown me-1 me-xl-0">
+                {/* <li className="nav-item dropdown-shortcuts navbar-dropdown dropdown me-1 me-xl-0">
                   <a
                     className="nav-link btn btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow"
                     href="javascript:void(0);"
@@ -227,9 +227,9 @@ const Header = () => {
                       </div>
                     </div>
                   </div>
-                </li>
+                </li> */}
 
-                <li className="nav-item dropdown-notifications navbar-dropdown dropdown me-4 me-xl-1">
+                {/* <li className="nav-item dropdown-notifications navbar-dropdown dropdown me-4 me-xl-1">
                   <a
                     className="nav-link btn btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow"
                     href="javascript:void(0);"
@@ -477,7 +477,7 @@ const Header = () => {
                       </div>
                     </li>
                   </ul>
-                </li>
+                </li> */}
 
                 <li className="nav-item navbar-dropdown dropdown-user dropdown">
                   <a className="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
@@ -504,17 +504,17 @@ const Header = () => {
                     <li>
                       <div className="dropdown-divider"></div>
                     </li>
-                    <li>
+                    {/* <li>
                       <a className="dropdown-item" href="pages-profile-user.html">
                         <i className="ri-user-3-line ri-22px me-3"></i><span className="align-middle">My Profile</span>
                       </a>
-                    </li>
+                    </li> */}
                     <li>
                       <a className="dropdown-item" href="pages-account-settings-account.html">
                         <i className="ri-settings-4-line ri-22px me-3"></i><span className="align-middle">Settings</span>
                       </a>
                     </li>
-                    <li>
+                    {/* <li>
                       <a className="dropdown-item" href="pages-account-settings-billing.html">
                         <span className="d-flex align-items-center align-middle">
                           <i className="flex-shrink-0 ri-file-text-line ri-22px me-3"></i>
@@ -522,21 +522,21 @@ const Header = () => {
                           <span className="flex-shrink-0 badge badge-center rounded-pill bg-danger">4</span>
                         </span>
                       </a>
-                    </li>
-                    <li>
+                    </li> */}
+                    {/* <li>
                       <div className="dropdown-divider"></div>
-                    </li>
+                    </li> */}
                     <li>
                       <a className="dropdown-item" href="pages-pricing.html">
                         <i className="ri-money-dollar-circle-line ri-22px me-3"></i
                         ><span className="align-middle">Pricing</span>
                       </a>
                     </li>
-                    <li>
+                    {/* <li>
                       <a className="dropdown-item" href="pages-faq.html">
                         <i className="ri-question-line ri-22px me-3"></i><span className="align-middle">FAQ</span>
                       </a>
-                    </li>
+                    </li> */}
                     <li>
                       <div className="d-grid px-4 pt-2 pb-1">
                         <a className="btn btn-sm btn-danger d-flex" href="auth-login-cover.html" target="_blank">

@@ -220,13 +220,7 @@ const Sidebar = () => {
           </Link>
         </li>
 
-        {/* Logout */}
-        <li className="menu-item">
-          <Link href="/logout" className="menu-link">
-            <i className="menu-icon tf-icons ri-logout-box-r-line"></i>
-            <div>Logout</div>
-          </Link>
-        </li>
+    
       </ul>
 
         </aside>

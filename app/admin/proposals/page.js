@@ -1,13 +1,17 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import jsPDF from "jspdf";
 
+const GST_RATE = 18; // default GST %
+
 const ProposalPage = () => {
+  // ================= CLIENTS =================
   const [clients] = useState([
     { id: 1, name: "Client A", email: "clientA@example.com" },
     { id: 2, name: "Client B", email: "clientB@example.com" },
   ]);
 
+  // ================= PRODUCTS =================
   const [products] = useState([
     { id: 1, name: "Product X", quantity: 5, unitPrice: 100 },
     { id: 2, name: "Product Y", quantity: 2, unitPrice: 200 },
@@ -15,20 +19,34 @@ const ProposalPage = () => {
 
   const [selectedClientId, setSelectedClientId] = useState("");
   const [proposalProducts, setProposalProducts] = useState(products);
-  const [gst, setGst] = useState(0);
+
+  // ================= EXTRA COSTS =================
   const [delivery, setDelivery] = useState(0);
   const [branding, setBranding] = useState(0);
 
-  const subtotal = proposalProducts.reduce(
-    (sum, p) => sum + p.quantity * p.unitPrice,
-    0
+  // ================= CALCULATIONS =================
+  const productSubtotal = useMemo(
+    () =>
+      proposalProducts.reduce(
+        (sum, p) => sum + p.quantity * p.unitPrice,
+        0
+      ),
+    [proposalProducts]
   );
 
-  const total = subtotal + gst + delivery + branding;
+  const taxableValue = productSubtotal + delivery + branding;
 
+  const gstAmount = useMemo(
+    () => (taxableValue * GST_RATE) / 100,
+    [taxableValue]
+  );
+
+  const finalAmount = taxableValue + gstAmount;
+
+  // ================= HANDLERS =================
   const handleQuantityChange = (productId, value) => {
-    setProposalProducts(prev =>
-      prev.map(p =>
+    setProposalProducts((prev) =>
+      prev.map((p) =>
         p.id === productId
           ? { ...p, quantity: Number(value || 0) }
           : p
@@ -42,36 +60,44 @@ const ProposalPage = () => {
       return;
     }
 
-    const client = clients.find(c => c.id === Number(selectedClientId));
+    const client = clients.find(
+      (c) => c.id === Number(selectedClientId)
+    );
+
     const doc = new jsPDF();
+    let y = 20;
 
     doc.setFontSize(18);
-    doc.text(`Proposal for ${client.name}`, 20, 20);
+    doc.text(`Proposal`, 20, y);
+    y += 10;
 
-    let y = 35;
     doc.setFontSize(12);
+    doc.text(`Client: ${client.name}`, 20, y);
+    y += 10;
 
-    proposalProducts.forEach(p => {
+    proposalProducts.forEach((p) => {
       doc.text(
-        `${p.name} | Qty: ${p.quantity} | ₹${p.unitPrice} | Total: ₹${p.quantity * p.unitPrice}`,
+        `${p.name} | Qty: ${p.quantity} | ₹${p.unitPrice} | ₹${p.quantity * p.unitPrice}`,
         20,
         y
       );
-      y += 8;
+      y += 7;
     });
 
     y += 5;
-    doc.text(`Subtotal: ₹${subtotal}`, 20, y);
-    y += 8;
-    doc.text(`GST: ₹${gst}`, 20, y);
-    y += 8;
-    doc.text(`Delivery: ₹${delivery}`, 20, y);
-    y += 8;
-    doc.text(`Branding: ₹${branding}`, 20, y);
+    doc.text(`Product Subtotal: ₹${productSubtotal}`, 20, y);
+    y += 7;
+    doc.text(`Delivery Charges: ₹${delivery}`, 20, y);
+    y += 7;
+    doc.text(`Branding Charges: ₹${branding}`, 20, y);
+    y += 7;
+    doc.text(`Taxable Value: ₹${taxableValue}`, 20, y);
+    y += 7;
+    doc.text(`GST @ ${GST_RATE}%: ₹${gstAmount}`, 20, y);
     y += 10;
 
     doc.setFontSize(14);
-    doc.text(`Final Amount: ₹${total}`, 20, y);
+    doc.text(`Final Amount: ₹${finalAmount}`, 20, y);
 
     doc.save(`Proposal_${client.name}.pdf`);
   };
@@ -81,28 +107,35 @@ const ProposalPage = () => {
       alert("Please select a client first");
       return;
     }
-    const client = clients.find(c => c.id === Number(selectedClientId));
+    const client = clients.find(
+      (c) => c.id === Number(selectedClientId)
+    );
     alert(`Proposal sent to ${client.email} (mock)`);
   };
 
+  // ================= UI =================
   return (
     <div className="container-xxl container-p-y">
       <h4 className="mb-4">Proposal Management</h4>
 
+      {/* CLIENT */}
       <div className="mb-4">
         <label className="form-label">Select Client</label>
         <select
           className="form-select"
           value={selectedClientId}
-          onChange={e => setSelectedClientId(e.target.value)}
+          onChange={(e) => setSelectedClientId(e.target.value)}
         >
           <option value="">-- Select Client --</option>
-          {clients.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+          {clients.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
       </div>
 
+      {/* PRODUCTS */}
       <div className="card mb-4">
         <div className="card-header">Products</div>
         <div className="card-body">
@@ -111,22 +144,22 @@ const ProposalPage = () => {
               <tr>
                 <th>Product</th>
                 <th>Unit Price (₹)</th>
-                <th>Quantity</th>
+                <th width="120">Qty</th>
                 <th>Total (₹)</th>
               </tr>
             </thead>
             <tbody>
-              {proposalProducts.map(p => (
+              {proposalProducts.map((p) => (
                 <tr key={p.id}>
                   <td>{p.name}</td>
                   <td>{p.unitPrice}</td>
-                  <td style={{ width: 120 }}>
+                  <td>
                     <input
                       type="number"
                       min="0"
                       className="form-control"
                       value={p.quantity}
-                      onChange={e =>
+                      onChange={(e) =>
                         handleQuantityChange(p.id, e.target.value)
                       }
                     />
@@ -139,47 +172,52 @@ const ProposalPage = () => {
         </div>
       </div>
 
+      {/* EXTRA COSTS */}
       <div className="card mb-4">
         <div className="card-header">Additional Costs</div>
         <div className="card-body row g-3">
-          <div className="col-md-4">
-            <label className="form-label">GST (₹)</label>
-            <input
-              type="number"
-              className="form-control"
-              value={gst}
-              onChange={e => setGst(Number(e.target.value || 0))}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label">Delivery (₹)</label>
+          <div className="col-md-6">
+            <label className="form-label">Delivery Charges (₹)</label>
             <input
               type="number"
               className="form-control"
               value={delivery}
-              onChange={e => setDelivery(Number(e.target.value || 0))}
+              onChange={(e) =>
+                setDelivery(Number(e.target.value || 0))
+              }
             />
           </div>
-          <div className="col-md-4">
-            <label className="form-label">Branding (₹)</label>
+          <div className="col-md-6">
+            <label className="form-label">Branding Charges (₹)</label>
             <input
               type="number"
               className="form-control"
               value={branding}
-              onChange={e => setBranding(Number(e.target.value || 0))}
+              onChange={(e) =>
+                setBranding(Number(e.target.value || 0))
+              }
             />
           </div>
         </div>
       </div>
 
-      <h5 className="mb-3">Final Amount: ₹{total}</h5>
+      {/* SUMMARY */}
+      <div className="card mb-4">
+        <div className="card-body">
+          <p>Product Subtotal: ₹{productSubtotal}</p>
+          <p>Taxable Value: ₹{taxableValue}</p>
+          <p>GST @ {GST_RATE}%: ₹{gstAmount}</p>
+          <h5 className="mt-2">Final Amount: ₹{finalAmount}</h5>
+        </div>
+      </div>
 
+      {/* ACTIONS */}
       <div className="d-flex gap-2">
         <button className="btn btn-primary" onClick={generatePDF}>
-          Generate PDF
+          Generate Proposal PDF
         </button>
         <button className="btn btn-success" onClick={sendEmail}>
-          Send Proposal to Email
+          Send Proposal Email
         </button>
       </div>
     </div>

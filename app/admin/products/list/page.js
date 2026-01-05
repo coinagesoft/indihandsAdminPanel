@@ -50,11 +50,11 @@ const Page = () => {
       prev.map((p) =>
         p.id === selectedProduct.id
           ? {
-              ...selectedProduct,
-              stock: Number(selectedProduct.stock),
-              qty: Number(selectedProduct.qty),
-              price: Number(selectedProduct.price),
-            }
+            ...selectedProduct,
+            stock: Number(selectedProduct.stock),
+            qty: Number(selectedProduct.qty),
+            price: Number(selectedProduct.price),
+          }
           : p
       )
     );
@@ -148,12 +148,11 @@ const Page = () => {
                     <td>{p.stock}</td>
                     <td>{p.sku}</td>
                     <td>${p.price}</td>
-                   
+
                     <td>
                       <span
-                        className={`badge ${
-                          p.status === "Available" ? "bg-success" : "bg-danger"
-                        }`}
+                        className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"
+                          }`}
                       >
                         {p.status}
                       </span>
@@ -188,57 +187,57 @@ const Page = () => {
               Edit Product - {selectedProduct.name}
             </h5>
 
-        <div className="flex flex-col gap-3">
-  <div>
-    <label className="form-label">Name</label>
-    <input
-      type="text"
-      className="form-control"
-      value={selectedProduct.name}
-      onChange={(e) =>
-        setSelectedProduct({ ...selectedProduct, name: e.target.value })
-      }
-    />
-  </div>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="form-label">Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={selectedProduct.name}
+                  onChange={(e) =>
+                    setSelectedProduct({ ...selectedProduct, name: e.target.value })
+                  }
+                />
+              </div>
 
-  <div>
-    <label className="form-label">Price</label>
-    <input
-      type="number"
-      className="form-control"
-      value={selectedProduct.price}
-      onChange={(e) =>
-        setSelectedProduct({ ...selectedProduct, price: e.target.value })
-      }
-    />
-  </div>
+              <div>
+                <label className="form-label">Price</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={selectedProduct.price}
+                  onChange={(e) =>
+                    setSelectedProduct({ ...selectedProduct, price: e.target.value })
+                  }
+                />
+              </div>
 
-  <div>
-    <label className="form-label">Stock</label>
-    <input
-      type="number"
-      className="form-control"
-      value={selectedProduct.stock}
-      onChange={(e) =>
-        setSelectedProduct({ ...selectedProduct, stock: e.target.value })
-      }
-    />
-  </div>
+              <div>
+                <label className="form-label">Stock</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={selectedProduct.stock}
+                  onChange={(e) =>
+                    setSelectedProduct({ ...selectedProduct, stock: e.target.value })
+                  }
+                />
+              </div>
 
-  <div>
-    <label className="form-label">Status</label>
-    <select
-      className="form-select"
-      value={selectedProduct.status}
-      onChange={(e) =>
-        setSelectedProduct({ ...selectedProduct, status: e.target.value })
-      }
-    >
-      <option value="Available">Available</option>
-      <option value="Out of Stock">Out of Stock</option>
-    </select>
-  </div>
-</div>
+              <div>
+                <label className="form-label">Status</label>
+                <select
+                  className="form-select"
+                  value={selectedProduct.status}
+                  onChange={(e) =>
+                    setSelectedProduct({ ...selectedProduct, status: e.target.value })
+                  }
+                >
+                  <option value="Available">Available</option>
+                  <option value="Out of Stock">Out of Stock</option>
+                </select>
+              </div>
+            </div>
 
 
             <div className="flex justify-end gap-2 mt-4">

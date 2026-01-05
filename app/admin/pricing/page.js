@@ -22,8 +22,9 @@ const ClientPricingPage = () => {
   ]);
 
   const [products] = useState([
-    { id: 1, name: "Product X", basePrice: 100 },
-    { id: 2, name: "Product Y", basePrice: 200 },
+    { id: 1, name: "Product X", basePrice: 100, category: "Electronics" },
+    { id: 2, name: "Product Y", basePrice: 200, category: "Furniture" },
+    { id: 3, name: "Product Z", basePrice: 150, category: "Electronics" },
   ]);
 
   const [pricing, setPricing] = useState([
@@ -33,6 +34,9 @@ const ClientPricingPage = () => {
 
   const [selectedClient, setSelectedClient] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const handlePriceChange = (clientId, productId, value) => {
     const price = Number(value);
@@ -64,12 +68,7 @@ const ClientPricingPage = () => {
 
   const handleSaveClientPricing = (clientId) => {
     const clientPricing = pricing.filter(p => p.clientId === clientId);
-
     console.log("Saving pricing for client:", clientId, clientPricing);
-
-    // 🔌 API READY
-    // await api.post(`/admin/client-pricing/${clientId}`, clientPricing);
-
     alert("Client pricing saved successfully");
   };
 
@@ -78,10 +77,22 @@ const ClientPricingPage = () => {
       ? clients
       : clients.filter(c => c.id === Number(selectedClient));
 
-  const filteredProducts =
-    selectedProduct === "all"
-      ? products
-      : products.filter(p => p.id === Number(selectedProduct));
+  const filteredProducts = products.filter(p => {
+    // Filter by selected product
+    if (selectedProduct !== "all" && p.id !== Number(selectedProduct)) return false;
+
+    // Filter by category
+    if (selectedCategory !== "all" && p.category !== selectedCategory) return false;
+
+    // Filter by price range
+    if (minPrice !== "" && p.basePrice < Number(minPrice)) return false;
+    if (maxPrice !== "" && p.basePrice > Number(maxPrice)) return false;
+
+    return true;
+  });
+
+  // Extract unique categories for filter dropdown
+  const categories = ["all", ...new Set(products.map(p => p.category))];
 
   return (
     <div className="container-xxl container-p-y">
@@ -89,7 +100,7 @@ const ClientPricingPage = () => {
 
       {/* Filters */}
       <div className="row mb-4 g-3">
-        <div className="col-md-6">
+        <div className="col-md-3">
           <label className="form-label">Client</label>
           <select
             className="form-select"
@@ -103,7 +114,7 @@ const ClientPricingPage = () => {
           </select>
         </div>
 
-        <div className="col-md-6">
+        <div className="col-md-3">
           <label className="form-label">Product</label>
           <select
             className="form-select"
@@ -115,6 +126,42 @@ const ClientPricingPage = () => {
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
+        </div>
+
+        <div className="col-md-3">
+          <label className="form-label">Category</label>
+          <select
+            className="form-select"
+            value={selectedCategory}
+            onChange={e => setSelectedCategory(e.target.value)}
+          >
+            {categories.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="col-md-3 d-flex gap-2">
+          <div>
+            <label className="form-label">Min Price</label>
+            <input
+              type="number"
+              className="form-control"
+              value={minPrice}
+              onChange={e => setMinPrice(e.target.value)}
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label className="form-label">Max Price</label>
+            <input
+              type="number"
+              className="form-control"
+              value={maxPrice}
+              onChange={e => setMaxPrice(e.target.value)}
+              placeholder="0"
+            />
+          </div>
         </div>
       </div>
 
@@ -143,6 +190,7 @@ const ClientPricingPage = () => {
                 <thead>
                   <tr>
                     <th>Product</th>
+                    <th>Category</th>
                     <th>Base Price</th>
                     <th>Client Price</th>
                   </tr>
@@ -158,6 +206,7 @@ const ClientPricingPage = () => {
                     return (
                       <tr key={product.id}>
                         <td>{product.name}</td>
+                        <td>{product.category}</td>
                         <td>₹{product.basePrice}</td>
                         <td>
                           <input

@@ -117,7 +117,6 @@ const Page = () => {
           </div>
         </div>
 
-        {/* Right Panel: Client Details */}
        {/* Right Panel: Client Details */}
 <div className="col-xl-9 col-lg-8">
   <div className="card shadow-sm border-0 p-4 rounded-4">
