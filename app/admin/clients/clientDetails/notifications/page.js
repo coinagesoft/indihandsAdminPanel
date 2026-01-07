@@ -112,7 +112,7 @@ const page = () => {
                       </li>
                       <li className="nav-item">
                         <a className="nav-link" href="app-ecommerce-customer-details-billing.html"
-                          ><i className="ri-map-pin-line me-2"></i>Address & Billing</a
+                          ><i className="ri-map-pin-line me-2"></i>Shifting Address</a
                         >
                       </li>
                       <li className="nav-item">

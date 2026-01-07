@@ -18,9 +18,11 @@ const SettingsPage = () => {
   });
 
   const [pricingDefaults, setPricingDefaults] = useState({
-    gstRate: 18,
-    deliveryCharges: 50,
-    brandingCharges: 0,
+    sgstRate: 9,        // default SGST %
+    cgstRate: 9,        // default CGST %
+    igstRate: 18,       // default IGST %
+    deliveryCharges: 40, // default handling/ courier charges
+    brandingCharges: 0,  // optional, default 0
   });
 
   const [securitySettings, setSecuritySettings] = useState({
@@ -70,14 +72,6 @@ const SettingsPage = () => {
             Pricing Defaults
           </button>
         </li>
-        {/* <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "security" ? "active" : ""}`}
-            onClick={() => setActiveTab("security")}
-          >
-            Security
-          </button>
-        </li> */}
       </ul>
 
       <div className="tab-content">
@@ -174,14 +168,40 @@ const SettingsPage = () => {
         {activeTab === "pricing" && (
           <div>
             <h5>Pricing & Proposal Defaults</h5>
+
             <div className="mb-3">
-              <label className="form-label">GST Rate (%)</label>
+              <label className="form-label">SGST Rate (%)</label>
               <input
                 type="number"
                 className="form-control"
-                value={pricingDefaults.gstRate}
+                title="State GST rate (%) applied to proposals"
+                value={pricingDefaults.sgstRate}
                 onChange={(e) =>
-                  setPricingDefaults({ ...pricingDefaults, gstRate: Number(e.target.value) })
+                  setPricingDefaults({ ...pricingDefaults, sgstRate: Number(e.target.value) })
+                }
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">CGST Rate (%)</label>
+              <input
+                type="number"
+                className="form-control"
+                title="Central GST rate (%) applied to proposals"
+                value={pricingDefaults.cgstRate}
+                onChange={(e) =>
+                  setPricingDefaults({ ...pricingDefaults, cgstRate: Number(e.target.value) })
+                }
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">IGST Rate (%)</label>
+              <input
+                type="number"
+                className="form-control"
+                title="Integrated GST rate (%) applied for interstate transactions"
+                value={pricingDefaults.igstRate}
+                onChange={(e) =>
+                  setPricingDefaults({ ...pricingDefaults, igstRate: Number(e.target.value) })
                 }
               />
             </div>
@@ -190,6 +210,7 @@ const SettingsPage = () => {
               <input
                 type="number"
                 className="form-control"
+                title="Default handling or courier charges for proposals"
                 value={pricingDefaults.deliveryCharges}
                 onChange={(e) =>
                   setPricingDefaults({ ...pricingDefaults, deliveryCharges: Number(e.target.value) })
@@ -201,6 +222,7 @@ const SettingsPage = () => {
               <input
                 type="number"
                 className="form-control"
+                title="Optional branding/design charges for proposals"
                 value={pricingDefaults.brandingCharges}
                 onChange={(e) =>
                   setPricingDefaults({ ...pricingDefaults, brandingCharges: Number(e.target.value) })
@@ -210,7 +232,6 @@ const SettingsPage = () => {
           </div>
         )}
 
-     
       </div>
 
       <div className="mt-4 text-end">

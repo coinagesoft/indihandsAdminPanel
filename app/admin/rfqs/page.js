@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 
 const RFQPage = () => {
   const [clients] = useState([
@@ -7,43 +7,65 @@ const RFQPage = () => {
     { id: 2, name: "Client B" },
   ]);
 
-  const [products] = useState([
-    { id: 1, name: "Product X" },
-    { id: 2, name: "Product Y" },
-    { id: 3, name: "Product Z" },
-  ]);
-
   const [rfqs, setRfqs] = useState([
     {
       id: 101,
       clientId: 1,
-      products: [
-        { id: 1, name: "Product X", quantity: 10 },
-        { id: 2, name: "Product Y", quantity: 5 },
-      ],
-      status: "Submitted",
       submittedAt: "2026-01-01 10:00 AM",
+      status: "Submitted",
+      notes: "Lights required for gifting purpose.",
+      products: [
+        {
+          id: 1,
+          name: "TATHAGAT : MADHUBANI FOLDABLE LAMP",
+          code: "1800",
+          hsn: "44209090",
+          quantity: 2,
+        },
+        {
+          id: 2,
+          name: "UTSAV : PHAD FOLDABLE LAMP",
+          code: "1800",
+          hsn: "44209090",
+          quantity: 2,
+        },
+      ],
     },
     {
       id: 102,
       clientId: 2,
-      products: [{ id: 1, name: "Product X", quantity: 2 }],
-      status: "Submitted",
       submittedAt: "2026-01-01 11:30 AM",
-    },
-    {
-      id: 103,
-      clientId: 1,
-      products: [{ id: 3, name: "Product Z", quantity: 7 }],
       status: "Reviewed",
-      submittedAt: "2026-01-01 12:15 PM",
+      notes: "",
+      products: [
+        {
+          id: 3,
+          name: "KEKIN : KALAMKARI FOLDABLE LAMP",
+          code: "1800",
+          hsn: "44209090",
+          quantity: 2,
+        },
+      ],
     },
   ]);
 
-  // Filters
+  /* ---------------- Filters ---------------- */
   const [selectedClient, setSelectedClient] = useState("all");
-  const [selectedProduct, setSelectedProduct] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedProduct, setSelectedProduct] = useState("all");
+
+  /* -------- Derive product list dynamically -------- */
+  const allProducts = useMemo(() => {
+    const map = new Map();
+    rfqs.forEach((r) =>
+      r.products.forEach((p) => {
+        if (!map.has(p.id)) {
+          map.set(p.id, { id: p.id, name: p.name });
+        }
+      })
+    );
+    return Array.from(map.values());
+  }, [rfqs]);
 
   const updateStatus = (rfqId, status) => {
     setRfqs((prev) =>
@@ -56,6 +78,7 @@ const RFQPage = () => {
     return client ? client.name : "Unknown Client";
   };
 
+  /* ---------------- Filtering Logic ---------------- */
   const filteredRfqs = rfqs.filter((rfq) => {
     const clientMatch =
       selectedClient === "all" || rfq.clientId === Number(selectedClient);
@@ -100,7 +123,7 @@ const RFQPage = () => {
             onChange={(e) => setSelectedProduct(e.target.value)}
           >
             <option value="all">All Products</option>
-            {products.map((p) => (
+            {allProducts.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
@@ -147,7 +170,7 @@ const RFQPage = () => {
           </div>
 
           <div className="card-body">
-            <p className="text-muted">
+            <p className="text-muted mb-2">
               Submitted at: {rfq.submittedAt}
             </p>
 
@@ -155,6 +178,8 @@ const RFQPage = () => {
               <thead>
                 <tr>
                   <th>Product</th>
+                  <th>Code</th>
+                  <th>HSN/SAC</th>
                   <th>Quantity</th>
                 </tr>
               </thead>
@@ -162,14 +187,23 @@ const RFQPage = () => {
                 {rfq.products.map((p) => (
                   <tr key={p.id}>
                     <td>{p.name}</td>
+                    <td>{p.code}</td>
+                    <td>{p.hsn}</td>
                     <td>{p.quantity}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
+            {rfq.notes && (
+              <div className="mt-3">
+                <strong>Client Notes:</strong>
+                <p className="mb-0 text-muted">{rfq.notes}</p>
+              </div>
+            )}
+
             {rfq.status === "Submitted" && (
-              <div className="d-flex gap-2 mt-3">
+              <div className="d-flex gap-2 mt-4">
                 <button
                   className="btn btn-success btn-sm"
                   onClick={() => updateStatus(rfq.id, "Reviewed")}
