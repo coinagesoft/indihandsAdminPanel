@@ -311,190 +311,65 @@ columnStyles: {
 
       {/* Client */}
       <div className="card p-3 mb-3">
-        <input
-          className="form-control mb-2"
-          placeholder="Client Name"
-          value={client.name}
-          onChange={e => setClient({ ...client, name: e.target.value })}
-        />
-        <input
-          className="form-control mb-2"
-          placeholder="Client Company & Address"
-          value={client.company}
-          onChange={e => setClient({ ...client, company: e.target.value })}
-        />
-        <input
-          className="form-control mb-2"
-          placeholder="Client Email"
-          value={client.email}
-          onChange={e => setClient({ ...client, email: e.target.value })}
-        />
-        <input
-          className="form-control"
-          placeholder="Quotation Date"
-          value={client.date}
-          onChange={e => setClient({ ...client, date: e.target.value })}
-        />
+        <input className="form-control mb-2" placeholder="Client Name" value={client.name} onChange={e => setClient({ ...client, name: e.target.value })} />
+        <input className="form-control mb-2" placeholder="Client Company & Address" value={client.company} onChange={e => setClient({ ...client, company: e.target.value })} />
+        <input className="form-control mb-2" placeholder="Client Email" value={client.email} onChange={e => setClient({ ...client, email: e.target.value })} />
+        <input className="form-control" placeholder="Quotation Date" value={client.date} onChange={e => setClient({ ...client, date: e.target.value })} />
       </div>
 
       {/* Items */}
       {items.map((item, idx) => {
-        const c = computed[idx]; // corresponding computed values
+        const c = computed[idx];
         return (
           <div key={item.id} className="card p-2 mb-2">
+            <input className="form-control mb-1" placeholder="Description" value={item.desc} onChange={e => updateItem(item.id, "desc", e.target.value)} />
+
             {/* Editable fields */}
-            <input
-              className="form-control mb-1"
-              placeholder="Description"
-              value={item.desc}
-              onChange={e => updateItem(item.id, "desc", e.target.value)}
-            />
-
             <div className="row g-2 mb-1">
-              <div className="col">
-                <input
-                  className="form-control"
-                  placeholder="HSN/SAC"
-                  value={item.hsn}
-                  onChange={e => updateItem(item.id, "hsn", e.target.value)}
-                />
-              </div>
-              <div className="col">
-                <input
-                  className="form-control"
-                  placeholder="UOM"
-                  value={item.uom}
-                  onChange={e => updateItem(item.id, "uom", e.target.value)}
-                />
-              </div>
-              <div className="col">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Qty"
-                  value={item.qty ?? ""}
-                  onChange={e => updateItem(item.id, "qty", e.target.value ? Number(e.target.value) : null)}
-                />
-              </div>
-              <div className="col">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Cost"
-                  value={item.cost ?? ""}
-                  onChange={e => updateItem(item.id, "cost", e.target.value ? Number(e.target.value) : null)}
-                />
-              </div>
-              <div className="col">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Discount"
-                  value={item.discount ?? ""}
-                  onChange={e => updateItem(item.id, "discount", e.target.value ? Number(e.target.value) : null)}
-                />
-              </div>
-              <div className="col">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="GST %"
-                  value={item.gst ?? ""}
-                  onChange={e => updateItem(item.id, "gst", e.target.value ? Number(e.target.value) : null)}
-                />
-              </div>
-
-              <div className="col">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Freight"
-                  value={item.freight ?? ""}
-                  onChange={e =>
-                    updateItem(item.id, "freight", e.target.value ? Number(e.target.value) : 0)
-                  }
-                />
-              </div>
-
-              <div className="col">
-                <select
-                  className="form-select"
-                  value={item.taxType}
-                  onChange={e => updateItem(item.id, "taxType", e.target.value)}
-                >
-                  <option value="CGST_SGST">CGST + SGST</option>
-                  <option value="IGST">IGST</option>
-                </select>
-              </div>
-
-              <div className="col-auto">
-                <button className="btn btn-danger" onClick={() => removeItem(item.id)}>
-                  ×
-                </button>
-              </div>
+              <div className="col-12 col-md"><input className="form-control" placeholder="HSN/SAC" value={item.hsn} onChange={e => updateItem(item.id, "hsn", e.target.value)} /></div>
+              <div className="col-12 col-md"><input className="form-control" placeholder="UOM" value={item.uom} onChange={e => updateItem(item.id, "uom", e.target.value)} /></div>
+              <div className="col-12 col-md"><input type="number" className="form-control" placeholder="Qty" value={item.qty ?? ""} onChange={e => updateItem(item.id, "qty", e.target.value ? Number(e.target.value) : null)} /></div>
+              <div className="col-12 col-md"><input type="number" className="form-control" placeholder="Cost" value={item.cost ?? ""} onChange={e => updateItem(item.id, "cost", e.target.value ? Number(e.target.value) : null)} /></div>
+              <div className="col-12 col-md"><input type="number" className="form-control" placeholder="Discount" value={item.discount ?? ""} onChange={e => updateItem(item.id, "discount", e.target.value ? Number(e.target.value) : null)} /></div>
+              <div className="col-12 col-md"><input type="number" className="form-control" placeholder="GST %" value={item.gst ?? ""} onChange={e => updateItem(item.id, "gst", e.target.value ? Number(e.target.value) : null)} /></div>
+              <div className="col-12 col-md"><input type="number" className="form-control" placeholder="Freight" value={item.freight ?? ""} onChange={e => updateItem(item.id, "freight", e.target.value ? Number(e.target.value) : 0)} /></div>
+              <div className="col-12 col-md"><select className="form-select" value={item.taxType} onChange={e => updateItem(item.id, "taxType", e.target.value)}><option value="CGST_SGST">CGST + SGST</option><option value="IGST">IGST</option></select></div>
+              <div className="col-12 col-md-auto"><button className="btn btn-danger w-100 w-md-auto" onClick={() => removeItem(item.id)}>×</button></div>
             </div>
 
-            {/* Computed / read-only fields */}
-   {/* Computed / read-only fields */}
-<div className="row g-2">
-  <div className="col">
-    <label className="form-label small text-muted">Discounted Cost</label>
-    <input className="form-control bg-light" value={c.discountedCost.toFixed(2)} readOnly />
-  </div>
-
-  <div className="col">
-    <label className="form-label small text-muted">Amount</label>
-    <input className="form-control bg-light" value={c.amount.toFixed(2)} readOnly />
-  </div>
-
-  <div className="col">
-    <label className="form-label small text-muted">Taxable Value</label>
-    <input className="form-control bg-light" value={c.taxableValue.toFixed(2)} readOnly />
-  </div>
-
-  <div className="col">
-    <label className="form-label small text-muted">CGST Amt</label>
-    <input className="form-control bg-light" value={c.cgstAmt.toFixed(2)} readOnly />
-  </div>
-
-  <div className="col">
-    <label className="form-label small text-muted">SGST Amt</label>
-    <input className="form-control bg-light" value={c.sgstAmt.toFixed(2)} readOnly />
-  </div>
-
-  <div className="col">
-    <label className="form-label small text-muted">IGST Amt</label>
-    <input className="form-control bg-light" value={c.igstAmt.toFixed(2)} readOnly />
-  </div>
-
-  <div className="col">
-    <label className="form-label fw-semibold">Total</label>
-    <input className="form-control bg-light fw-semibold" value={c.total.toFixed(2)} readOnly />
-  </div>
-</div>
-
+            {/* Computed fields */}
+            <div className="row g-2">
+              {[
+                { label: "Discounted Cost", value: c.discountedCost },
+                { label: "Amount", value: c.amount },
+                { label: "Taxable Value", value: c.taxableValue },
+                { label: "CGST Amt", value: c.cgstAmt },
+                { label: "SGST Amt", value: c.sgstAmt },
+                { label: "IGST Amt", value: c.igstAmt },
+                { label: "Total", value: c.total },
+              ].map((f, i) => (
+                <div key={i} className="col-12 col-md">
+                  <label className="form-label small text-muted">{f.label}</label>
+                  <input className="form-control bg-light fw-semibold" value={f.value.toFixed(2)} readOnly />
+                </div>
+              ))}
+            </div>
           </div>
         );
       })}
 
-      <button className="btn btn-secondary mb-4" onClick={addItem}>
-        + Add Item
-      </button>
+      <button className="btn btn-secondary mb-4" onClick={addItem}>+ Add Item</button>
 
       {/* Terms */}
       <div className="card p-3 mb-3">
         <h6>Terms & Conditions</h6>
         {terms.map((t, i) => (
-          <div key={i} className="d-flex gap-2 mb-1">
+          <div key={i} className="d-flex flex-column flex-md-row gap-2 mb-1">
             <input className="form-control" value={t} onChange={e => updateTerm(i, e.target.value)} />
-            <button className="btn btn-outline-danger" onClick={() => removeTerm(i)}>
-              ×
-            </button>
+            <button className="btn btn-outline-danger" onClick={() => removeTerm(i)}>×</button>
           </div>
         ))}
-        <button className="btn btn-outline-primary mt-2" onClick={addTerm}>
-          + Add Term
-        </button>
+        <button className="btn btn-outline-primary mt-2" onClick={addTerm}>+ Add Term</button>
       </div>
 
       {/* Sign & Stamp */}
@@ -510,12 +385,8 @@ columnStyles: {
         </div>
       </div>
 
-      <button className="btn btn-primary me-2" onClick={generatePDF}>
-        Generate PDF
-      </button>
-      <button className="btn btn-success" onClick={sendPDFToClient}>
-        Send PDF to Client
-      </button>
+      <button className="btn btn-primary me-2" onClick={generatePDF}>Generate PDF</button>
+      <button className="btn btn-success" onClick={sendPDFToClient}>Send PDF to Client</button>
     </div>
   );
 

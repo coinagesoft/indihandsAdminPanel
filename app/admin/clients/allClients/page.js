@@ -99,15 +99,26 @@ const Page = () => {
                   <td>{cust.orders}</td>
                   <td>{cust.totalSpent}</td>
                   <td>{cust.username}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => openEditModal(cust)}
-                    >
-                      Edit
-                    </button>
-                  </td>
+                 <td>
+  <div className="d-flex gap-2">
+    <button
+      type="button"
+      className="btn btn-sm btn-outline-primary"
+      onClick={() => openEditModal(cust)}
+    >
+      Edit
+    </button>
+
+    <button
+      type="button"
+      className="btn btn-sm btn-outline-danger"
+      onClick={() => handleDelete(cust)}
+    >
+      Delete
+    </button>
+  </div>
+</td>
+
                 </tr>
               ))}
             </tbody>

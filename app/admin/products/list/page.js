@@ -147,7 +147,7 @@ const Page = () => {
                     <td>{p.category}</td>
                     <td>{p.stock}</td>
                     <td>{p.sku}</td>
-                    <td>${p.price}</td>
+                    <td>Rs.{p.price}</td>
 
                     <td>
                       <span
@@ -157,14 +157,20 @@ const Page = () => {
                         {p.status}
                       </span>
                     </td>
-                    <td>
+                    <td className="text-center ">
                       <button
-                        className="btn btn-sm btn-primary"
+                        className="btn btn-sm btn-primary me-2"
                         onClick={() => openModal(p)}
                       >
                         Edit
                       </button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                      >
+                        Delete
+                      </button>
                     </td>
+                   
                   </tr>
                 ))
               )}

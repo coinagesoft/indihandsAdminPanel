@@ -3,22 +3,8 @@ import React, { useState } from "react";
 
 const ClientPricingPage = () => {
   const [clients] = useState([
-    {
-      id: 1,
-      name: "Client A",
-      gst: "27ABCDE1234F1Z5",
-      primaryContact: "John Doe",
-      email: "john@acme.com",
-      phone: "+911234567890",
-    },
-    {
-      id: 2,
-      name: "Client B",
-      gst: "27XYZDE6789G1Z2",
-      primaryContact: "Jane Smith",
-      email: "jane@xyz.com",
-      phone: "+919876543210",
-    },
+    { id: 1, name: "Client A", gst: "27ABCDE1234F1Z5", primaryContact: "John Doe", email: "john@acme.com", phone: "+911234567890" },
+    { id: 2, name: "Client B", gst: "27XYZDE6789G1Z2", primaryContact: "Jane Smith", email: "jane@xyz.com", phone: "+919876543210" },
   ]);
 
   const [products] = useState([
@@ -41,23 +27,15 @@ const ClientPricingPage = () => {
   const handlePriceChange = (clientId, productId, value) => {
     const price = Number(value);
     setPricing(prev => {
-      const existing = prev.find(
-        p => p.clientId === clientId && p.productId === productId
-      );
+      const existing = prev.find(p => p.clientId === clientId && p.productId === productId);
       return existing
-        ? prev.map(p =>
-            p.clientId === clientId && p.productId === productId
-              ? { ...p, price }
-              : p
-          )
+        ? prev.map(p => (p.clientId === clientId && p.productId === productId ? { ...p, price } : p))
         : [...prev, { clientId, productId, price }];
     });
   };
 
   const getClientPrice = (clientId, productId) => {
-    const entry = pricing.find(
-      p => p.clientId === clientId && p.productId === productId
-    );
+    const entry = pricing.find(p => p.clientId === clientId && p.productId === productId);
     return entry ? entry.price : "";
   };
 
@@ -72,26 +50,16 @@ const ClientPricingPage = () => {
     alert("Client pricing saved successfully");
   };
 
-  const filteredClients =
-    selectedClient === "all"
-      ? clients
-      : clients.filter(c => c.id === Number(selectedClient));
+  const filteredClients = selectedClient === "all" ? clients : clients.filter(c => c.id === Number(selectedClient));
 
   const filteredProducts = products.filter(p => {
-    // Filter by selected product
     if (selectedProduct !== "all" && p.id !== Number(selectedProduct)) return false;
-
-    // Filter by category
     if (selectedCategory !== "all" && p.category !== selectedCategory) return false;
-
-    // Filter by price range
     if (minPrice !== "" && p.basePrice < Number(minPrice)) return false;
     if (maxPrice !== "" && p.basePrice > Number(maxPrice)) return false;
-
     return true;
   });
 
-  // Extract unique categories for filter dropdown
   const categories = ["all", ...new Set(products.map(p => p.category))];
 
   return (
@@ -100,84 +68,41 @@ const ClientPricingPage = () => {
 
       {/* Filters */}
       <div className="row mb-4 g-3">
-        <div className="col-md-3">
+        <div className="col-12 col-md-3">
           <label className="form-label">Client</label>
-          <select
-            className="form-select"
-            value={selectedClient}
-            onChange={e => setSelectedClient(e.target.value)}
-          >
+          <select className="form-select" value={selectedClient} onChange={e => setSelectedClient(e.target.value)}>
             <option value="all">All Clients</option>
-            {clients.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
+            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
-
-        <div className="col-md-3">
+        <div className="col-12 col-md-3">
           <label className="form-label">Product</label>
-          <select
-            className="form-select"
-            value={selectedProduct}
-            onChange={e => setSelectedProduct(e.target.value)}
-          >
+          <select className="form-select" value={selectedProduct} onChange={e => setSelectedProduct(e.target.value)}>
             <option value="all">All Products</option>
-            {products.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
+            {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>
-
-        <div className="col-md-3">
+        <div className="col-12 col-md-3">
           <label className="form-label">Category</label>
-          <select
-            className="form-select"
-            value={selectedCategory}
-            onChange={e => setSelectedCategory(e.target.value)}
-          >
-            {categories.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+          <select className="form-select" value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
-
-        <div className="col-md-3 d-flex gap-2">
-          <div>
-            <label className="form-label">Min Price</label>
-            <input
-              type="number"
-              className="form-control"
-              value={minPrice}
-              onChange={e => setMinPrice(e.target.value)}
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label className="form-label">Max Price</label>
-            <input
-              type="number"
-              className="form-control"
-              value={maxPrice}
-              onChange={e => setMaxPrice(e.target.value)}
-              placeholder="0"
-            />
-          </div>
+        <div className="col-12 col-md-3 d-flex flex-wrap gap-2">
+          <input type="number" className="form-control mb-2" placeholder="Min Price" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
+          <input type="number" className="form-control mb-2" placeholder="Max Price" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
         </div>
       </div>
 
-      {/* Pricing Cards */}
+      {/* Client Pricing */}
       {filteredClients.map(client => (
         <div key={client.id} className="card mb-4">
-          <div className="card-header bg-label-primary d-flex justify-content-between align-items-center">
+          <div className="card-header bg-label-primary d-flex justify-content-between align-items-center flex-wrap">
             <div>
               <h5 className="mb-0">{client.name}</h5>
               <small className="text-muted">GST: {client.gst}</small>
             </div>
-
-            <button
-              className="btn btn-sm btn-primary"
-              onClick={() => handleSaveClientPricing(client.id)}
-            >
+            <button className="btn btn-sm btn-primary mt-2 mt-md-0" onClick={() => handleSaveClientPricing(client.id)}>
               Save Pricing
             </button>
           </div>
@@ -186,55 +111,40 @@ const ClientPricingPage = () => {
             {filteredProducts.length === 0 ? (
               <p className="text-muted">No products available.</p>
             ) : (
-              <table className="table table-bordered align-middle">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Category</th>
-                    <th>Base Price</th>
-                    <th>Client Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.map(product => {
-                    const overridden = isPriceOverridden(
-                      client.id,
-                      product.id,
-                      product.basePrice
-                    );
-
-                    return (
-                      <tr key={product.id}>
-                        <td>{product.name}</td>
-                        <td>{product.category}</td>
-                        <td>₹{product.basePrice}</td>
-                        <td>
-                          <input
-                            type="number"
-                            className={`form-control ${
-                              overridden ? "border-primary" : ""
-                            }`}
-                            placeholder="Enter client price"
-                            value={getClientPrice(client.id, product.id)}
-                            onChange={e =>
-                              handlePriceChange(
-                                client.id,
-                                product.id,
-                                e.target.value
-                              )
-                            }
-                          />
-                          {overridden && (
-                            <small className="text-primary">
-                              Custom price applied
-                            </small>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="table-responsive">
+                <table className="table table-bordered align-middle mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Product</th>
+                      <th>Category</th>
+                      <th>Base Price</th>
+                      <th>Client Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map(product => {
+                      const overridden = isPriceOverridden(client.id, product.id, product.basePrice);
+                      return (
+                        <tr key={product.id}>
+                          <td>{product.name}</td>
+                          <td>{product.category}</td>
+                          <td>₹{product.basePrice}</td>
+                          <td>
+                            <input
+                              type="number"
+                              className={`form-control ${overridden ? "border-primary" : ""}`}
+                              placeholder="Enter client price"
+                              value={getClientPrice(client.id, product.id)}
+                              onChange={e => handlePriceChange(client.id, product.id, e.target.value)}
+                            />
+                            {overridden && <small className="text-primary">Custom price applied</small>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
