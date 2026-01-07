@@ -46,7 +46,6 @@ const SettingsPage = () => {
     <div className="container-xxl flex-grow-1 container-p-y">
       <h4 className="mb-4">Admin Settings</h4>
 
-      {/* Tabs */}
 {/* Tabs */}
 <div className="settings-tabs mb-4">
   <button

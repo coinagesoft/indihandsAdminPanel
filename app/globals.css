@@ -49,7 +49,10 @@ body {
   position: relative;
   cursor: pointer;
   white-space: nowrap;
+  overflow-x: none;
+  overflow-y: none;
 }
+
 
 .settings-tab.active {
   color: #0d6efd;
