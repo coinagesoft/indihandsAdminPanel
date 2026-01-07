@@ -1,4 +1,5 @@
 "use client";
+import Link from 'next/link';
 import React from 'react'
 
 const Header = () => {
@@ -509,29 +510,19 @@ const Header = () => {
                         <i className="ri-user-3-line ri-22px me-3"></i><span className="align-middle">My Profile</span>
                       </a>
                     </li> */}
-                    <li>
-                      <a className="dropdown-item" href="pages-account-settings-account.html">
-                        <i className="ri-settings-4-line ri-22px me-3"></i><span className="align-middle">Settings</span>
-                      </a>
-                    </li>
-                    {/* <li>
-                      <a className="dropdown-item" href="pages-account-settings-billing.html">
-                        <span className="d-flex align-items-center align-middle">
-                          <i className="flex-shrink-0 ri-file-text-line ri-22px me-3"></i>
-                          <span className="flex-grow-1 align-middle">Billing</span>
-                          <span className="flex-shrink-0 badge badge-center rounded-pill bg-danger">4</span>
-                        </span>
-                      </a>
-                    </li> */}
-                    {/* <li>
-                      <div className="dropdown-divider"></div>
-                    </li> */}
-                    <li>
-                      <a className="dropdown-item" href="pages-pricing.html">
-                        <i className="ri-money-dollar-circle-line ri-22px me-3"></i
-                        ><span className="align-middle">Pricing</span>
-                      </a>
-                    </li>
+                <li>
+      <Link href="/admin/settings" className="dropdown-item">
+        <i className="ri-settings-4-line ri-22px me-3"></i>
+        <span className="align-middle">Settings</span>
+      </Link>
+    </li>
+
+    <li>
+      <Link href="/admin/pricing" className="dropdown-item">
+        <i className="ri-money-dollar-circle-line ri-22px me-3"></i>
+        <span className="align-middle">Pricing</span>
+      </Link>
+    </li>
                     {/* <li>
                       <a className="dropdown-item" href="pages-faq.html">
                         <i className="ri-question-line ri-22px me-3"></i><span className="align-middle">FAQ</span>
