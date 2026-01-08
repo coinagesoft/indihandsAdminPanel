@@ -3,24 +3,30 @@
 import React, { useState } from "react";
 
 const Page = () => {
+  // Catalog state
+  const [catalogs, setCatalogs] = useState([
+    { id: 1, name: "Electronics Catalog" },
+    { id: 2, name: "Festive Catalog" },
+    { id: 3, name: "Office Supplies Catalog" },
+  ]);
+  const [selectedCatalog, setSelectedCatalog] = useState(catalogs[0]);
+  const [newCatalogName, setNewCatalogName] = useState("");
+
+  // Products state
   const [products, setProducts] = useState([
-    { id: 1, name: "Product X", category: "Electronics", subCategory: "Mobile", stock: 120, sku: "ELEC-X-001", price: 100, status: "Available" },
-    { id: 2, name: "Product Y", category: "Electronics", subCategory: "Laptop", stock: 0, sku: "ELEC-Y-002", price: 200, status: "Out of Stock" },
-    { id: 3, name: "Product Z", category: "Eco-friendly", subCategory: "Reusable Bags", stock: 50, sku: "ECO-Z-003", price: 50, status: "Available" },
-    { id: 4, name: "Product A", category: "Festive", subCategory: "Gifts", stock: 300, sku: "FEST-A-004", price: 75, status: "Available" },
-    { id: 5, name: "Product B", category: "Festive", subCategory: "Decor", stock: 20, sku: "FEST-B-005", price: 85, status: "Available" },
-    { id: 6, name: "Product C", category: "Office Supplies", subCategory: "Stationery", stock: 15, sku: "OFF-C-006", price: 55, status: "Available" },
-    { id: 7, name: "Product D", category: "Electronics", subCategory: "Headphones", stock: 60, sku: "ELEC-D-007", price: 120, status: "Available" },
-    { id: 8, name: "Product E", category: "Office Supplies", subCategory: "Chairs", stock: 0, sku: "OFF-E-008", price: 500, status: "Out of Stock" },
-    { id: 9, name: "Product F", category: "Eco-friendly", subCategory: "Water Bottles", stock: 90, sku: "ECO-F-009", price: 30, status: "Available" },
-    { id: 10, name: "Product G", category: "Festive", subCategory: "Candles", stock: 50, sku: "FEST-G-010", price: 40, status: "Available" },
+    { id: 1, catalogId: 1, name: "Product X", category: "Electronics", subCategory: "Mobile", stock: 120, sku: "ELEC-X-001", price: 100, status: "Available" },
+    { id: 2, catalogId: 1, name: "Product Y", category: "Electronics", subCategory: "Laptop", stock: 0, sku: "ELEC-Y-002", price: 200, status: "Out of Stock" },
+    { id: 3, catalogId: 2, name: "Product A", category: "Festive", subCategory: "Gifts", stock: 300, sku: "FEST-A-004", price: 75, status: "Available" },
+    { id: 4, catalogId: 3, name: "Product C", category: "Office Supplies", subCategory: "Stationery", stock: 15, sku: "OFF-C-006", price: 55, status: "Available" },
   ]);
 
+  // Product modal state
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteProduct, setDeleteProduct] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
+  // Filters
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [subCategory, setSubCategory] = useState("All");
@@ -29,18 +35,22 @@ const Page = () => {
   const categories = ["All", ...new Set(products.map((p) => p.category))];
   const subCategories = ["All", ...new Set(products.map((p) => p.subCategory))];
 
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const filteredProducts = products.filter((p) => {
-    const matchSearch =
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.sku.toLowerCase().includes(search.toLowerCase());
-    const matchCategory = category === "All" || p.category === category;
-    const matchSubCategory = subCategory === "All" || p.subCategory === subCategory;
-    const matchStatus = status === "All" || p.status === status;
-    return matchSearch && matchCategory && matchSubCategory && matchStatus;
-  });
+  // Filtered products based on selected catalog and filters
+  const filteredProducts = products
+    .filter((p) => p.catalogId === selectedCatalog.id)
+    .filter((p) => {
+      const matchSearch =
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.sku.toLowerCase().includes(search.toLowerCase());
+      const matchCategory = category === "All" || p.category === category;
+      const matchSubCategory = subCategory === "All" || p.subCategory === subCategory;
+      const matchStatus = status === "All" || p.status === status;
+      return matchSearch && matchCategory && matchSubCategory && matchStatus;
+    });
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice(
@@ -48,15 +58,20 @@ const Page = () => {
     currentPage * itemsPerPage
   );
 
-  // Edit handlers
+  // Handlers
+  const addCatalog = () => {
+    if (!newCatalogName.trim()) return;
+    const newCatalog = { id: catalogs.length + 1, name: newCatalogName };
+    setCatalogs([...catalogs, newCatalog]);
+    setNewCatalogName("");
+    setSelectedCatalog(newCatalog);
+  };
+
   const openEditModal = (product) => {
     setSelectedProduct({ ...product });
     setIsEditModalOpen(true);
   };
-  const closeEditModal = () => {
-    setSelectedProduct(null);
-    setIsEditModalOpen(false);
-  };
+  const closeEditModal = () => setIsEditModalOpen(false);
   const saveChanges = () => {
     setProducts((prev) =>
       prev.map((p) => (p.id === selectedProduct.id ? selectedProduct : p))
@@ -64,15 +79,11 @@ const Page = () => {
     closeEditModal();
   };
 
-  // Delete handlers
   const openDeleteModal = (product) => {
     setDeleteProduct(product);
     setIsDeleteModalOpen(true);
   };
-  const closeDeleteModal = () => {
-    setDeleteProduct(null);
-    setIsDeleteModalOpen(false);
-  };
+  const closeDeleteModal = () => setIsDeleteModalOpen(false);
   const confirmDelete = () => {
     setProducts((prev) => prev.filter((p) => p.id !== deleteProduct.id));
     closeDeleteModal();
@@ -85,50 +96,68 @@ const Page = () => {
 
   return (
     <div className="container-xxl flex-grow-1 container-p-y">
-      {/* Filters */}
+      {/* Catalog Section */}
       <div className="card mb-4">
+        <div className="card-header d-flex justify-content-between align-items-center">
+          <h5 className="card-title mb-0">Catalogs</h5>
+          <div className="d-flex gap-2">
+            <input
+              className="form-control form-control-sm"
+              placeholder="New catalog name"
+              value={newCatalogName}
+              onChange={(e) => setNewCatalogName(e.target.value)}
+            />
+            <button className="btn btn-primary btn-sm" onClick={addCatalog}>Add Catalog</button>
+          </div>
+        </div>
+        <div className="card-body">
+          <div className="d-flex flex-wrap gap-2">
+            {catalogs.map((c) => (
+              <button
+                key={c.id}
+                className={`btn btn-sm ${selectedCatalog.id === c.id ? "btn-primary" : "btn-outline-primary"}`}
+                onClick={() => setSelectedCatalog(c)}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Product Section */}
+      <div className="card mb-4">
+        <div className="card-header">
+          <h5 className="card-title mb-0">Products in "{selectedCatalog.name}"</h5>
+        </div>
+
+        {/* Filters */}
         <div className="card-body">
           <div className="row g-3">
             <div className="col-md-3">
-              <label className="form-label">Search</label>
               <input
                 className="form-control"
-                placeholder="Product name or SKU"
+                placeholder="Search product or SKU"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <div className="col-md-3">
-              <label className="form-label">Category</label>
-              <select
-                className="form-select"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
+              <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
                 {categories.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
             <div className="col-md-3">
-              <label className="form-label">Subcategory</label>
-              <select
-                className="form-select"
-                value={subCategory}
-                onChange={(e) => setSubCategory(e.target.value)}
-              >
+              <select className="form-select" value={subCategory} onChange={(e) => setSubCategory(e.target.value)}>
                 {subCategories.map((sc) => (
                   <option key={sc} value={sc}>{sc}</option>
                 ))}
               </select>
             </div>
             <div className="col-md-3">
-              <label className="form-label">Status</label>
-              <select
-                className="form-select"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
+              <select className="form-select" value={status} onChange={(e) => setStatus(e.target.value)}>
                 <option value="All">All</option>
                 <option value="Available">Available</option>
                 <option value="Out of Stock">Out of Stock</option>
@@ -136,14 +165,9 @@ const Page = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="card position-relative">
-        <div className="card-header">
-          <h5 className="card-title mb-0">Products</h5>
-        </div>
-        <div className="card-datatable table-responsive" style={{ overflowX: "auto" }}>
+        {/* Product Table */}
+        <div className="card-datatable table-responsive">
           <table className="table table-striped table-hover mb-0 text-nowrap">
             <thead>
               <tr>
@@ -161,9 +185,7 @@ const Page = () => {
             <tbody>
               {paginatedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center text-muted py-4">
-                    No products found
-                  </td>
+                  <td colSpan="9" className="text-center py-4">No products found</td>
                 </tr>
               ) : (
                 paginatedProducts.map((p) => (
@@ -176,12 +198,10 @@ const Page = () => {
                     <td>{p.sku}</td>
                     <td>Rs.{p.price}</td>
                     <td>
-                      <span className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"}`}>
-                        {p.status}
-                      </span>
+                      <span className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"}`}>{p.status}</span>
                     </td>
-                    <td className="text-center">
-                      <div className="d-flex gap-2 justify-content-center">
+                    <td>
+                      <div className="d-flex gap-2">
                         <button className="btn btn-sm btn-primary" onClick={() => openEditModal(p)}>Edit</button>
                         <button className="btn btn-sm btn-danger" onClick={() => openDeleteModal(p)}>Delete</button>
                       </div>
@@ -209,13 +229,12 @@ const Page = () => {
             <button className="btn btn-outline-secondary btn-sm" onClick={() => changePage(currentPage + 1)}>Next</button>
           </div>
         )}
+      </div>
 
-        {/* Edit Modal inside Card */}
-        {isEditModalOpen && selectedProduct && (
-          <div
-            className="position-absolute top-50 start-50 translate-middle bg-white p-4 rounded shadow"
-            style={{ maxWidth: "500px", zIndex: 20 }}
-          >
+      {/* Edit Product Modal */}
+      {isEditModalOpen && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={closeEditModal}>
+          <div className="bg-white p-4 rounded shadow w-96" onClick={(e) => e.stopPropagation()}>
             <h5 className="mb-3">Edit Product</h5>
             <div className="d-flex flex-column gap-2">
               <input
@@ -223,39 +242,32 @@ const Page = () => {
                 className="form-control"
                 value={selectedProduct.name}
                 onChange={(e) => setSelectedProduct({ ...selectedProduct, name: e.target.value })}
-                placeholder="Product Name"
               />
               <select
                 className="form-select"
                 value={selectedProduct.category}
                 onChange={(e) => setSelectedProduct({ ...selectedProduct, category: e.target.value })}
               >
-                {categories.filter((c) => c !== "All").map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
+                {categories.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <select
                 className="form-select"
                 value={selectedProduct.subCategory}
                 onChange={(e) => setSelectedProduct({ ...selectedProduct, subCategory: e.target.value })}
               >
-                {subCategories.filter((sc) => sc !== "All").map((sc) => (
-                  <option key={sc} value={sc}>{sc}</option>
-                ))}
+                {subCategories.filter(sc => sc !== "All").map(sc => <option key={sc} value={sc}>{sc}</option>)}
               </select>
               <input
                 type="number"
                 className="form-control"
                 value={selectedProduct.stock}
                 onChange={(e) => setSelectedProduct({ ...selectedProduct, stock: e.target.value })}
-                placeholder="Stock"
               />
               <input
                 type="number"
                 className="form-control"
                 value={selectedProduct.price}
                 onChange={(e) => setSelectedProduct({ ...selectedProduct, price: e.target.value })}
-                placeholder="Price"
               />
               <select
                 className="form-select"
@@ -271,23 +283,22 @@ const Page = () => {
               <button className="btn btn-primary" onClick={saveChanges}>Save Changes</button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Delete Modal inside Card */}
-        {isDeleteModalOpen && deleteProduct && (
-          <div
-            className="position-absolute top-50 start-50 translate-middle bg-white p-4 rounded shadow"
-            style={{ maxWidth: "400px", zIndex: 20 }}
-          >
+      {/* Delete Product Modal */}
+      {isDeleteModalOpen && deleteProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={closeDeleteModal}>
+          <div className="bg-white p-4 rounded shadow w-96" onClick={(e) => e.stopPropagation()}>
             <h5 className="mb-3">Delete Product</h5>
-            <p className="mb-3">Are you sure you want to delete <strong>{deleteProduct.name}</strong>?</p>
+            <p>Are you sure you want to delete <strong>{deleteProduct.name}</strong>?</p>
             <div className="d-flex justify-content-end gap-2">
               <button className="btn btn-secondary" onClick={closeDeleteModal}>Cancel</button>
               <button className="btn btn-danger" onClick={confirmDelete}>Delete</button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

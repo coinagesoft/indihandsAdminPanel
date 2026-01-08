@@ -106,7 +106,7 @@ const Sidebar = () => {
             className="menu-link menu-toggle"
           >
             <i className="menu-icon tf-icons ri-shopping-bag-3-line"></i>
-            <div>Products & Inventory</div>
+            <div>Products & Catalog</div>
           </a>
           <ul className="menu-sub">
             <li className={`menu-item ${pathname === "/admin/products/list" ? "active" : ""}`}>
@@ -119,74 +119,23 @@ const Sidebar = () => {
                 <div>Add Product</div>
               </Link>
             </li>
-            <li className={`menu-item ${pathname === "/admin/products/category" ? "active" : ""}`}>
-              <Link href="/admin/products/category" className="menu-link">
-                <div>Categories</div>
+            <li className={`menu-item ${pathname === "/admin/products/catalog" ? "active" : ""}`}>
+              <Link href="/admin/products/catalog" className="menu-link">
+                <div>Catalog</div>
               </Link>
             </li>
           </ul>
         </li>
 
         {/* Clients */}
-       <li className={`menu-item ${openMenu === "customer" ? "open" : ""}`}>
-  <a
-    href="#"
-    onClick={(e) => {
-      e.preventDefault();
-      toggleMenu("customer");
-    }}
-    className="menu-link menu-toggle"
-  >
-        <i className="menu-icon tf-icons ri-user-3-line"></i>  {/* ← Icon added here */}
-
-    <div>Clients</div>
-  </a>
-
-  <ul className="menu-sub">
-    <li className={`menu-item ${pathname === "/admin/clients/allClients" ? "active" : ""}`}>
-      <Link href="/admin/clients/allClients" className="menu-link">
-        <div>All Clients</div>
-      </Link>
-    </li>
-
-    <li className={`menu-item ${openSubMenu === "customerDetails" ? "open" : ""}`}>
-      <a
-        href="#"
-        onClick={(e) => {
-          e.preventDefault();
-          toggleSubMenu("customerDetails");
-        }}
-        className="menu-link menu-toggle"
-      >
-        <div>Clients Details</div>
-      </a>
-
-      <ul className="menu-sub">
-        <li className={`menu-item ${pathname === "/admin/clients/clientDetails/overview" ? "active" : ""}`}>
-          <Link href="/admin/clients/clientDetails/overview" className="menu-link">
-            <div>Overview</div>
+  
+          {/* Client Pricing */}
+        <li className={`menu-item ${pathname === "/admin/clients" ? "active" : ""}`}>
+          <Link href="/admin/clients" className="menu-link">
+            <i className="menu-icon tf-icons ri-price-tag-3-line"></i>
+            <div>Companies</div>
           </Link>
         </li>
-        <li className={`menu-item ${pathname === "/admin/clients/clientDetails/security" ? "active" : ""}`}>
-          <Link href="/admin/clients/clientDetails/security" className="menu-link">
-            <div>Security</div>
-          </Link>
-        </li>
-        <li className={`menu-item ${pathname === "/admin/clients/clientDetails/address_billing" ? "active" : ""}`}>
-          <Link href="/admin/clients/clientDetails/address_billing" className="menu-link">
-            <div>Shipping Address</div>
-          </Link>
-        </li>
-        {/* <li className={`menu-item ${pathname === "/admin/clients/clientDetails/notifications" ? "active" : ""}`}>
-          <Link href="/admin/clients/clientDetails/notifications" className="menu-link">
-            <div>Notifications</div>
-          </Link>
-        </li> */}
-      </ul>
-    </li>
-  </ul>
-</li>
-
 
         {/* Client Pricing */}
         <li className={`menu-item ${pathname === "/admin/pricing" ? "active" : ""}`}>
