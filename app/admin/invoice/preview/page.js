@@ -10,6 +10,12 @@ const ACCEPTED_RFQS = [
         gstin: "27ABCDE1234F1Z5",
         place: "Maharashtra (27)",
         date: "2026-01-05",
+
+        billingAddress:
+            "Tripseay Consulting Services Pvt Ltd, Baner Road, Pune, Maharashtra - 411045",
+        shippingAddress:
+            "Tripseay Consulting Services Pvt Ltd, Baner Road, Pune, Maharashtra - 411045",
+
         items: [
             {
                 description: "1021 Sofa/Wood Chair - Wood & Fabric",
@@ -64,6 +70,12 @@ const ACCEPTED_RFQS = [
         gstin: "08ABCDE4321F1Z9",
         place: "Rajasthan (08)",
         date: "2026-01-07",
+
+        billingAddress:
+            "Kekin Artworks, MI Road, Jaipur, Rajasthan - 302001",
+        shippingAddress:
+            "Kekin Artworks, MI Road, Jaipur, Rajasthan - 302001",
+
         items: [
             {
                 description: "Hand-painted Wooden Lamp",
@@ -89,6 +101,8 @@ const Page = () => {
         company: "",
         gstin: "",
         place: "",
+        billingAddress: "",
+  shippingAddress: "",
     });
     const [items, setItems] = useState([]);
 
@@ -107,6 +121,8 @@ const Page = () => {
             company: rfq.company,
             gstin: rfq.gstin,
             place: rfq.place,
+                 billingAddress: rfq.billingAddress,
+            shippingAddress: rfq.shippingAddress,
         });
 
         setItems(rfq.items);
@@ -158,34 +174,85 @@ const Page = () => {
             <div className="row invoice-edit">
                 <div className="col-lg-9 col-12 mb-lg-0 mb-6">
                     <div className="card invoice-preview-card p-sm-12 p-6">
-                        {/* Header */}
-                        <div className="card-body invoice-preview-header rounded-4 text-heading p-6 px-3">
-                            <div className="row mx-0 px-3 row-gap-6">
-                                <div className="col-md-8 ps-0">
-                                    <h4 className="mb-3">Quotation</h4>
 
-                                    <p className="mb-1">
-                                        <strong>Quotation No:</strong> {header.quotationNo}
-                                    </p>
-                                    <p className="mb-1">
-                                        <strong>To:</strong> {header.customerName}
-                                    </p>
-                                    <p className="mb-1">{header.company}</p>
-                                    <p className="mb-1">
-                                        <strong>GSTIN:</strong> {header.gstin}
-                                    </p>
-                                    <p className="mb-0">
-                                        <strong>Place of Supply:</strong> {header.place}
-                                    </p>
-                                </div>
+{/* ================= SELLER HEADER (GREY ROW) ================= */}
+<div
+  className="card-body rounded-4 mb-4"
+  style={{ backgroundColor: "#f4f5f7" }}
+>
+  <div className="row align-items-start">
+    {/* LEFT: LOGO ABOVE COMPANY NAME */}
+    <div className="col-md-8">
+      <img
+        src="/materialize/assets/img/favicon/favicon.png"
+        alt="Indihands Logo"
+        style={{ height: "52px", marginBottom: "10px" }}
+      />
 
-                                <div className="col-md-4 col-8 pe-0 ps-0 ps-md-2 text-end">
-                                    <p className="mb-1">
-                                        <strong>Date:</strong> {header.date}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+      <h5 className="mb-1">Indihands – The Art Craft Nook</h5>
+
+      <p className="mb-0">Pune, Maharashtra, India</p>
+      <p className="mb-0">+91 98765 43210</p>
+      <p className="mb-0">support@indihands.com</p>
+    </div>
+
+    {/* RIGHT: INVOICE META */}
+    <div className="col-md-4 text-end">
+      <h6 className="mb-2">
+         #{header.quotationNo}
+      </h6>
+    
+      
+    </div>
+  </div>
+</div>
+
+                     {/* Header */}
+<div className="card-body invoice-preview-header rounded-4 text-heading p-6 px-3">
+  <div className="row mx-0 px-3">
+
+    {/* LEFT SECTION */}
+    <div className="col-md-8 ps-0">
+      <h4 className="mb-3">Quotation</h4>
+
+      <p className="mb-1">
+        <strong>Quotation No:</strong> {header.quotationNo}
+      </p>
+      <p className="mb-1">
+        <strong>To:</strong> {header.customerName}
+      </p>
+      <p className="mb-1">{header.company}</p>
+      <p className="mb-1">
+        <strong>GSTIN:</strong> {header.gstin}
+      </p>
+      <p className="mb-1">
+        <strong>Place of Supply:</strong> {header.place}
+      </p>
+
+      {/* ✅ Billing & Shipping (NOW CORRECT) */}
+      <div className="row">
+        <div className="col-md-12">
+          <strong>Billing Address</strong>
+          <p className="mb-0">{header.billingAddress}</p>
+        </div>
+
+        <div className="col-md-12 mt-2">
+          <strong>Shipping Address</strong>
+          <p className="mb-0">{header.shippingAddress}</p>
+        </div>
+      </div>
+    </div>
+
+    {/* RIGHT SECTION */}
+    <div className="col-md-4 col-12 pe-0 text-end">
+      <p className="mb-1">
+        <strong>Date:</strong> {header.date}
+      </p>
+    </div>
+
+  </div>
+</div>
+
 
                         {/* Items Table */}
                         <div className="card-body px-0">

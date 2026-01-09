@@ -20,7 +20,7 @@ const Sidebar = () => {
   return (
     <aside id="layout-menu" className="layout-menu menu-vertical menu bg-menu-theme">
    <div className="app-brand demo">
-  <a href="index.html" className="app-brand-link d-flex align-items-center justify-content-center text-center">
+  <a href="/admin/dashboard" className="app-brand-link d-flex align-items-center justify-content-center text-center">
     {/* PNG Logo */}
    <div className='d-flex justify-content-center'>
      <img

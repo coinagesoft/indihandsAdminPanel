@@ -81,9 +81,9 @@ const Page = () => {
 
   // --- Assign to Catalog ---
   const [catalogs, setCatalogs] = useState([
-    { id: 1, name: "Electronics Catalog" },
-    { id: 2, name: "Festive Catalog" },
-    { id: 3, name: "Eco-friendly Catalog" },
+    { id: 1, name: "indihands_Stationary" },
+    { id: 2, name: "indihands-art-n-craft_Price range up to 1000 INR" },
+    { id: 3, name: "indihands-art-n-craft_Price range 1000 to 2000 INR" },
   ]);
   const [newCatalogName, setNewCatalogName] = useState("");
 
