@@ -96,34 +96,65 @@ const Page = () => {
 
   return (
     <div className="container-xxl flex-grow-1 container-p-y">
-      {/* Catalog Section */}
-      <div className="card mb-4">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h5 className="card-title mb-0">Catalogs</h5>
-          <div className="d-flex gap-2">
-            <input
-              className="form-control form-control-sm"
-              placeholder="New catalog name"
-              value={newCatalogName}
-              onChange={(e) => setNewCatalogName(e.target.value)}
+{/* Catalog Section */}
+<div className="card mb-4">
+  <div className="card-header">
+    <h5 className="card-title mb-0">Indihands Catalog</h5>
+  </div>
+
+  <div className="card-body">
+    {/* New Catalog Form */}
+    <div className="d-flex gap-2 mb-4 flex-wrap">
+      <input
+        className="form-control form-control-sm"
+        placeholder="New catalog name"
+        value={newCatalogName}
+        onChange={(e) => setNewCatalogName(e.target.value)}
+        style={{ maxWidth: "200px" }}
+      />
+      <input
+        className="form-control form-control-sm"
+        placeholder="Featured image file name"
+        value={selectedCatalog?.featuredImage || ""}
+        onChange={(e) => {
+          if (!selectedCatalog) return;
+          setSelectedCatalog({ ...selectedCatalog, featuredImage: e.target.value });
+          setCatalogs(catalogs.map(c => c.id === selectedCatalog.id ? { ...c, featuredImage: e.target.value } : c));
+        }}
+        style={{ maxWidth: "300px" }}
+      />
+      <button className="btn btn-primary btn-sm" onClick={addCatalog}>Add Catalog</button>
+    </div>
+
+    {/* Catalog Cards */}
+    <div className="d-flex flex-wrap gap-3">
+      {catalogs.map((c) => (
+        <div
+          key={c.id}
+          className="card shadow-sm"
+          style={{ width: "250px", cursor: "pointer", position: "relative" }}
+          onClick={() => setSelectedCatalog(c)}
+        >
+          {c.featuredImage && (
+            <img
+              src={process.env.PUBLIC_URL + "/catalog-images/" + c.featuredImage}
+              alt={c.name}
+              className="card-img-top"
+              style={{ height: "150px", objectFit: "cover", borderTopLeftRadius: "4px", borderTopRightRadius: "4px" }}
             />
-            <button className="btn btn-primary btn-sm" onClick={addCatalog}>Add Catalog</button>
+          )}
+          <div className="card-body p-2">
+            <h6 className="card-title text-truncate">{c.name}</h6>
+            <p className="mb-1 text-muted" style={{ fontSize: "12px" }}>ART & CRAFT BY IndiHANDS</p>
           </div>
         </div>
-        <div className="card-body">
-          <div className="d-flex flex-wrap gap-2">
-            {catalogs.map((c) => (
-              <button
-                key={c.id}
-                className={`btn btn-sm ${selectedCatalog.id === c.id ? "btn-primary" : "btn-outline-primary"}`}
-                onClick={() => setSelectedCatalog(c)}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+
+
 
       {/* Product Section */}
       <div className="card mb-4">
@@ -202,7 +233,7 @@ const Page = () => {
                     </td>
                     <td>
                       <div className="d-flex gap-2">
-                        <button className="btn btn-sm btn-primary" onClick={() => openEditModal(p)}>Edit</button>
+                        {/* <button className="btn btn-sm btn-primary" onClick={() => openEditModal(p)}>Edit</button> */}
                         <button className="btn btn-sm btn-danger" onClick={() => openDeleteModal(p)}>Delete</button>
                       </div>
                     </td>
