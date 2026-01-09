@@ -1,0 +1,68 @@
+/* ================= INVOICE TABLE FIX ================= */
+
+.invoice-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Description column - widest */
+.invoice-table th:nth-child(2),
+.invoice-table td:nth-child(2) {
+  width: 280px;
+}
+
+/* HSN */
+.invoice-table th:nth-child(3),
+.invoice-table td:nth-child(3) {
+  width: 120px;
+}
+
+/* Qty */
+.invoice-table th:nth-child(4),
+.invoice-table td:nth-child(4) {
+  width: 90px;
+}
+
+/* Rate */
+.invoice-table th:nth-child(5),
+.invoice-table td:nth-child(5) {
+  width: 120px;
+}
+
+/* Discount */
+.invoice-table th:nth-child(6),
+.invoice-table td:nth-child(6) {
+  width: 100px;
+}
+
+/* Amount */
+.invoice-table th:nth-child(7),
+.invoice-table td:nth-child(7) {
+  width: 130px;
+}
+
+/* Tax */
+.invoice-table th:nth-child(8),
+.invoice-table td:nth-child(8) {
+  width: 130px;
+}
+
+/* Total */
+.invoice-table th:nth-child(9),
+.invoice-table td:nth-child(9) {
+  width: 140px;
+}
+
+/* Delete */
+.invoice-table th:nth-child(10),
+.invoice-table td:nth-child(10) {
+  width: 60px;
+}
+
+/* INPUT FIX */
+.invoice-table input {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  white-space: nowrap;
+}

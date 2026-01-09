@@ -155,12 +155,31 @@ const Sidebar = () => {
           </Link>
         </li>
 
-        {/* Proposals */}
-        <li className={`menu-item ${pathname === "/admin/proposals" ? "active" : ""}`}>
-          <Link href="/admin/proposals" className="menu-link">
-            <i className="menu-icon tf-icons ri-file-text-line"></i>
-            <div>Proposals</div>
-          </Link>
+        <li className={`menu-item ${openMenu === "invoice" ? "open" : ""}`}>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              toggleMenu("invoice");
+            }}
+            className="menu-link menu-toggle"
+          >
+            <i className="menu-icon tf-icons ri-shopping-bag-3-line"></i>
+            <div>Invoice</div>
+          </a>
+          <ul className="menu-sub">
+            <li className={`menu-item ${pathname === "/admin/invoice/preview" ? "active" : ""}`}>
+              <Link href="/admin/invoice/preview" className="menu-link">
+                <div>Invoice Preview</div>
+              </Link>
+            </li>
+            <li className={`menu-item ${pathname === "/admin/invoice/edit" ? "active" : ""}`}>
+              <Link href="/admin/invoice/edit" className="menu-link">
+                <div>Edit Invoice</div>
+              </Link>
+            </li>
+
+          </ul>
         </li>
 
         {/* Settings */}
