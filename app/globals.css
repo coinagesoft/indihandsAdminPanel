@@ -75,7 +75,116 @@ body {
 }
 
 
+.menu-item.active > .menu-link {
+  background-color: #F39F46 !important;
+  color: #fff !important;
+}
 
+/* Active icon */
+.menu-item.active > .menu-link .menu-icon {
+  color: #fff !important;
+}
 
+/* Open parent menu */
+.menu-item.open > .menu-link {
+  background-color: #F39F46 !important;
+  color: #fff !important;
+}
 
+/* Hover state */
+.menu-item > .menu-link:hover {
+  background-color: rgba(240, 124, 0, 0.15);
+  color: #F39F46;
+}
 
+/* Submenu active */
+.menu-sub .menu-item.active > .menu-link {
+  background-color: #F39F46 !important;
+  color: #fff !important;
+}
+
+.pagination-custom .btn-primary,
+.pagination-custom .btn-primary:hover,
+.pagination-custom .btn-primary:focus {
+  background-color: #F39F46 !important;
+  border-color: #F39F46 !important;
+  color: #fff !important;
+}
+
+/* Inactive page buttons */
+.pagination-custom .btn-outline-primary {
+  color: #F39F46 !important;
+  border-color: #F39F46 !important;
+}
+
+/* Hover state for inactive buttons */
+.pagination-custom .btn-outline-primary:hover {
+  background-color: #F39F46 !important;
+  color: #fff !important;
+}
+
+/* ===== Custom Publish Button Color ===== */
+
+/* Publish Product button */
+.btn-publish,
+.btn-publish:hover,
+.btn-publish:focus {
+  background-color: #F39F46 !important;
+  border-color: #F39F46 !important;
+  color: #fff !important;
+}
+
+/* Optional hover effect */
+.btn-publish:hover {
+  opacity: 0.9;
+}
+
+/* ===== BRAND COLORS ===== */
+:root {
+  --brand-orange: #F39F46;
+  --brand-hover: #1AA5A3;
+}
+
+/* ================= PRIMARY BUTTON ================= */
+.btn-primary {
+  background-color: var(--brand-orange) !important;
+  border-color: var(--brand-orange) !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--brand-hover) !important;
+  border-color: var(--brand-hover) !important;
+  color: #fff !important;
+}
+
+/* ================= OUTLINE PRIMARY ================= */
+.btn-outline-primary {
+  color: var(--brand-orange) !important;
+  border-color: var(--brand-orange) !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  background-color: var(--brand-hover) !important;
+  border-color: var(--brand-hover) !important;
+  color: #fff !important;
+}
+
+/* ================= SUCCESS BUTTON ================= */
+.btn-success {
+  background-color: var(--brand-orange) !important;
+  border-color: var(--brand-orange) !important;
+  color: #fff !important;
+}
+
+.btn-success:hover,
+.btn-success:focus {
+  background-color: var(--brand-hover) !important;
+  border-color: var(--brand-hover) !important;
+  color: #fff !important;
+}
+
+/* ================= REMOVE BUTTON (KEEP RED) ================= */
+/* Uses default Bootstrap red styling */

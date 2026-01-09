@@ -240,7 +240,7 @@ const Page = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap">
+          <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap pagination-custom">
             <button className="btn btn-outline-secondary btn-sm" onClick={() => changePage(currentPage - 1)}>Prev</button>
             {Array.from({ length: totalPages }, (_, i) => (
               <button
