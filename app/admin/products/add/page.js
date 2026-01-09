@@ -206,17 +206,7 @@ const Page = () => {
               </div>
             </div>
 
-            {/* Inventory */}
-            <div className="card mb-6">
-              <div className="card-header"><h5 className="mb-0">Inventory</h5></div>
-              <div className="card-body">
-                <div className="form-floating form-floating-outline">
-                  <input type="number" min="0" className="form-control" name="stockQty" placeholder="Stock Quantity" required />
-                  <label>Stock Quantity</label>
-                </div>
-                <small className="text-muted d-block mt-2">Stock status will be managed automatically.</small>
-              </div>
-            </div>
+          
           </div>
 
           {/* RIGHT */}
@@ -264,6 +254,19 @@ const Page = () => {
                   </select>
                   <label>Status</label>
                 </div>
+                
+              </div>
+              
+            </div>
+              {/* Inventory */}
+            <div className="card mb-6">
+              <div className="card-header"><h5 className="mb-0">Inventory</h5></div>
+              <div className="card-body">
+                <div className="form-floating form-floating-outline">
+                  <input type="number" min="0" className="form-control" name="stockQty" placeholder="Stock Quantity" required />
+                  <label>Stock Quantity</label>
+                </div>
+                <small className="text-muted d-block mt-2">Stock status will be managed automatically.</small>
               </div>
             </div>
           </div>

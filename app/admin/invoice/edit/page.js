@@ -153,7 +153,7 @@ const Page = () => {
         <div className="col-lg-9">
           <div className="card shadow-sm">
             <div className="card-body">
-              <h4 className="mb-4">Quotation / Invoice (Admin Edit)</h4>
+              <h4 className="mb-4">Proposal Editor</h4>
 
               {/* RFQ */}
               <div className="mb-4">
@@ -354,11 +354,9 @@ const Page = () => {
         <div className="col-lg-3">
           <div className="card shadow-sm p-3">
             <button className="btn btn-success mb-3">
-              Save Quotation
+              Save Proposal
             </button>
-            <button className="btn btn-primary mb-3">
-              Convert to Invoice
-            </button>
+         
             <button className="btn btn-outline-secondary">
               Download PDF
             </button>

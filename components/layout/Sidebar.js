@@ -20,15 +20,23 @@ const Sidebar = () => {
   return (
     <aside id="layout-menu" className="layout-menu menu-vertical menu bg-menu-theme">
    <div className="app-brand demo">
-  <a href="index.html" className="app-brand-link d-flex align-items-center">
+  <a href="index.html" className="app-brand-link d-flex align-items-center justify-content-center text-center">
     {/* PNG Logo */}
-    <img
-      src="/materialize/assets/img/favicon/favicon.png"  // <-- put your PNG file path here
+   <div className='d-flex justify-content-center'>
+     <img
+      src="/materialize/assets/img/favicon/faviconSidebar.png"  // <-- put your PNG file path here
       alt="Logo"
-      style={{ height: 30, width: "auto" }} // adjust height/width as needed
-      className="me-2"
+      style={{ height: 50, width: "auto" }} // adjust height/width as needed
+      className=""
     />
-
+     <img
+      src="/materialize/assets/img/favicon/name.png"  // <-- put your PNG file path here
+      alt="Logo"
+      style={{ height: 40, width: "auto" }} // adjust height/width as needed
+      className="me-2 mt-1"
+    />
+   </div>
+ 
     {/* App Name */}
   </a>
 
@@ -139,17 +147,17 @@ const Sidebar = () => {
             className="menu-link menu-toggle"
           >
             <i className="menu-icon tf-icons ri-shopping-bag-3-line"></i>
-            <div>Invoice</div>
+            <div>Proposal</div>
           </a>
           <ul className="menu-sub">
             <li className={`menu-item ${pathname === "/admin/invoice/preview" ? "active" : ""}`}>
               <Link href="/admin/invoice/preview" className="menu-link">
-                <div>Invoice Preview</div>
+                <div>Proposal Preview</div>
               </Link>
             </li>
             <li className={`menu-item ${pathname === "/admin/invoice/edit" ? "active" : ""}`}>
               <Link href="/admin/invoice/edit" className="menu-link">
-                <div>Edit Invoice</div>
+                <div>Proposal Invoice</div>
               </Link>
             </li>
 

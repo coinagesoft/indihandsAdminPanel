@@ -314,7 +314,7 @@ const Page = () => {
                     <div className="card">
                         <div className="card-body">
                             <button className="btn btn-primary w-100 mb-4">
-                                Send Quotation
+                                Send Proposal
                             </button>
                             <button className="btn btn-outline-secondary w-100 mb-2">
                                 Download PDF
