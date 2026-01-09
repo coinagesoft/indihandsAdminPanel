@@ -1,86 +1,128 @@
 "use client";
+
 import React, { useState, useRef } from "react";
+
+/* ===================== SAFE EMPTY MODELS ===================== */
+const EMPTY_BRANCH = {
+  id: null,
+  branchName: "",
+  gstin: "",
+  shippingAddress: "",
+  billingAddress: "",
+  contactPerson: "",
+  phones: [],
+  emails: [],
+  loginEmail: "",
+  password: "",
+};
+
+const EMPTY_COMPANY = {
+  id: null,
+  companyName: "",
+  companyEmail: "",
+  branches: [],
+};
 
 const Page = () => {
   /* ===================== DUMMY DATA ===================== */
-  // Inside your dummy data, add billingAddress to branches:
-  const dummyCompanies = [
-    {
-      id: 1,
-      companyName: "TCS",
-      companyEmail: "accounts@tcs.com",
-      branches: [
-        {
-          id: 101,
-          branchName: "TCS Pune",
-          gstin: "27ABCDE1234F1Z5",
-          shippingAddress: "Hinjewadi Phase 2, Pune",
-          billingAddress: "Hinjewadi Phase 2, Pune",
-          contactPerson: "Ravi Kumar",
-          phones: ["+91 9876543210"],
-          emails: ["ravi.pune@tcs.com"],
-          loginEmail: "pune@tcs.com",
-          password: "",
-        },
-        {
-          id: 102,
-          branchName: "TCS Mumbai",
-          gstin: "27ABCDE9999F1Z9",
-          shippingAddress: "Andheri East, Mumbai",
-          billingAddress: "Andheri East, Mumbai",
-          contactPerson: "Sneha Patil",
-          phones: ["+91 9123456789"],
-          emails: ["sneha.mum@tcs.com"],
-          loginEmail: "mumbai@tcs.com",
-          password: "",
-        },
-      ],
-    },
-    // ... other companies
-  ];
+const dummyCompanies = [
+  {
+    id: 1,
+    companyName: "TCS",
+    companyEmail: "accounts@tcs.com",
+    branches: [
+      {
+        id: 101,
+        branchName: "TCS Pune",
+        gstin: "27ABCDE1234F1Z5",
+        shippingAddress: "Hinjewadi Phase 2, Pune",
+        billingAddress: "Hinjewadi Phase 2, Pune",
+        contactPerson: "Ravi Kumar",
+        phones: ["+91 9876543210"],
+        emails: ["ravi.pune@tcs.com"],
+        loginEmail: "pune@tcs.com",
+        password: "",
+      },
+      {
+        id: 102,
+        branchName: "TCS Mumbai",
+        gstin: "27ABCDE9999F1Z9",
+        shippingAddress: "Andheri East, Mumbai",
+        billingAddress: "Andheri East, Mumbai",
+        contactPerson: "Sneha Patil",
+        phones: ["+91 9123456789"],
+        emails: ["sneha.mum@tcs.com"],
+        loginEmail: "mumbai@tcs.com",
+        password: "",
+      },
+    ],
+  },
+
+  {
+    id: 2,
+    companyName: "Infosys",
+    companyEmail: "finance@infosys.com",
+    branches: [
+      {
+        id: 201,
+        branchName: "Infosys Bengaluru",
+        gstin: "29INFOSYS1234F1Z1",
+        shippingAddress: "Electronic City Phase 1, Bengaluru",
+        billingAddress: "Electronic City Phase 1, Bengaluru",
+        contactPerson: "Anil Sharma",
+        phones: ["+91 9988776655"],
+        emails: ["anil.sharma@infosys.com"],
+        loginEmail: "blr@infosys.com",
+        password: "",
+      },
+      {
+        id: 202,
+        branchName: "Infosys Pune",
+        gstin: "27INFOSYS5678F1Z3",
+        shippingAddress: "Hinjewadi Phase 3, Pune",
+        billingAddress: "Hinjewadi Phase 3, Pune",
+        contactPerson: "Pooja Kulkarni",
+        phones: ["+91 9090909090"],
+        emails: ["pooja.kulkarni@infosys.com"],
+        loginEmail: "pune@infosys.com",
+        password: "",
+      },
+    ],
+  },
+];
 
 
   /* ===================== STATE ===================== */
   const [companies, setCompanies] = useState(dummyCompanies);
-  const [selectedCompany, setSelectedCompany] = useState(companies[0]);
+  const [selectedCompany, setSelectedCompany] = useState(dummyCompanies[0]);
   const [filter, setFilter] = useState("");
 
-  const [newCompany, setNewCompany] = useState(null);
-  const [newBranch, setNewBranch] = useState(null);
-  const [editingBranch, setEditingBranch] = useState(null);
+  const [newCompany, setNewCompany] = useState(EMPTY_COMPANY);
+  const [newBranch, setNewBranch] = useState(EMPTY_BRANCH);
+  const [editingBranch, setEditingBranch] = useState(EMPTY_BRANCH);
 
   const companyModalRef = useRef(null);
   const branchCreateModalRef = useRef(null);
   const branchEditModalRef = useRef(null);
 
-  /* ===================== MODAL HELPERS ===================== */
+  /* ===================== MODALS ===================== */
   const openCompanyModal = () => {
-    setNewCompany({
-      id: Date.now(),
-      companyName: "",
-      companyEmail: "",
-      branches: [],
-    });
+    setNewCompany({ ...EMPTY_COMPANY, id: Date.now() });
     new bootstrap.Modal(companyModalRef.current).show();
   };
 
   const openAddBranchModal = () => {
-    setNewBranch({
-      id: Date.now(),
-      branchName: "",
-      gstin: "",
-      shippingAddress: "",
-      contactPerson: "",
-      phones: [""],
-      emails: [""],
-      loginEmail: "",
-      password: "",
-    });
+    setNewBranch({ ...EMPTY_BRANCH, id: Date.now(), phones: [""], emails: [""] });
     new bootstrap.Modal(branchCreateModalRef.current).show();
   };
 
   const openEditBranchModal = (branch) => {
-    setEditingBranch(branch);
+    setEditingBranch({
+      ...EMPTY_BRANCH,
+      ...branch,
+      phones: branch.phones || [],
+      emails: branch.emails || [],
+    });
     new bootstrap.Modal(branchEditModalRef.current).show();
   };
 
@@ -109,11 +151,11 @@ const Page = () => {
       prev.map((c) =>
         c.id === selectedCompany.id
           ? {
-            ...c,
-            branches: c.branches.map((b) =>
-              b.id === editingBranch.id ? editingBranch : b
-            ),
-          }
+              ...c,
+              branches: c.branches.map((b) =>
+                b.id === editingBranch.id ? editingBranch : b
+              ),
+            }
           : c
       )
     );
@@ -129,20 +171,17 @@ const Page = () => {
     <div className="container-xxl py-4">
       <h4 className="mb-4 text-primary">Company & Branch Management</h4>
 
-      <button
-        className="btn btn-orange rounded-pill mb-3"
-        onClick={openCompanyModal}
-      >
+      <button className="btn btn-orange mb-3" onClick={openCompanyModal}>
         + New Company
       </button>
 
       <div className="row g-4">
-        {/* LEFT PANEL */}
+        {/* LEFT */}
         <div className="col-lg-3">
-          <div className="card h-100">
+          <div className="card">
             <div className="p-2">
               <input
-                className="form-control rounded-pill"
+                className="form-control"
                 placeholder="Search company..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
@@ -152,10 +191,11 @@ const Page = () => {
               {filteredCompanies.map((c) => (
                 <li
                   key={c.id}
-                  className={`list-group-item ${selectedCompany.id === c.id ? "bg-primary text-white" : ""
-                    }`}
-                  style={{ cursor: "pointer" }}
+                  className={`list-group-item ${
+                    selectedCompany?.id === c.id ? "bg-primary text-white" : ""
+                  }`}
                   onClick={() => setSelectedCompany(c)}
+                  style={{ cursor: "pointer" }}
                 >
                   {c.companyName}
                 </li>
@@ -164,62 +204,39 @@ const Page = () => {
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
+        {/* RIGHT */}
         <div className="col-lg-9">
           <div className="card p-4">
-            <h5 className="text-orange">{selectedCompany.companyName}</h5>
+            <h5 className="text-orange">{selectedCompany?.companyName}</h5>
 
-            <div className="d-flex justify-content-between align-items-center my-3">
+            <div className="d-flex justify-content-between my-3">
               <h6>Branches</h6>
-              <button
-                className="btn btn-outline-orange btn-sm"
-                onClick={openAddBranchModal}
-              >
+              <button className="btn btn-outline-orange btn-sm" onClick={openAddBranchModal}>
                 + Add Branch
               </button>
             </div>
 
-            {selectedCompany.branches.map((b) => (
+            {(selectedCompany?.branches || []).map((b) => (
               <div key={b.id} className="border rounded p-3 mb-3">
                 <h6 className="text-orange">{b.branchName}</h6>
-                <div className="row small g-2">
-                  <div className="col-md-6">
-                    <b>GSTIN:</b> {b.gstin}
-                  </div>
-                  <div className="col-md-6">
-                    <b>Contact Person:</b> {b.contactPerson}
-                  </div>
-                  <div className="col-md-6">
-                    <b>Login Email:</b> {b.loginEmail}
-                  </div>
-                  <div className="col-md-6">
-                    <b>Password:</b> {b.password || "(Not set)"}
-                  </div>
+
+                <div className="row small">
+                  <div className="col-md-6"><b>GSTIN:</b> {b.gstin}</div>
+                  <div className="col-md-6"><b>Contact:</b> {b.contactPerson}</div>
+                  <div className="col-md-6"><b>Login:</b> {b.loginEmail}</div>
+
                   <div className="col-md-6">
                     <b>Phones:</b>
-                    <ul>
-                      {(b.phones || []).map((p, i) => (
-                        <li key={i}>{p}</li>
-                      ))}
-                    </ul>
+                    <ul>{(b.phones || []).map((p, i) => <li key={i}>{p}</li>)}</ul>
                   </div>
 
                   <div className="col-md-6">
                     <b>Emails:</b>
-                    <ul>
-                      {(b.emails || []).map((e, i) => (
-                        <li key={i}>{e}</li>
-                      ))}
-                    </ul>
+                    <ul>{(b.emails || []).map((e, i) => <li key={i}>{e}</li>)}</ul>
                   </div>
 
-                  <div className="col-12">
-                    <b>Shipping Address:</b> {b.shippingAddress}
-                  </div>
-                  <div className="col-12">
-                    <b>Billing Address:</b> {b.billingAddress}
-                  </div>
-
+                  <div className="col-12"><b>Shipping:</b> {b.shippingAddress}</div>
+                  <div className="col-12"><b>Billing:</b> {b.billingAddress}</div>
                 </div>
 
                 <button
@@ -243,13 +260,15 @@ const Page = () => {
               <input
                 className="form-control mb-2"
                 placeholder="Company Name"
+                value={newCompany.companyName}
                 onChange={(e) =>
                   setNewCompany({ ...newCompany, companyName: e.target.value })
                 }
               />
               <input
                 className="form-control mb-2"
-                placeholder="Account Email"
+                placeholder="Company Email"
+                value={newCompany.companyEmail}
                 onChange={(e) =>
                   setNewCompany({ ...newCompany, companyEmail: e.target.value })
                 }
