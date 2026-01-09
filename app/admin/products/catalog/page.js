@@ -111,47 +111,35 @@ const Page = () => {
   };
 
   return (
-    <>
-      <div className="container-xxl flex-grow-1 container-p-y">
-        {/* Catalog Section */}
-        <div className="card mb-4">
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <h5 className="card-title mb-0">Catalogs</h5>
-            <button className="btn btn-primary btn-sm" onClick={() => addCatalogModalRef.current && new bootstrap.Modal(addCatalogModalRef.current).show()}>Add Catalog</button>
-          </div>
-          <div className="card-body">
-            <div className="row g-3">
-              {catalogs.map((c) => (
-                <div key={c.id} className="col-md-3 col-sm-6">
-                  <div
-                    className={`card h-100 ${selectedCatalog.id === c.id ? "border-primary" : ""}`}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => setSelectedCatalog(c)}
-                  >
-                    <div className="card-body text-center">
-                      {c.image ? (
-                        <img
-                          src={c.image}
-                          alt={c.name}
-                          className="img-fluid mb-2"
-                          style={{ height: "100px", objectFit: "cover", borderRadius: "4px" }}
-                        />
-                      ) : (
-                        <div
-                          className="bg-light d-flex align-items-center justify-content-center mb-2"
-                          style={{ height: "100px", borderRadius: "4px" }}
-                        >
-                          <span className="text-muted">No Image</span>
-                        </div>
-                      )}
-                      <h6 className="card-title mb-0">{c.name}</h6>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+    <div className="container-xxl flex-grow-1 container-p-y">
+      {/* Catalog Section */}
+      <div className="card mb-4">
+        <div className="card-header d-flex justify-content-between align-items-center">
+          <h5 className="card-title mb-0">Catalogs</h5>
+          <div className="d-flex gap-2">
+            <input
+              className="form-control form-control-sm"
+              placeholder="New catalog name"
+              value={newCatalogName}
+              onChange={(e) => setNewCatalogName(e.target.value)}
+            />
+            <button className="btn btn-primary btn-sm" onClick={addCatalog}>Add Catalog</button>
           </div>
         </div>
+        <div className="card-body">
+          <div className="d-flex flex-wrap gap-2">
+            {catalogs.map((c) => (
+              <button
+                key={c.id}
+                className={`btn btn-sm ${selectedCatalog.id === c.id ? "btn-primary" : "btn-outline-primary"}`}
+                onClick={() => setSelectedCatalog(c)}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
         {/* Product Section */}
         <div className="card mb-4">
@@ -194,83 +182,44 @@ const Page = () => {
             </div>
           </div>
 
-          {/* Product Cards */}
-          <div className="card-body">
-            {paginatedProducts.length === 0 ? (
-              <div className="text-center py-4">No products found</div>
-            ) : (
-              <div className="row g-4">
-                {paginatedProducts.map((p) => (
-                  <div key={p.id} className="col-12 col-xxl-4 col-md-6">
-                    <div className="card h-100">
-                      <div className="card-body">
-                        <div className="bg-label-primary text-center mb-3 pt-2 rounded-3">
-                          <span className="avatar-initial rounded-3 bg-label-primary">
-                            <i className="ri-shopping-bag-line ri-24px"></i>
-                          </span>
-                        </div>
-                        <h5 className="mb-1">{p.name}</h5>
-                        <p className="mb-3 text-muted">{p.category} - {p.subCategory}</p>
-                        <div className="row mb-3 g-2">
-                          <div className="col-6">
-                            <div className="d-flex align-items-center">
-                              <div className="avatar flex-shrink-0 me-2">
-                                <span className="avatar-initial rounded-3 bg-label-info">
-                                  <i className="ri-hashtag ri-20px"></i>
-                                </span>
-                              </div>
-                              <div>
-                                <h6 className="mb-0 text-nowrap fw-normal">{p.sku}</h6>
-                                <small>SKU</small>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-6">
-                            <div className="d-flex align-items-center">
-                              <div className="avatar flex-shrink-0 me-2">
-                                <span className="avatar-initial rounded-3 bg-label-warning">
-                                  <i className="ri-money-dollar-circle-line ri-20px"></i>
-                                </span>
-                              </div>
-                              <div>
-                                <h6 className="mb-0 text-nowrap fw-normal">Rs.{p.price}</h6>
-                                <small>Price</small>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="row mb-3 g-2">
-                          <div className="col-6">
-                            <div className="d-flex align-items-center">
-                              <div className="avatar flex-shrink-0 me-2">
-                                <span className="avatar-initial rounded-3 bg-label-success">
-                                  <i className="ri-archive-line ri-20px"></i>
-                                </span>
-                              </div>
-                              <div>
-                                <h6 className="mb-0 text-nowrap fw-normal">{p.stock}</h6>
-                                <small>Stock</small>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-6">
-                            <div className="d-flex align-items-center">
-                              <div className="avatar flex-shrink-0 me-2">
-                                <span className={`avatar-initial rounded-3 ${p.status === "Available" ? "bg-label-success" : "bg-label-danger"}`}>
-                                  <i className={`ri-${p.status === "Available" ? "check" : "close"}-line ri-20px`}></i>
-                                </span>
-                              </div>
-                              <div>
-                                <h6 className="mb-0 text-nowrap fw-normal">{p.status}</h6>
-                                <small>Status</small>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="d-flex gap-2">
-                          <button className="btn btn-outline-primary flex-fill" onClick={() => openEditModal(p)}><i class="bi bi-pencil-square text-primary"></i></button>
-                          <button className="btn btn-outline-danger flex-fill" onClick={() => openDeleteModal(p)}><i class="bi bi-trash text-danger"></i></button>
-                        </div>
+        {/* Product Table */}
+        <div className="card-datatable table-responsive">
+          <table className="table table-striped table-hover mb-0 text-nowrap">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Subcategory</th>
+                <th>Stock</th>
+                <th>SKU</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedProducts.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="text-center py-4">No products found</td>
+                </tr>
+              ) : (
+                paginatedProducts.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.id}</td>
+                    <td>{p.name}</td>
+                    <td>{p.category}</td>
+                    <td>{p.subCategory}</td>
+                    <td>{p.stock}</td>
+                    <td>{p.sku}</td>
+                    <td>Rs.{p.price}</td>
+                    <td>
+                      <span className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"}`}>{p.status}</span>
+                    </td>
+                    <td>
+                      <div className="d-flex gap-2">
+                        <button className="btn btn-sm btn-primary" onClick={() => openEditModal(p)}>Edit</button>
+                        <button className="btn btn-sm btn-danger" onClick={() => openDeleteModal(p)}>Delete</button>
                       </div>
                     </div>
                   </div>
