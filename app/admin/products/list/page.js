@@ -182,8 +182,8 @@ const Page = () => {
                     </td>
                     <td className="text-center">
                       <div className="d-flex gap-2 justify-content-center">
-                        <button className="btn btn-sm btn-primary" onClick={() => openEditModal(p)}>Edit</button>
-                        <button className="btn btn-sm btn-danger" onClick={() => openDeleteModal(p)}>Delete</button>
+                        <button className="btn btn-sm btn-outline-primary" onClick={() => openEditModal(p)}><i class="bi bi-pencil-square text-primary"></i></button>
+                        <button className="btn btn-sm btn-outline-danger" onClick={() => openDeleteModal(p)}><i class="bi bi-trash text-danger"></i></button>
                       </div>
                     </td>
                   </tr>
@@ -195,7 +195,7 @@ const Page = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="d-flex justify-content-end align-items-center mt-3 gap-2 flex-wrap">
+          <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap">
             <button className="btn btn-outline-secondary btn-sm" onClick={() => changePage(currentPage - 1)}>Prev</button>
             {Array.from({ length: totalPages }, (_, i) => (
               <button
