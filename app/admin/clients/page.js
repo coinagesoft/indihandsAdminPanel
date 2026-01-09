@@ -167,6 +167,7 @@ const Page = () => {
                 <strong>Branches:</strong>
                 <ul className="ms-3 mb-0">{selectedClient.branches.map((b, i) => (<li key={i} className="text-muted">{b.location}, {b.city}, {b.state} ({b.contact})</li>))}</ul>
               </div>
+              
             </div>
 
             <div className="d-flex justify-content-end">
@@ -178,8 +179,6 @@ const Page = () => {
         </div>
       </div>
 
-      {/* --- Edit Modal --- */}
-      {/* You can reuse your existing edit modal here */}
 
       {/* --- Create Modal --- */}
       <div className="modal fade" ref={createModalRef} tabIndex="-1" aria-hidden="true">
@@ -276,7 +275,43 @@ const Page = () => {
                       setNewClient((prev) => ({ ...prev, branches: [...prev.branches, { location: "", city: "", state: "", contact: "" }] }))
                     }>Add Branch</button>
                   </div>
-
+   {/* Credentials Section */}
+            <div className="col-12 mt-3 border-top pt-3">
+              <h6 className="text-success mb-2">Login Credentials</h6>
+              <div className="col-md-6 mb-2">
+                <input
+                  type="email"
+                  className="form-control rounded-pill"
+                  placeholder="Login Email"
+                  value={selectedClient.loginEmail || ""}
+                  onChange={(e) =>
+                    setSelectedClient((prev) => ({ ...prev, loginEmail: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="col-md-6 mb-2">
+                <input
+                  type="password"
+                  className="form-control rounded-pill"
+                  placeholder="Password"
+                  value={selectedClient.password || ""}
+                  onChange={(e) =>
+                    setSelectedClient((prev) => ({ ...prev, password: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="col-12">
+                <button
+                  type="button"
+                  className="btn btn-outline-warning rounded-pill"
+                  onClick={() =>
+                    setSelectedClient((prev) => ({ ...prev, password: "" }))
+                  }
+                >
+                  Create Password
+                </button>
+              </div>
+            </div>
                   <div className="col-12 d-flex justify-content-center gap-2 mt-3">
                     <button type="submit" className="btn btn-success rounded-pill">Create</button>
                     <button className="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
@@ -287,6 +322,257 @@ const Page = () => {
           </div>
         </div>
       </div>
+{/* --- Edit Modal --- */}
+<div className="modal fade" ref={editModalRef} tabIndex="-1" aria-hidden="true">
+  <div className="modal-dialog modal-lg modal-simple">
+    <div className="modal-content rounded-4 shadow">
+      <button type="button" className="btn-close m-3 position-absolute top-0 end-0" data-bs-dismiss="modal"></button>
+      <div className="modal-body p-4">
+        <h5 className="text-center mb-3 text-primary">Edit Company</h5>
+        {selectedClient && (
+          <form className="row g-3" onSubmit={handleEditSubmit}>
+            {/* Name */}
+            <div className="col-md-6">
+              <input
+                type="text"
+                className="form-control rounded-pill"
+                name="name"
+                value={selectedClient.name}
+                onChange={handleEditChange}
+                placeholder="Company Name"
+              />
+            </div>
+
+            {/* Billing */}
+            <div className="col-md-6">
+              <input
+                type="text"
+                className="form-control rounded-pill"
+                name="billingAddress"
+                value={selectedClient.billingAddress}
+                onChange={handleEditChange}
+                placeholder="Billing Address"
+              />
+            </div>
+
+            {/* GSTIN */}
+            <div className="col-md-6">
+              <input
+                type="text"
+                className="form-control rounded-pill"
+                name="gstin"
+                value={selectedClient.gstin}
+                onChange={handleEditChange}
+                placeholder="GSTIN"
+              />
+            </div>
+
+            {/* Contact Person */}
+            <div className="col-md-6">
+              <input
+                type="text"
+                className="form-control rounded-pill"
+                name="contactPerson"
+                value={selectedClient.contactPerson}
+                onChange={handleEditChange}
+                placeholder="Contact Person"
+              />
+            </div>
+
+            {/* Phone */}
+            <div className="col-md-6">
+              <input
+                type="text"
+                className="form-control rounded-pill"
+                name="phone"
+                value={selectedClient.phone}
+                onChange={handleEditChange}
+                placeholder="Phone"
+              />
+            </div>
+
+            {/* Email */}
+            <div className="col-md-6">
+              <input
+                type="email"
+                className="form-control rounded-pill"
+                name="email"
+                value={selectedClient.email}
+                onChange={handleEditChange}
+                placeholder="Email"
+              />
+            </div>
+
+            {/* Shipping Addresses */}
+            <div className="col-12">
+              <strong>Shipping Addresses</strong>
+              {selectedClient.shippingAddresses.map((addr, idx) => (
+                <div key={idx} className="input-group mb-2">
+                  <input
+                    type="text"
+                    className="form-control rounded-pill"
+                    value={addr}
+                    onChange={(e) => {
+                      const newAddresses = [...selectedClient.shippingAddresses];
+                      newAddresses[idx] = e.target.value;
+                      setSelectedClient((prev) => ({ ...prev, shippingAddresses: newAddresses }));
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger"
+                    onClick={() => {
+                      const newAddresses = selectedClient.shippingAddresses.filter((_, i) => i !== idx);
+                      setSelectedClient((prev) => ({ ...prev, shippingAddresses: newAddresses }));
+                    }}
+                  >
+                    X
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="btn btn-outline-primary rounded-pill mt-2"
+                onClick={() =>
+                  setSelectedClient((prev) => ({
+                    ...prev,
+                    shippingAddresses: [...prev.shippingAddresses, ""],
+                  }))
+                }
+              >
+                Add Address
+              </button>
+            </div>
+
+            {/* Branches */}
+            <div className="col-12">
+              <strong>Branches</strong>
+              {selectedClient.branches.map((b, idx) => (
+                <div key={idx} className="border rounded p-2 mb-2">
+                  <input
+                    type="text"
+                    className="form-control mb-1"
+                    placeholder="Location"
+                    value={b.location}
+                    onChange={(e) => {
+                      const newBranches = [...selectedClient.branches];
+                      newBranches[idx].location = e.target.value;
+                      setSelectedClient((prev) => ({ ...prev, branches: newBranches }));
+                    }}
+                  />
+                  <input
+                    type="text"
+                    className="form-control mb-1"
+                    placeholder="City"
+                    value={b.city}
+                    onChange={(e) => {
+                      const newBranches = [...selectedClient.branches];
+                      newBranches[idx].city = e.target.value;
+                      setSelectedClient((prev) => ({ ...prev, branches: newBranches }));
+                    }}
+                  />
+                  <input
+                    type="text"
+                    className="form-control mb-1"
+                    placeholder="State"
+                    value={b.state}
+                    onChange={(e) => {
+                      const newBranches = [...selectedClient.branches];
+                      newBranches[idx].state = e.target.value;
+                      setSelectedClient((prev) => ({ ...prev, branches: newBranches }));
+                    }}
+                  />
+                  <input
+                    type="text"
+                    className="form-control mb-1"
+                    placeholder="Contact"
+                    value={b.contact}
+                    onChange={(e) => {
+                      const newBranches = [...selectedClient.branches];
+                      newBranches[idx].contact = e.target.value;
+                      setSelectedClient((prev) => ({ ...prev, branches: newBranches }));
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger btn-sm mt-1"
+                    onClick={() => {
+                      const newBranches = selectedClient.branches.filter((_, i) => i !== idx);
+                      setSelectedClient((prev) => ({ ...prev, branches: newBranches }));
+                    }}
+                  >
+                    Remove Branch
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="btn btn-outline-primary rounded-pill mt-2"
+                onClick={() =>
+                  setSelectedClient((prev) => ({
+                    ...prev,
+                    branches: [...prev.branches, { location: "", city: "", state: "", contact: "" }],
+                  }))
+                }
+              >
+                Add Branch
+              </button>
+            </div>
+
+            {/* Credentials Section */}
+            <div className="col-12 mt-3 border-top pt-3">
+              <h6 className="text-success mb-2">Login Credentials</h6>
+              <div className="col-md-6 mb-2">
+                <input
+                  type="email"
+                  className="form-control rounded-pill"
+                  placeholder="Login Email"
+                  value={selectedClient.loginEmail || ""}
+                  onChange={(e) =>
+                    setSelectedClient((prev) => ({ ...prev, loginEmail: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="col-md-6 mb-2">
+                <input
+                  type="password"
+                  className="form-control rounded-pill"
+                  placeholder="Password"
+                  value={selectedClient.password || ""}
+                  onChange={(e) =>
+                    setSelectedClient((prev) => ({ ...prev, password: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="col-12">
+                <button
+                  type="button"
+                  className="btn btn-outline-warning rounded-pill"
+                  onClick={() =>
+                    setSelectedClient((prev) => ({ ...prev, password: "" }))
+                  }
+                >
+                  Reset Password
+                </button>
+              </div>
+            </div>
+
+            <div className="col-12 d-flex justify-content-center gap-2 mt-3">
+              <button type="submit" className="btn btn-primary rounded-pill">
+                Save Changes
+              </button>
+              <button className="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
     </div>
   );
