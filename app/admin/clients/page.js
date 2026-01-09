@@ -145,7 +145,7 @@ const Page = () => {
     <div className="container-xxl py-4">
       <h4 className="mb-4 text-primary">Company & Branch Management</h4>
 
-      <button className="btn btn-primary rounded-pill mb-3" onClick={openCompanyModal}>
+      <button className="btn btn-orange rounded-pill mb-3" onClick={openCompanyModal}>
         + New Company
       </button>
 
@@ -180,21 +180,21 @@ const Page = () => {
         {/* RIGHT PANEL */}
         <div className="col-lg-9">
           <div className="card p-4">
-            <h5 className="text-primary">{selectedCompany.companyName}</h5>
+            <h5 className="text-orange">{selectedCompany.companyName}</h5>
             <p className="text-muted mb-1">
               Billing: {selectedCompany.billingAddress}
             </p>
 
             <div className="d-flex justify-content-between align-items-center my-3">
               <h6>Branches (Buyers)</h6>
-              <button className="btn btn-outline-primary btn-sm" onClick={openAddBranchModal}>
+              <button className="btn btn-outline-orange btn-sm" onClick={openAddBranchModal}>
                 + Add Branch
               </button>
             </div>
 
             {selectedCompany.branches.map((b) => (
               <div key={b.id} className="border rounded p-3 mb-3">
-                <h6 className="text-primary">{b.branchName}</h6>
+                <h6 className="text-orange">{b.branchName}</h6>
                 <div className="row small g-2">
                   <div className="col-md-6">
                     <b>GSTIN:</b> {b.gstin}
@@ -222,7 +222,7 @@ const Page = () => {
                 </div>
 
                 <button
-                  className="btn btn-sm btn-outline-primary mt-2"
+                  className="btn btn-sm btn-outline-orange mt-2"
                   onClick={() => openEditBranchModal(b)}
                 >
                   Edit Branch
@@ -245,7 +245,7 @@ const Page = () => {
                 onChange={(e) => setNewCompany({ ...newCompany, billingAddress: e.target.value })} />
               <input className="form-control mb-2" placeholder="Accounts Email"
                 onChange={(e) => setNewCompany({ ...newCompany, companyEmail: e.target.value })} />
-              <button className="btn btn-success">Create</button>
+              <button className="btn btn-orange">Create</button>
             </form>
           </div>
         </div>
@@ -271,7 +271,7 @@ const Page = () => {
                     </div>
                   )
               )}
-              <button className="btn btn-success mt-2">Add Branch</button>
+              <button className="btn btn-orange mt-2">Add Branch</button>
             </form>
           </div>
         </div>
@@ -301,7 +301,7 @@ const Page = () => {
                       </div>
                     )
                 )}
-              <button className="btn btn-primary mt-2">Save</button>
+              <button className="btn btn-orange mt-2">Save</button>
             </form>
           </div>
         </div>

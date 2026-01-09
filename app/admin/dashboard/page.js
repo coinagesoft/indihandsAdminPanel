@@ -36,8 +36,8 @@ const [view, setView] = useState("weekly");
   };
 
   const yearlyDataByYear = {
-    2023: [120, 140, 180, 160, 190, 210, 220, 240, 200, 260, 280, 300],
-    2024: [150, 180, 210, 230, 260, 280, 300, 330, 310, 360, 390, 420],
+    2025: [120, 140, 180, 160, 190, 210, 220, 240, 200, 260, 280, 300],
+    2026: [150, 180, 210, 230, 260, 280, 300, 330, 310, 360, 390, 420],
   };
 
   /* ---------------- LABELS & VALUES ---------------- */
@@ -183,8 +183,8 @@ const [view, setView] = useState("weekly");
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(Number(e.target.value))}
                     >
-                      <option value={2023}>2023</option>
-                      <option value={2024}>2024</option>
+                      <option value={2025}>2025</option>
+                      <option value={2026}>2026</option>
                     </select>
                   )}
 

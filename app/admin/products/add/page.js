@@ -77,7 +77,10 @@ const Page = () => {
   };
 
   return (
-    <form className="container-xxl flex-grow-1 container-p-y" onSubmit={handleSubmit}>
+    <form
+      className="container-xxl flex-grow-1 container-p-y"
+      onSubmit={handleSubmit}
+    >
       <div className="app-ecommerce">
         {/* Header */}
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6 row-gap-4">
@@ -86,14 +89,20 @@ const Page = () => {
             <p className="mb-0">Create product for RFQ & proposal flow</p>
           </div>
           <div className="d-flex gap-3">
-            <button type="button" className="btn btn-outline-secondary">Discard</button>
-            <button type="submit" className="btn btn-primary">Publish Product</button>
+            <button type="button" className="btn btn-outline-secondary">
+              Discard
+            </button>
+            <button type="submit" className="btn btn-publish">
+              Publish Product
+            </button>
           </div>
         </div>
 
         {/* Excel Import Section */}
         <div className="card mb-6">
-          <div className="card-header"><h5 className="mb-0">Import Products from Excel</h5></div>
+          <div className="card-header">
+            <h5 className="mb-0">Import Products from Excel</h5>
+          </div>
           <div className="card-body">
             <input
               type="file"
@@ -103,7 +112,7 @@ const Page = () => {
             />
             <button
               type="button"
-              className="btn btn-success"
+              className="btn  btn-orange"
               onClick={handleExcelImport}
             >
               Publish Excel Products
@@ -150,23 +159,41 @@ const Page = () => {
           <div className="col-12 col-lg-8">
             {/* Product Information */}
             <div className="card mb-6">
-              <div className="card-header"><h5 className="mb-0">Product Information</h5></div>
+              <div className="card-header">
+                <h5 className="mb-0">Product Information</h5>
+              </div>
               <div className="card-body">
                 <div className="form-floating form-floating-outline mb-5">
-                  <input type="text" className="form-control" name="productName" placeholder="Product Name" required />
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="productName"
+                    placeholder="Product Name"
+                    required
+                  />
                   <label>Product Name</label>
                 </div>
 
                 <div className="row gx-5">
                   <div className="col">
                     <div className="form-floating form-floating-outline">
-                      <input type="text" className="form-control" name="sku" placeholder="SKU" />
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="sku"
+                        placeholder="SKU"
+                      />
                       <label>SKU</label>
                     </div>
                   </div>
                   <div className="col">
                     <div className="form-floating form-floating-outline">
-                      <input type="text" className="form-control" name="barcode" placeholder="Barcode (Optional)" />
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="barcode"
+                        placeholder="Barcode (Optional)"
+                      />
                       <label>Barcode</label>
                     </div>
                   </div>
@@ -174,31 +201,73 @@ const Page = () => {
 
                 <div className="mt-5">
                   <p>Description (Optional)</p>
-                  <textarea className="form-control" rows={4} name="description" placeholder="Product description" />
+                  <textarea
+                    className="form-control"
+                    rows={4}
+                    name="description"
+                    placeholder="Product description"
+                  />
                 </div>
               </div>
             </div>
 
             {/* Product Images */}
             <div className="card mb-6">
-              <div className="card-header"><h5 className="mb-0">Product Images</h5></div>
+              <div className="card-header">
+                <h5 className="mb-0">Product Images</h5>
+              </div>
               <div className="card-body">
                 {/* Featured Image */}
                 <div className="mb-4">
                   <label className="form-label">Featured Image</label>
-                  <input type="file" className="form-control" name="featuredImage" accept="image/*" onChange={handleFeaturedChange} />
-                  {featuredPreview && <img src={featuredPreview} alt="Featured Preview" className="mt-2" style={{ width: "120px", height: "120px", objectFit: "cover", borderRadius: "4px" }} />}
+                  <input
+                    type="file"
+                    className="form-control"
+                    name="featuredImage"
+                    accept="image/*"
+                    onChange={handleFeaturedChange}
+                  />
+                  {featuredPreview && (
+                    <img
+                      src={featuredPreview}
+                      alt="Featured Preview"
+                      className="mt-2"
+                      style={{
+                        width: "120px",
+                        height: "120px",
+                        objectFit: "cover",
+                        borderRadius: "4px",
+                      }}
+                    />
+                  )}
                 </div>
 
                 {/* Gallery Images */}
                 <div className="border rounded p-4 text-center">
                   <p className="mb-1 fw-medium">Additional Images</p>
                   <small className="text-muted">Multiple images allowed</small>
-                  <input type="file" className="form-control mt-3" name="galleryImages" multiple accept="image/*" onChange={handleGalleryChange} />
+                  <input
+                    type="file"
+                    className="form-control mt-3"
+                    name="galleryImages"
+                    multiple
+                    accept="image/*"
+                    onChange={handleGalleryChange}
+                  />
                   {galleryPreviews.length > 0 && (
                     <div className="d-flex flex-wrap mt-3 gap-2 justify-content-center">
                       {galleryPreviews.map((src, idx) => (
-                        <img key={idx} src={src} alt={`Gallery Preview ${idx + 1}`} style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "4px" }} />
+                        <img
+                          key={idx}
+                          src={src}
+                          alt={`Gallery Preview ${idx + 1}`}
+                          style={{
+                            width: "100px",
+                            height: "100px",
+                            objectFit: "cover",
+                            borderRadius: "4px",
+                          }}
+                        />
                       ))}
                     </div>
                   )}
@@ -206,26 +275,40 @@ const Page = () => {
               </div>
             </div>
 
-          
+
+         
           </div>
 
           {/* RIGHT */}
           <div className="col-12 col-lg-4">
             {/* Pricing */}
             <div className="card mb-6">
-              <div className="card-header"><h5 className="mb-0">Base Pricing</h5></div>
+              <div className="card-header">
+                <h5 className="mb-0">Base Pricing</h5>
+              </div>
               <div className="card-body">
                 <div className="form-floating form-floating-outline mb-3">
-                  <input type="number" min="0" className="form-control" name="basePrice" placeholder="Base Price" required />
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control"
+                    name="basePrice"
+                    placeholder="Base Price"
+                    required
+                  />
                   <label>Base Price (Admin)</label>
                 </div>
-                <small className="text-muted">Client pricing will be handled during RFQ.</small>
+                <small className="text-muted">
+                  Client pricing will be handled during RFQ.
+                </small>
               </div>
             </div>
 
             {/* Organize */}
             <div className="card mb-6">
-              <div className="card-header"><h5 className="mb-0">Organize</h5></div>
+              <div className="card-header">
+                <h5 className="mb-0">Organize</h5>
+              </div>
               <div className="card-body">
                 <div className="form-floating form-floating-outline mb-4">
                   <select className="form-select" name="category" required>

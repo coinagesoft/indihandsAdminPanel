@@ -301,7 +301,7 @@ const Page = () => {
 
 
               <button
-                className="btn btn-outline-primary mt-2"
+                className="btn btn-outline-orange mt-2"
                 onClick={addItem}
               >
                 + Add Item
@@ -353,7 +353,7 @@ const Page = () => {
         {/* ACTIONS */}
         <div className="col-lg-3">
           <div className="card shadow-sm p-3">
-            <button className="btn btn-success mb-3">
+            <button className="btn btn-orange mb-3">
               Save Proposal
             </button>
          

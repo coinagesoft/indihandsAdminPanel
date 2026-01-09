@@ -4,7 +4,49 @@ body {
   height: 100%;
   overflow: hidden;
 }
+.btn-primary{
+  background-color: #f39f46 !important;
 
+}
+.text-primary{
+    color: #f39f46 !important;
+
+}
+.mb-4.text-primary{
+  color: #f39f46 !important;
+}
+.bg-primary {
+    background-color: #f39f46 !important;
+}
+li.list-group-item.bg-primary.text-white{
+    background-color: #f39f46 !important;
+}
+.btn-orange:hover {
+    color: #f39f46 !important;
+    background-color:#fff !important;
+    border-color: #f39f46 !important;
+}
+.btn-outline-primary{
+  color: #f39f46 !important;
+  background-color: white;
+}
+.btn-orange{
+  background-color: #f39f46 !important;
+  color: #f3f2f1 !important;
+}
+.text-orange{
+  color: #f39f46;
+}
+.btn-outline-orange:hover {
+    color: #f7f6f4 !important;
+    background-color: #f39f46  !important;
+    border-color: #f39f46 !important;
+}
+.btn-outline-orange {
+    color: #f39f46 !important;
+    border-color: #f39f46 !important;
+    background: transparent !important;
+}
 /* Full height layout */
 .layout-wrapper,
 .layout-container {
@@ -53,7 +95,7 @@ body {
 
 
 .settings-tab.active {
-  color: #0d6efd;
+  color: #f39f46;
   font-weight: 600;
 }
 
@@ -64,7 +106,7 @@ body {
   bottom: -1px;
   width: 100%;
   height: 3px;
-  background-color: #0d6efd;
+  background-color:#f39f46;
 }
 
 /* Mobile */
@@ -75,7 +117,144 @@ body {
 }
 
 
+.menu-item.active > .menu-link {
+  background-color: #F39F46 !important;
+  color: #fff !important;
+}
 
+/* Active icon */
+.menu-item.active > .menu-link .menu-icon {
+  color: #fff !important;
+}
 
+/* Open parent menu */
+.menu-item.open > .menu-link {
+  background-color: #F39F46 !important;
+  color: #fff !important;
+}
 
+/* Hover state */
+.menu-item > .menu-link:hover {
+  background-color: rgba(240, 124, 0, 0.15);
+  color: #F39F46;
+}
 
+/* Submenu active */
+.menu-sub .menu-item.active > .menu-link {
+  background-color: #F39F46 !important;
+  color: #fff !important;
+}
+
+.pagination-custom .btn-primary,
+.pagination-custom .btn-primary:hover,
+.pagination-custom .btn-primary:focus {
+  background-color: #F39F46 !important;
+  border-color: #F39F46 !important;
+  color: #fff !important;
+}
+
+/* Inactive page buttons */
+.pagination-custom .btn-outline-primary {
+  color: #F39F46 !important;
+  border-color: #F39F46 !important;
+}
+
+/* Hover state for inactive buttons */
+.pagination-custom .btn-outline-primary:hover {
+  background-color: #F39F46 !important;
+  color: #fff !important;
+}
+
+/* ===== Custom Publish Button Color ===== */
+
+/* Publish Product button */
+.btn-publish,
+.btn-publish:hover,
+.btn-publish:focus {
+  background-color: #F39F46 !important;
+  border-color: #F39F46 !important;
+  color: #fff !important;
+}
+
+/* Optional hover effect */
+.btn-publish:hover {
+  opacity: 0.9;
+}
+
+/* ===== BRAND COLORS ===== */
+:root {
+  --brand-orange: #F39F46;
+  --brand-hover: #1AA5A3;
+}
+
+/* ================= PRIMARY BUTTON ================= */
+.btn-primary {
+  background-color: var(--brand-orange) !important;
+  border-color: var(--brand-orange) !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #f39f46 !important;
+  border-color: #f39f46 !important;
+  color: #fff !important;
+}
+
+/* ================= OUTLINE PRIMARY ================= */
+.btn-outline-primary {
+  color: #f39f46 !important;
+  border-color: #f39f46 !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  background-color: #f39f46 !important;
+  border-color: #f39f46 !important;
+  color: #fff !important;
+}
+.btn-orange {
+    color: #fff;
+    background-color: #f39f46;
+    border-color: #f39f46;
+}
+.btn-orange:focus {
+    color: #fff;
+    background-color: #f39f46;
+    border-color: #f39f46;
+}
+/* ================= SUCCESS BUTTON ================= */
+.btn-success {
+  background-color: var(--brand-orange) !important;
+  border-color: var(--brand-orange) !important;
+  color: #fff !important;
+}
+
+.btn-success:hover,
+.btn-success:focus {
+  background-color: var(--brand-hover) !important;
+  border-color: var(--brand-hover) !important;
+  color: #fff !important;
+}
+
+/* ================= REMOVE BUTTON (KEEP RED) ================= */
+/* Uses default Bootstrap red styling */
+.catalog-card {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.catalog-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.catalog-card:active {
+  transform: scale(0.97);
+}
+
+.catalog-card.active {
+  border: 2px solid #f39f46;
+  box-shadow: 0 8px 20px rgba(219, 165, 125, 0.3);
+}

@@ -313,7 +313,7 @@ const Page = () => {
                 <div className="col-lg-3 col-12 invoice-actions">
                     <div className="card">
                         <div className="card-body">
-                            <button className="btn btn-primary w-100 mb-4">
+                            <button className="btn btn-orange w-100 mb-4">
                                 Send Proposal
                             </button>
                             <button className="btn btn-outline-secondary w-100 mb-2">

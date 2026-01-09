@@ -5,9 +5,9 @@ import React, { useState } from "react";
 const Page = () => {
   /* ===================== CATALOG STATE ===================== */
   const [catalogs, setCatalogs] = useState([
-    { id: 1, name: "Electronics Catalog", desc: "", image: null },
-    { id: 2, name: "Festive Catalog", desc: "", image: null },
-    { id: 3, name: "Office Supplies Catalog", desc: "", image: null },
+    { id: 1, name: "indihands_Stationary", desc: "", image: "/materialize/assets/img/backgrounds/Price-Range-1000-to-2000-INR.png" },
+    { id: 2, name: "indihands-art-n-craft_Price range up to 1000 INR", desc: "", image: "/materialize/assets/img/backgrounds/Price-Range-up-to-1000-INR.png" },
+    { id: 3, name: "indihands-art-n-craft_Price range 1000 to 2000 INR", desc: "", image: "/materialize/assets/img/backgrounds/The-Stationary-Catalogue.png" },
   ]);
   const [selectedCatalog, setSelectedCatalog] = useState(catalogs[0]);
 
@@ -134,55 +134,74 @@ const Page = () => {
   return (
     <div className="container-xxl flex-grow-1 container-p-y">
       {/* ===================== CATALOGS ===================== */}
-      <div className="card mb-4">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h5 className="mb-0">Catalogs</h5>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => {
-              setEditingCatalog(null); // new catalog
-              setCatalogName("");
-              setCatalogDesc("");
-              setCatalogImagePreview(null);
-              setIsCatalogModalOpen(true);
-            }}
-          >
-            Add Catalog
-          </button>
-        </div>
+   <div className="card mb-4">
+  <div className="card-header d-flex justify-content-between align-items-center">
+    <h5 className="mb-0">Catalogs</h5>
+    <button
+      className="btn btn-orange btn-sm"
+      onClick={() => {
+        setEditingCatalog(null);
+        setCatalogName("");
+        setCatalogDesc("");
+        setCatalogImagePreview(null);
+        setIsCatalogModalOpen(true);
+      }}
+    >
+      Add Catalog
+    </button>
+  </div>
 
-        <div className="card-body">
-          <div className="row g-3">
-            {catalogs.map((c) => (
-              <div key={c.id} className="col-md-3 col-sm-6">
-                <div
-                  className={`card h-100 ${selectedCatalog.id === c.id ? "border-primary" : ""}`}
-                  style={{ cursor: "pointer" }}
-                >
-                  <div className="card-body text-center" onClick={() => setSelectedCatalog(c)}>
-                    {c.image ? (
-                      <img src={c.image} alt={c.name} className="img-fluid mb-2" style={{ height: 100, objectFit: "cover" }} />
-                    ) : (
-                      <div className="bg-light py-4 text-muted">No Image</div>
-                    )}
-                    <h6 className="mb-0">{c.name}</h6>
-                    <small>{c.desc}</small>
-                  </div>
-                  <div className="card-footer text-center">
-                    <button className="btn btn-sm btn-outline-primary" onClick={() => openEditCatalogModal(c)}>Edit Catalog</button>
-                  </div>
-                </div>
-              </div>
-            ))}
+  <div className="card-body">
+    <div className="row g-3">
+      {catalogs.map((c) => (
+        <div key={c.id} className="col-md-3 col-sm-6">
+          <div
+            className={`card h-100 catalog-card ${
+              selectedCatalog.id === c.id ? "active" : ""
+            }`}
+            onClick={() => setSelectedCatalog(c)}
+          >
+          
+
+            <div className="card-body text-center">
+              {c.image ? (
+                <img
+                  src={c.image}
+                  alt={c.name}
+                  className="img-fluid mb-2"
+                  style={{ height: 100, objectFit: "cover" }}
+                />
+              ) : (
+                <div className="bg-light py-4 text-muted">No Image</div>
+              )}
+              <h6 className="mb-0">{c.name}</h6>
+              <small className="text-muted">{c.desc}</small>
+            </div>
+
+            <div className="card-footer text-center">
+              <button
+                className="btn btn-sm btn-outline-orange"
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                  openEditCatalogModal(c);
+                }}
+              >
+                Edit Catalog
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      ))}
+    </div>
+  </div>
+</div>
+
 
       {/* ===================== PRODUCTS IN CATALOG ===================== */}
       <div className="card">
         <div className="card-header d-flex justify-content-between">
           <h5 className="mb-0">Products in "{selectedCatalog.name}"</h5>
-          <button className="btn btn-primary btn-sm" onClick={openAddExistingProductsModal}>Add Existing Product</button>
+          <button className="btn btn-orange btn-sm" onClick={openAddExistingProductsModal}>Add Product to Catalog</button>
         </div>
         <div className="table-responsive">
           <table className="table table-striped">
@@ -292,7 +311,7 @@ const Page = () => {
 
                 <div className="modal-footer">
                   <button className="btn btn-secondary" onClick={() => setIsAddExistingModalOpen(false)}>Cancel</button>
-                  <button className="btn btn-primary" onClick={addSelectedProductsToCatalog}>Add Selected</button>
+                  <button className="btn btn-orange" onClick={addSelectedProductsToCatalog}>Add Selected</button>
                 </div>
               </div>
             </div>
@@ -320,7 +339,7 @@ const Page = () => {
                 </div>
                 <div className="modal-footer">
                   <button className="btn btn-secondary" onClick={() => setIsCatalogModalOpen(false)}>Cancel</button>
-                  <button className="btn btn-primary" onClick={saveCatalog}>Save</button>
+                  <button className="btn btn-orange" onClick={saveCatalog}>Save</button>
                 </div>
               </div>
             </div>

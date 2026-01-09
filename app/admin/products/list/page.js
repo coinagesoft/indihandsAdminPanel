@@ -226,7 +226,7 @@ const Page = () => {
                     </td>
                     <td className="text-center">
                       <div className="d-flex gap-2 justify-content-center ">
-                        <button className="btn btn-sm btn-outline-primary" onClick={() => openEditModal(p)}><i className="bi bi-pencil-square text-primary"></i></button>
+                        <button className="btn btn-sm btn-orange " onClick={() => openEditModal(p)}><i className="bi bi-pencil-square "></i></button>
                         <button className="btn btn-sm btn-outline-danger" onClick={() => openDeleteModal(p)}><i className="bi bi-trash text-danger"></i></button>
                         <button className="btn btn-sm btn-outline-success" onClick={() => openAssignModal(p)}><i className="bi bi-box-arrow-in-down-right text-success"></i> </button>
                       </div>
@@ -240,7 +240,7 @@ const Page = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap">
+          <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap pagination-custom">
             <button className="btn btn-outline-secondary btn-sm" onClick={() => changePage(currentPage - 1)}>Prev</button>
             {Array.from({ length: totalPages }, (_, i) => (
               <button
@@ -299,6 +299,159 @@ const Page = () => {
             </div>
           </div>
         )}
+
+{/* --- Edit Product Modal --- */}
+{isEditModalOpen && selectedProduct && (
+  <>
+    {/* Backdrop */}
+    <div
+      className="modal-backdrop fade show"
+      style={{ zIndex: 10 }}
+    ></div>
+
+    {/* Modal */}
+    <div
+      className="modal d-block"
+      tabIndex="-1"
+      style={{ zIndex: 20 }}
+    >
+      <div className="modal-dialog modal-lg modal-dialog-centered">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">Edit Product</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={closeEditModal}
+            ></button>
+          </div>
+
+          <div className="modal-body">
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label">Product Name</label>
+                <input
+                  className="form-control"
+                  value={selectedProduct.name}
+                  onChange={(e) =>
+                    setSelectedProduct({
+                      ...selectedProduct,
+                      name: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Category</label>
+                <input
+                  className="form-control"
+                  value={selectedProduct.category}
+                  onChange={(e) =>
+                    setSelectedProduct({
+                      ...selectedProduct,
+                      category: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Subcategory</label>
+                <input
+                  className="form-control"
+                  value={selectedProduct.subCategory}
+                  onChange={(e) =>
+                    setSelectedProduct({
+                      ...selectedProduct,
+                      subCategory: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">SKU</label>
+                <input
+                  className="form-control"
+                  value={selectedProduct.sku}
+                  onChange={(e) =>
+                    setSelectedProduct({
+                      ...selectedProduct,
+                      sku: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">Stock</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={selectedProduct.stock}
+                  onChange={(e) =>
+                    setSelectedProduct({
+                      ...selectedProduct,
+                      stock: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">Price</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={selectedProduct.price}
+                  onChange={(e) =>
+                    setSelectedProduct({
+                      ...selectedProduct,
+                      price: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">Status</label>
+                <select
+                  className="form-select"
+                  value={selectedProduct.status}
+                  onChange={(e) =>
+                    setSelectedProduct({
+                      ...selectedProduct,
+                      status: e.target.value,
+                    })
+                  }
+                >
+                  <option value="Available">Available</option>
+                  <option value="Out of Stock">Out of Stock</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="modal-footer">
+            <button
+              className="btn btn-secondary"
+              onClick={closeEditModal}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={saveChanges}
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+)}
 
       </div>
     </div>

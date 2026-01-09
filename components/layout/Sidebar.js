@@ -37,7 +37,6 @@ const Sidebar = () => {
     />
    </div>
  
-    {/* App Name */}
   </a>
 
   {/* Menu toggle */}
@@ -101,6 +100,11 @@ const Sidebar = () => {
                 <div>Add Product</div>
               </Link>
             </li>
+             <li className={`menu-item ${pathname === "/admin/products/category" ? "active" : ""}`}>
+              <Link href="/admin/products/category" className="menu-link">
+                <div>Category</div>
+              </Link>
+            </li>
             <li className={`menu-item ${pathname === "/admin/products/catalog" ? "active" : ""}`}>
               <Link href="/admin/products/catalog" className="menu-link">
                 <div>Catalog</div>
@@ -157,7 +161,7 @@ const Sidebar = () => {
             </li>
             <li className={`menu-item ${pathname === "/admin/invoice/edit" ? "active" : ""}`}>
               <Link href="/admin/invoice/edit" className="menu-link">
-                <div>Proposal Invoice</div>
+                <div>Edit Proposal </div>
               </Link>
             </li>
 

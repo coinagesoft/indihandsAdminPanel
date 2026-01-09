@@ -91,7 +91,7 @@ const OrgPricingPage = () => {
 
   return (
     <div className="container-xxl container-p-y">
-      <h4 className="mb-4 text-primary">Organization-Specific Pricing</h4>
+      <h4 className="mb-4 text-orange">Organization-Specific Pricing</h4>
 
       {/* Filters */}
       <div className="row mb-4 g-3 align-items-end">
@@ -144,7 +144,7 @@ const OrgPricingPage = () => {
               <h5 className="mb-0">{org.name}</h5>
               <small className="text-muted">GST: {org.gst}</small>
             </div>
-            <button className="btn btn-sm btn-primary" onClick={() => handleSaveOrgPricing(org.id)}>
+            <button className="btn btn-sm btn-orange" onClick={() => handleSaveOrgPricing(org.id)}>
               Save Pricing
             </button>
           </div>
@@ -177,7 +177,7 @@ const OrgPricingPage = () => {
                             value={getOrgPrice(org.id, product.id)}
                             onChange={e => handlePriceChange(org.id, product.id, e.target.value)}
                           />
-                          {customized && <small className="text-primary">Custom price applied</small>}
+                          {customized && <small className="text-orange">Custom price applied</small>}
                         </td>
                       </tr>
                     );
@@ -188,9 +188,9 @@ const OrgPricingPage = () => {
 
             {totalPages > 1 && (
               <div className="d-flex justify-content-end gap-2 mt-3">
-                <button className="btn btn-sm btn-outline-primary" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Prev</button>
+                <button className="btn btn-sm btn-outline-orange" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Prev</button>
                 <span className="align-self-center">Page {currentPage} of {totalPages}</span>
-                <button className="btn btn-sm btn-outline-primary" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</button>
+                <button className="btn btn-sm btn-outline-orange" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</button>
               </div>
             )}
           </div>
