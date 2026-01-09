@@ -95,13 +95,13 @@ const Page = () => {
 
   return (
     <div className="container-xxl flex-grow-1 py-4">
-      <h4 className="mb-4 text-primary">Client Management</h4>
+      <h4 className="mb-4 text-primary">Organization Management</h4>
      <div className="mb-3">
   <button
     className="btn btn-primary rounded-pill px-4" // <- theme matching
     onClick={openCreateModal}
   >
-    + New Company
+    + New Organization
   </button>
 </div>
 
@@ -110,7 +110,7 @@ const Page = () => {
         <div className="col-xl-3 col-lg-4">
           <div className="card shadow-sm border-0 h-100">
             <div className="card-header bg-light d-flex justify-content-between align-items-center">
-              <span>Clients</span>
+              <span>Organizations</span>
               <span className="badge bg-primary">{clients.length}</span>
             </div>
             <div className="p-2">

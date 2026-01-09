@@ -108,7 +108,7 @@ const Sidebar = () => {
         <li className={`menu-item ${pathname === "/admin/clients" ? "active" : ""}`}>
           <Link href="/admin/clients" className="menu-link">
             <i className="menu-icon tf-icons ri-building-4-line"></i>
-            <div>Companies</div>
+            <div>Organizations</div>
           </Link>
         </li>
 
@@ -117,7 +117,7 @@ const Sidebar = () => {
         <li className={`menu-item ${pathname === "/admin/pricing" ? "active" : ""}`}>
           <Link href="/admin/pricing" className="menu-link">
             <i className="menu-icon tf-icons ri-price-tag-3-line"></i>
-            <div>Client Pricing</div>
+            <div>Company Pricing</div>
           </Link>
         </li>
 
