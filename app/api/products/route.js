@@ -1,0 +1,182 @@
+export const runtime = "nodejs";
+
+import { db } from "../../db";
+import cloudinary from "../../../lib/cloudinary";
+
+async function uploadBase64ToCloudinary(base64, folder = "products") {
+  if (!base64 || typeof base64 !== "string") {
+    throw new Error("Invalid image file");
+  }
+
+  // ✅ Allow all image types (jpg, png, webp, gif, svg, etc.)
+  if (!base64.startsWith("data:image/")) {
+    throw new Error("Invalid image file");
+  }
+
+  const uploadResult = await cloudinary.uploader.upload(file, {
+  folder: "products",
+  quality: "auto",
+  fetch_format: "auto"
+});
+
+
+  return uploadResult.secure_url;
+}
+
+
+
+
+export async function POST(req) {
+  try {
+    const data = await req.json();
+
+    const {
+      product_name,
+      sku,
+      category,
+      subCategory,
+      stock,
+      price,
+      status,
+      featuredImage,
+      images,
+      hsn
+    } = data;
+
+    console.log("✅ POST HIT:", data);
+
+    const [result] = await db.query(
+      `INSERT INTO products 
+      (product_name, sku, category, sub_category,hsn, stock_qty, base_price, status, featured_image)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        product_name,
+        sku,
+        category,
+        subCategory,
+         hsn || null,
+        stock,
+        price,
+        status,
+        featuredImage || null,
+      ]
+    );
+
+    const productId = result.insertId;
+
+    if (Array.isArray(images) && images.length > 0) {
+      const values = images.map((url) => [productId, url]);
+
+      await db.query(
+        `INSERT INTO product_gallery_images (product_id, image_url) VALUES ?`,
+        [values]
+      );
+    }
+
+    return Response.json({ message: "Product created", productId }, { status: 201 });
+  } catch (err) {
+    console.error("❌ POST ERROR:", err);
+    return Response.json(
+      { message: "Server error", error: err.message },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+
+export async function GET(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 5;
+    const search = searchParams.get("search") || "";
+    const category = searchParams.get("category");
+    const subCategory = searchParams.get("subCategory");
+    const status = searchParams.get("status");
+
+    const offset = (page - 1) * limit;
+
+    let where = `WHERE 1=1`;
+    let values = [];
+
+    if (search) {
+      where += ` AND (p.product_name LIKE ? OR p.sku LIKE ?)`;
+      values.push(`%${search}%`, `%${search}%`);
+    }
+
+    if (category && category !== "All") {
+      where += ` AND p.category = ?`;
+      values.push(category);
+    }
+
+    if (subCategory && subCategory !== "All") {
+      where += ` AND p.sub_category = ?`;
+      values.push(subCategory);
+    }
+
+    if (status && status !== "All") {
+      where += ` AND p.status = ?`;
+      values.push(status);
+    }
+
+    // 🔹 Products
+    const [products] = await db.query(
+      `
+      SELECT 
+        p.id,
+        p.product_name AS name,
+        p.category,
+        p.sub_category AS subCategory,
+            p.hsn AS hsn, 
+        p.stock_qty AS stock,
+        p.sku,
+        p.base_price AS price,
+        p.status,
+        p.featured_image AS featureImage,
+          COALESCE(
+    (
+      SELECT JSON_ARRAYAGG(g.image_url)
+      FROM product_gallery_images g
+      WHERE g.product_id = p.id
+    ),
+    JSON_ARRAY()
+  ) AS images
+
+      FROM products p
+      ${where}
+      ORDER BY p.id DESC
+      LIMIT ? OFFSET ?
+      `,
+      [...values, limit, offset]
+    );
+
+    // 🔹 Total count (pagination)
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) AS total FROM products p ${where}`,
+      values
+    );
+
+    return new Response(
+      JSON.stringify({
+        products,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      }),
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error(err);
+    return new Response(
+      JSON.stringify({ message: "Server error", error: err.message }),
+      { status: 500 }
+    );
+  }
+}
+

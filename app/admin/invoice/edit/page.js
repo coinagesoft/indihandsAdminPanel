@@ -1,75 +1,28 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 
 /* ================= MOCK ACCEPTED RFQs ================= */
-const ACCEPTED_RFQS = [
-  {
-    id: 201,
-    customerName: "Mr. Naveen Kumar L R",
-    company: "Tripseay Consulting Services Pvt Ltd, Pune",
-    gstin: "27ABCDE1234F1Z5",
-    place: "Maharashtra (27)",
-    items: [
-      {
-        description: "Madhubani Foldable Lamp",
-        hsn: "44209090",
-        uom: "No",
-        qty: 2,
-        rate: 1800,
-        discount: 0,
-        cgst: 9,
-        sgst: 9,
-        igst: 0,
-      },
-      {
-        description: "Phad Foldable Lamp",
-        hsn: "44209090",
-        uom: "No",
-        qty: 2,
-        rate: 1900,
-        discount: 0,
-        cgst: 9,
-        sgst: 9,
-        igst: 0,
-      },
-    ],
-  },
-  {
-    id: 203,
-    customerName: "Kekin Artworks",
-    company: "Kekin Artworks, Jaipur",
-    gstin: "08ABCDE4321F1Z9",
-    place: "Rajasthan (08)",
-    items: [
-      {
-        description: "Hand-painted Wooden Lamp",
-        hsn: "44209090",
-        uom: "No",
-        qty: 1,
-        rate: 2500,
-        discount: 0,
-        cgst: 9,
-        sgst: 9,
-        igst: 0,
-      },
-    ],
-  },
-];
+
 
 const Page = () => {
   /* ================= HEADER ================= */
   const [header, setHeader] = useState({
-    quotationNo: "QTN-2026-001",
-    date: "2026-01-05",
+    quotationNo: "",
+    date: "",
     customerName: "",
     company: "",
     gstin: "",
     place: "",
+      billingAddress: "",
+  shippingAddress: "",
+      companyId: null,   // ✅ add
+  branchId: null,  
   });
 
   const [selectedRfq, setSelectedRfq] = useState("");
   const [items, setItems] = useState([]);
-
+    const [acceptedRfqs, setAcceptedRfqs] = useState([]);
+const [saving, setSaving] = useState(false);
   /* ================= HANDLERS ================= */
   const handleHeaderChange = (e) => {
     setHeader({ ...header, [e.target.name]: e.target.value });
@@ -80,46 +33,120 @@ const Page = () => {
     updated[index][field] = value;
     setItems(updated);
   };
+const handleSaveProposal = async () => {
+  if (!selectedRfq) return alert("❌ Please select RFQ first");
+  if (!header.companyId || !header.branchId) return alert("❌ companyId / branchId missing");
 
-  const addItem = () => {
-    setItems([
-      ...items,
-      {
-        description: "",
-        hsn: "",
-        uom: "No",
-        qty: 1,
-        rate: 0,
-        discount: 0,
-        cgst: 9,
-        sgst: 9,
-        igst: 0,
-      },
-    ]);
-  };
+  try {
+    setSaving(true);
+
+    const payload = {
+      rfqId: Number(selectedRfq),
+      companyId: header.companyId,
+      branchId: header.branchId,
+
+      proposal_number: header.quotationNo, // ✅ correct now
+      proposal_date: header.date,
+      place:header.place,
+      billing_address: header.billingAddress,
+      shipping_address: header.shippingAddress,
+
+      items: items.map((x) => ({
+        productId: x.productId,
+        quantity: x.qty,
+        rate: x.rate,
+        discount: x.discount,
+        cgst_rate: x.cgst,
+        sgst_rate: x.sgst,
+        igst_rate: x.igst,
+      })),
+    };
+
+    const res = await fetch("/api/proposals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    // ✅ if already exists
+    if (res.status === 409) {
+      setHeader((prev) => ({ ...prev, quotationNo: data.proposal_number })); // UI same as DB
+      return alert("⚠️ Proposal already exists. Proposal No: " + data.proposal_number);
+    }
+
+    if (!res.ok) return alert("❌ " + data.message);
+
+    // ✅ use DB returned proposal_number always
+    setHeader((prev) => ({ ...prev, quotationNo: data.proposal_number }));
+
+    alert("✅ Proposal saved. ID = " + data.proposalId);
+  } finally {
+    setSaving(false);
+  }
+};
+
+
+
+ const addItem = () => {
+  setItems([
+    ...items,
+    {
+      productId: null, // ✅ important
+      description: "",
+      hsn: "",
+      uom: "No",
+      qty: 1,
+      rate: 0,
+      discount: 0,
+      cgst: 9,
+      sgst: 9,
+      igst: 0,
+    },
+  ]);
+};
+
 
   const removeItem = (index) => {
     setItems(items.filter((_, i) => i !== index));
   };
 
   /* ================= RFQ SELECT ================= */
-  const handleRfqSelect = (e) => {
-    const rfqId = e.target.value;
-    setSelectedRfq(rfqId);
+const handleRfqSelect = async (e) => {
+  const rfqId = e.target.value;
+  setSelectedRfq(rfqId);
 
-    const rfq = ACCEPTED_RFQS.find((r) => r.id === Number(rfqId));
-    if (!rfq) return;
+  if (!rfqId) return;
 
-    setHeader((prev) => ({
-      ...prev,
-      customerName: rfq.customerName,
-      company: rfq.company,
-      gstin: rfq.gstin,
-      place: rfq.place,
-    }));
+  const res = await fetch(`/api/rfqs/${rfqId}/details`);
+  const data = await res.json();
 
-    setItems(rfq.items);
-  };
+  if (!res.ok) return alert("❌ " + data.message);
+
+  const prRes = await fetch(`/api/proposals/by-rfq/${rfqId}`);
+  const prData = await prRes.json();
+const selected = acceptedRfqs.find(x => x.id == rfqId);
+  setHeader((prev) => ({
+    ...prev,
+  place: selected?.place || "",
+  quotationNo: selected?.proposalNumber || "",
+        date: new Date().toISOString().slice(0, 10),
+    companyId: data.header.companyId,
+    branchId: data.header.branchId,
+
+    customerName: data.header.customerName,
+    company: data.header.company,
+    gstin: data.header.gstin,
+
+ billingAddress: data.header.billing_address,
+shippingAddress: data.header.shipping_address,
+  }));
+
+  setItems(data.items || []);
+};
+
+
 
   /* ================= CALCULATIONS ================= */
   const calcAmount = (item) => {
@@ -145,6 +172,20 @@ const Page = () => {
   const grandTotal =
     totals.subtotal + totals.cgst + totals.sgst + totals.igst;
 
+useEffect(() => {
+  fetchAcceptedRfqs();
+}, []);
+
+const fetchAcceptedRfqs = async () => {
+  const res = await fetch("/api/proposals/accepted-rfqs");
+  const data = await res.json();
+  if (!res.ok) return alert("❌ " + data.message);
+
+  setAcceptedRfqs(data.rfqs || []);
+};
+
+
+
   /* ================= UI ================= */
   return (
     <div className="container-xxl py-4">
@@ -164,11 +205,11 @@ const Page = () => {
                   onChange={handleRfqSelect}
                 >
                   <option value="">-- Select RFQ --</option>
-                  {ACCEPTED_RFQS.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      RFQ #{r.id} — {r.company}
-                    </option>
-                  ))}
+                            {acceptedRfqs.map((r) => (
+  <option key={r.id} value={r.id}>
+    RFQ #{r.id} — {r.company}
+  </option>
+))}
                 </select>
               </div>
 
@@ -199,16 +240,16 @@ const Page = () => {
 <div className="table-responsive">
   <table className="table table-bordered align-middle" style={{ tableLayout: "fixed" }}>
     <colgroup>
-      <col style={{ width: "50px" }} />   {/* # */}
-      <col style={{ width: "300px" }} />  {/* Description */}
-      <col style={{ width: "120px" }} />  {/* HSN */}
-      <col style={{ width: "80px" }} />   {/* Qty */}
-      <col style={{ width: "120px" }} />  {/* Rate */}
-      <col style={{ width: "100px" }} />  {/* Discount */}
-      <col style={{ width: "140px" }} />  {/* Amount */}
-      <col style={{ width: "140px" }} />  {/* Tax */}
-      <col style={{ width: "160px" }} />  {/* Total */}
-      <col style={{ width: "60px" }} />   {/* Remove */}
+      <col style={{ width: "50px" }} />   
+      <col style={{ width: "300px" }} />  
+      <col style={{ width: "120px" }} />  
+      <col style={{ width: "80px" }} />   
+      <col style={{ width: "120px" }} />  
+      <col style={{ width: "100px" }} />  
+      <col style={{ width: "140px" }} />  
+      <col style={{ width: "140px" }} />  
+      <col style={{ width: "160px" }} />  
+      <col style={{ width: "60px" }} />   
     </colgroup>
 
     <thead className="table-primary text-nowrap">
@@ -353,13 +394,19 @@ const Page = () => {
         {/* ACTIONS */}
         <div className="col-lg-3">
           <div className="card shadow-sm p-3">
-            <button className="btn btn-orange mb-3">
-              Save Proposal
-            </button>
+       <button
+  className="btn btn-orange mb-3"
+  onClick={handleSaveProposal}
+  disabled={saving}
+>
+  {saving ? "Saving..." : "Save Proposal"}
+</button>
+
+
          
-            <button className="btn btn-outline-secondary">
+            {/* <button className="btn btn-outline-secondary">
               Download PDF
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

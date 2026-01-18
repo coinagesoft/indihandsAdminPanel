@@ -1,89 +1,53 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 
-const RFQ_STATUSES = [
-  "Submitted",
-  "Under Review",
-  "Accepted",
-  "Rejected",
-];
+const RFQ_STATUSES = ["Submitted", "Under Review", "Accepted", "Rejected"];
 
 const RFQPage = () => {
-  const [organizations] = useState([
-    { id: 1, name: "Tathagat Crafts", branches: ["Pune", "Mumbai"] },
-    { id: 2, name: "Utsav Handicrafts", branches: ["Delhi"] },
-    { id: 3, name: "Kekin Artworks", branches: ["Jaipur", "Ahmedabad"] },
-  ]);
-
-  const [rfqs, setRfqs] = useState([
-    {
-      id: 201,
-      orgId: 1,
-      branch: "Pune",
-      submittedAt: "2026-01-01 10:00 AM",
-      status: "Submitted",
-      notes: "Products required for corporate gifting.",
-      products: [
-        {
-          id: 1,
-          name: "Madhubani Foldable Lamp",
-          code: "TL-1800",
-          category: "Lighting",
-          hsn: "44209090",
-          quantity: 2,
-        },
-        {
-          id: 2,
-          name: "Phad Foldable Lamp",
-          code: "UL-1801",
-          category: "Lighting",
-          hsn: "44209090",
-          quantity: 2,
-        },
-      ],
-    },
-    {
-      id: 202,
-      orgId: 2,
-      branch: "Delhi",
-      submittedAt: "2026-01-01 11:30 AM",
-      status: "Under Review",
-      notes: "",
-      products: [
-        {
-          id: 3,
-          name: "Kalamkari Foldable Lamp",
-          code: "KL-1802",
-          category: "Decor",
-          hsn: "44209090",
-          quantity: 3,
-        },
-      ],
-    },
-    {
-      id: 203,
-      orgId: 3,
-      branch: "Jaipur",
-      submittedAt: "2026-01-02 09:15 AM",
-      status: "Submitted",
-      notes: "Urgent requirement.",
-      products: [
-        {
-          id: 4,
-          name: "Hand-painted Wooden Lamp",
-          code: "KA-1900",
-          category: "Decor",
-          hsn: "44209090",
-          quantity: 1,
-        },
-      ],
-    },
-  ]);
+  const [organizations, setOrganizations] = useState([]);
+  const [rfqs, setRfqs] = useState([]);
 
   const [selectedOrg, setSelectedOrg] = useState("all");
   const [selectedBranch, setSelectedBranch] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState("all");
+
+  /* ---------------- API ---------------- */
+
+  useEffect(() => {
+    fetchRfqs();
+  }, []);
+
+  const fetchRfqs = async () => {
+    try {
+      const res = await fetch("/api/rfqs");
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Failed to load RFQs");
+
+      setOrganizations(data.organizations || []);
+      setRfqs(data.rfqs || []);
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
+  };
+
+  const updateStatus = async (rfqId, status) => {
+    const res = await fetch(`/api/rfqs/${rfqId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) return alert("❌ " + data.message);
+
+    setRfqs((prev) =>
+      prev.map((r) => (r.id === rfqId ? { ...r, status } : r))
+    );
+  };
+
+  /* ---------------- FILTER HELPERS ---------------- */
 
   const allProducts = useMemo(() => {
     const map = new Map();
@@ -98,17 +62,9 @@ const RFQPage = () => {
   const availableBranches = useMemo(() => {
     if (selectedOrg === "all") return [];
     const org = organizations.find((o) => o.id === Number(selectedOrg));
-    return org ? org.branches : [];
+    return org?.branches || [];
   }, [selectedOrg, organizations]);
 
-  const updateStatus = (rfqId, status) => {
-    setRfqs((prev) =>
-      prev.map((r) => (r.id === rfqId ? { ...r, status } : r))
-    );
-  };
-
-  const getOrgName = (orgId) =>
-    organizations.find((o) => o.id === orgId)?.name || "Unknown Org";
 
   const filteredRfqs = rfqs.filter((rfq) => {
     const orgMatch = selectedOrg === "all" || rfq.orgId === Number(selectedOrg);
@@ -137,6 +93,8 @@ const RFQPage = () => {
         return "bg-label-secondary";
     }
   };
+
+  /* ---------------- UI ---------------- */
 
   return (
     <div className="container-xxl container-p-y">
@@ -173,14 +131,15 @@ const RFQPage = () => {
           >
             <option value="all">All Branches</option>
             {availableBranches.map((b) => (
-              <option key={b} value={b}>
-                {b}
+              <option key={b.id} value={b.name}>
+                {b.name}
               </option>
             ))}
+
           </select>
         </div>
 
-        <div className="col-md-3">
+        {/* <div className="col-md-3">
           <label className="form-label">Product</label>
           <select
             className="form-select"
@@ -194,7 +153,7 @@ const RFQPage = () => {
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         <div className="col-md-3">
           <label className="form-label">Status</label>
@@ -219,9 +178,9 @@ const RFQPage = () => {
 
       {filteredRfqs.map((rfq) => (
         <div key={rfq.id} className="card mb-4 shadow-sm">
-          <div className="card-header d-flex justify-content-between flex-wrap gap-2">
+          <div className="card-header d-flex justify-content-between">
             <strong>
-              RFQ #{rfq.id} — {getOrgName(rfq.orgId)} ({rfq.branch})
+              RFQ #{rfq.id} — {rfq.orgName} ({rfq.branch})
             </strong>
             <span className={`badge ${statusBadgeClass(rfq.status)}`}>
               {rfq.status}
@@ -231,25 +190,24 @@ const RFQPage = () => {
           <div className="card-body">
             <p className="text-muted">Submitted at: {rfq.submittedAt}</p>
 
-            {/* Products table */}
             <div className="table-responsive">
-              <table className="table table-bordered align-middle">
-                <thead className="table-light">
+              <table className="table table-bordered">
+                <thead>
                   <tr>
                     <th>Product</th>
-                    <th>SKU / Code</th>
+                     <th>HSN</th>
+                    <th>Code</th>
                     <th>Category</th>
-                    <th>HSN</th>
-                    <th>Quantity</th>
+                    <th>Qty</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rfq.products.map((p) => (
                     <tr key={p.id}>
                       <td>{p.name}</td>
+                       <td>{p.hsn || "-"}</td>
                       <td>{p.code}</td>
                       <td>{p.category}</td>
-                      <td>{p.hsn}</td>
                       <td>{p.quantity}</td>
                     </tr>
                   ))}
@@ -257,38 +215,21 @@ const RFQPage = () => {
               </table>
             </div>
 
-            {rfq.notes && (
-              <div className="mt-3">
-                <strong>Organization Notes:</strong>
-                <p className="mb-0 text-muted">{rfq.notes}</p>
-              </div>
-            )}
-
-            {/* Admin Actions */}
-            {rfq.status === "Submitted" && (
-              <div className="d-flex gap-2 mt-4">
-                <button
-                  className="btn btn-warning btn-sm"
-                  onClick={() => updateStatus(rfq.id, "Under Review")}
-                >
-                  Mark Under Review
-                </button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => updateStatus(rfq.id, "Rejected")}
-                >
-                  Reject
-                </button>
-              </div>
-            )}
-
-            {rfq.status === "Under Review" && (
-              <div className="d-flex gap-2 mt-4">
+            {rfq.status !== "Accepted" && rfq.status !== "Rejected" && (
+              <div className="d-flex gap-2 mt-3">
+                {rfq.status === "Submitted" && (
+                  <button
+                    className="btn btn-warning btn-sm"
+                    onClick={() => updateStatus(rfq.id, "Under Review")}
+                  >
+                    Mark Under Review
+                  </button>
+                )}
                 <button
                   className="btn btn-success btn-sm"
                   onClick={() => updateStatus(rfq.id, "Accepted")}
                 >
-                  Accept RFQ
+                  Accept
                 </button>
                 <button
                   className="btn btn-danger btn-sm"
