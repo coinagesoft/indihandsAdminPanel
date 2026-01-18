@@ -71,9 +71,10 @@ useEffect(() => {
 }, []);
 
 
-  useEffect(() => {
-    fetchCategoryFilters();
-  }, []);
+useEffect(() => {
+  fetchCategoryFilters();
+}, [selectedCategory]);
+
 
   const fetchData = async () => {
     try {

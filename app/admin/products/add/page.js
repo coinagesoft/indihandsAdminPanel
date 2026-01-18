@@ -1,11 +1,14 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 
 const Page = () => {
   const [featuredPreview, setFeaturedPreview] = useState(null);
   const [galleryPreviews, setGalleryPreviews] = useState([]);
   const [products, setProducts] = useState([]);
   const [excelFile, setExcelFile] = useState(null);
+const [categories, setCategories] = useState([]);
+const [selectedCategory, setSelectedCategory] = useState("");
+const [subcategories, setSubcategories] = useState([]);
 
   const handleFeaturedChange = (e) => {
     const file = e.target.files[0];
@@ -13,6 +16,23 @@ const Page = () => {
       setFeaturedPreview(URL.createObjectURL(file));
     }
   };
+useEffect(() => {
+  const fetchCategories = async () => {
+    const res = await fetch("/api/categories");
+    const data = await res.json();
+    setCategories(data.categories || []);
+  };
+
+  fetchCategories();
+}, []);
+
+const handleCategoryChange = (e) => {
+  const value = e.target.value;
+  setSelectedCategory(value);
+
+  const selected = categories.find(c => c.name === value);
+  setSubcategories(selected?.subcategories || []);
+};
 
   const handleGalleryChange = (e) => {
     const files = Array.from(e.target.files);
@@ -402,22 +422,34 @@ const handleExcelImport = async () => {
               </div>
               <div className="card-body">
                 <div className="form-floating form-floating-outline mb-4">
-                  <select className="form-select" name="category" required>
-                    <option value="">Select Category</option>
-                    <option>Electronics</option>
-                    <option>Eco Friendly</option>
-                    <option>Office Supplies</option>
-                  </select>
+                 <select
+  className="form-select"
+  name="category"
+  required
+  value={selectedCategory}
+  onChange={handleCategoryChange}
+>
+  <option value="">Select Category</option>
+  {categories.map(c => (
+    <option key={c.name} value={c.name}>
+      {c.name}
+    </option>
+  ))}
+</select>
+
                   <label>Category</label>
                 </div>
 
                 <div className="form-floating form-floating-outline mb-4">
-                  <select className="form-select" name="subCategory">
-                    <option value="">Select Sub Category</option>
-                    <option>Festive Gifts</option>
-                    <option>Employee Onboarding</option>
-                    <option>Corporate Gifting</option>
-                  </select>
+                 <select className="form-select" name="subCategory">
+  <option value="">Select SubCategory</option>
+  {subcategories.map(sc => (
+    <option key={sc.name} value={sc.name}>
+      {sc.name}
+    </option>
+  ))}
+</select>
+
                   <label>Sub Category</label>
                 </div>
 
