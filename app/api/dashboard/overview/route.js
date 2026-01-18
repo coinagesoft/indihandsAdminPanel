@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "../../../db";
-
 export async function GET() {
   try {
+
+    
     const [activeClients] = await db.query(`SELECT COUNT(*) as count FROM companies`);
     const [openRFQs] = await db.query(`SELECT COUNT(*) as count FROM rfqs WHERE status='Submitted' OR status='Under Review'`);
     const [approvedProposals] = await db.query(`SELECT COUNT(*) as count FROM proposals WHERE status='Approved'`);
