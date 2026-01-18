@@ -24,57 +24,136 @@ const Page = () => {
     const file = e.target.files[0];
     if (file) setExcelFile(file);
   };
+const uploadToCloudinary = async (file) => {
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", "products");
 
-  // Publish single product
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
+    console.log("➡️ Cloudinary request start...");
 
-    const featuredImage = formData.get("featuredImage");
-    const galleryFiles = e.target.galleryImages.files;
-    for (let i = 0; i < galleryFiles.length; i++) {
-      formData.append("galleryImages[]", galleryFiles[i]);
-    }
-
-    console.log("Single Product Data:");
-    console.log({
-      productName: formData.get("productName"),
-      sku: formData.get("sku"),
-      barcode: formData.get("barcode"),
-      description: formData.get("description"),
-      stockQty: formData.get("stockQty"),
-      basePrice: formData.get("basePrice"),
-      category: formData.get("category"),
-      subCategory: formData.get("subCategory"),
-      status: formData.get("status"),
-      featuredImage,
-      galleryFiles,
+    const res = await fetch("https://api.cloudinary.com/v1_1/dxb1whlam/image/upload", {
+      method: "POST",
+      body: fd,
     });
 
-    alert("Single product published! Check console for details.");
+    console.log("✅ Cloudinary status:", res.status);
+
+    const data = await res.json();
+    console.log("✅ Cloudinary response:", data);
+
+    if (!res.ok) throw new Error(data?.error?.message || "Cloudinary upload failed");
+
+    return data.secure_url;
+  } catch (err) {
+    console.error("❌ Cloudinary upload failed:", err);
+    throw err;
+  }
+};
+
+  // Publish single product
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const form = e.target;
+
+  let featuredImageUrl = null;
+  if (form.featuredImage.files[0]) {
+    featuredImageUrl = await uploadToCloudinary(form.featuredImage.files[0]);
+  }
+
+  const galleryUrls = [];
+  for (const file of Array.from(form.galleryImages.files)) {
+    const url = await uploadToCloudinary(file);
+    galleryUrls.push(url);
+  }
+
+  const body = {
+    product_name: form.productName.value,
+    sku: form.sku.value,
+    category: form.category.value,
+    subCategory: form.subCategory.value,
+     hsn: form.hsn.value,
+    stock: Number(form.stockQty.value),
+    price: Number(form.basePrice.value),
+    status: form.status.value === "active" ? "Available" : "Out of Stock",
+    
+    featuredImage: featuredImageUrl,
+    images: galleryUrls,
   };
 
-  // Import products from Excel
-  const handleExcelImport = async () => {
-    if (!excelFile) return alert("Please select an Excel file");
+  const res = await fetch("/api/products", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
-    // dynamic import to fix Next.js build issue
-    const XLSX = await import("xlsx");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to create product");
 
+  alert("✅ Product created");
+};
+
+
+
+// --- helper to convert file to base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = evt.target.result;
-      const workbook = XLSX.read(data, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (err) => reject(err);
+  });
+}
 
-      setProducts((prev) => [...prev, ...jsonData]);
-      alert(`${jsonData.length} products imported successfully`);
-      console.log("Imported Products:", jsonData);
-    };
-    reader.readAsBinaryString(excelFile);
+
+const handleExcelImport = async () => {
+  if (!excelFile) return alert("Please select an Excel file");
+
+  const XLSX = await import("xlsx");
+  const reader = new FileReader();
+
+  reader.onload = async (evt) => {
+    const data = evt.target.result;
+    const workbook = XLSX.read(data, { type: "binary" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+    if (jsonData.length === 0) return alert("Excel empty आहे");
+
+    const mapped = jsonData.map((x) => ({
+      productName: x.productName?.toString().trim() || "",
+      sku: x.sku?.toString().trim() || "",
+      barcode: x.barcode?.toString().trim() || "",
+      category: x.category?.toString().trim() || "",
+      subCategory: x.subCategory?.toString().trim() || "",
+      hsn: x.hsn?.toString().trim() || "",
+      description: x.description?.toString().trim() || "",
+      stockQty: Number(x.stockQty ?? 0),
+      basePrice: Number(x.basePrice ?? 0),
+      status: x.status?.toString().trim() || "Available",
+    }));
+
+    setProducts(mapped);
+
+    const res = await fetch("/api/products/bulk-import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ products: mapped }),
+    });
+
+    const result = await res.json();
+
+    console.log("excel data",result)
+    if (!res.ok) return alert("❌ " + result.message);
+    alert(result.message);
   };
+
+  reader.readAsBinaryString(excelFile);
+};
+
+
 
   return (
     <form
@@ -132,6 +211,7 @@ const Page = () => {
                     <th>SKU</th>
                     <th>Category</th>
                     <th>Subcategory</th>
+                       <th>HSN</th>
                     <th>Stock</th>
                     <th>Price</th>
                   </tr>
@@ -143,6 +223,7 @@ const Page = () => {
                       <td>{p.sku}</td>
                       <td>{p.category}</td>
                       <td>{p.subCategory}</td>
+                       <td>{p.hsn}</td> 
                       <td>{p.stockQty}</td>
                       <td>₹{p.basePrice}</td>
                     </tr>
@@ -198,6 +279,16 @@ const Page = () => {
                     </div>
                   </div>
                 </div>
+                <div className="form-floating form-floating-outline mt-4">
+  <input
+    type="text"
+    className="form-control"
+    name="hsn"
+    placeholder="HSN Code"
+  />
+  <label>HSN Code</label>
+</div>
+
 
                 <div className="mt-5">
                   <p>Description (Optional)</p>
@@ -332,8 +423,8 @@ const Page = () => {
 
                 <div className="form-floating form-floating-outline">
                   <select className="form-select" name="status">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                  <option value="Available">Available</option>
+                <option value="Out of Stock">Out of Stock</option>
                   </select>
                   <label>Status</label>
                 </div>

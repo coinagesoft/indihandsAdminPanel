@@ -1,9 +1,9 @@
 /* 🚫 Stop body scrolling */
-html,
+/* html,
 body {
   height: 100%;
   overflow: hidden;
-}
+} */
 .btn-primary{
   background-color: #f39f46 !important;
 

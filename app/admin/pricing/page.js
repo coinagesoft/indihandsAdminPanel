@@ -1,197 +1,445 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const OrgPricingPage = () => {
-  const [orgs] = useState([
-    { id: 1, name: "Alpha Industries", gst: "27ABCDE1234F1Z5", primaryContact: "Rohit Sharma", email: "rohit@alpha.com", phone: "+911111111111" },
-    { id: 2, name: "Beta Enterprises", gst: "27XYZDE6789G1Z2", primaryContact: "Neha Verma", email: "neha@beta.com", phone: "+922222222222" },
-    { id: 3, name: "Gamma Solutions", gst: "27LMNOP4567Q1Z9", primaryContact: "Amit Patel", email: "amit@gamma.com", phone: "+933333333333" },
-  ]);
+  // ✅ API state
+  const [orgs, setOrgs] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [pricing, setPricing] = useState([]);
 
-  const [products] = useState([
-    { id: 1, name: "Product X", basePrice: 100, category: "Electronics", subcategory: "Mobile" },
-    { id: 2, name: "Product Y", basePrice: 200, category: "Furniture", subcategory: "Chair" },
-    { id: 3, name: "Product Z", basePrice: 150, category: "Electronics", subcategory: "Laptop" },
-    { id: 4, name: "Product A", basePrice: 180, category: "Electronics", subcategory: "Mobile" },
-    { id: 5, name: "Product B", basePrice: 300, category: "Furniture", subcategory: "Table" },
-  ]);
-
-  const [pricing, setPricing] = useState([
-    { orgId: 1, productId: 1, price: 90 },
-    { orgId: 2, productId: 1, price: 95 },
-  ]);
-
+  // ✅ UI state
   const [selectedOrg, setSelectedOrg] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState("all");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [categoryList, setCategoryList] = useState([]);
+  const [subCategoryList, setSubCategoryList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [savingOrgId, setSavingOrgId] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 3;
+  const PAGE_SIZE = 5;
 
+  // ✅ Fetch API data
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // ✅ Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedProduct, selectedCategory, selectedSubcategory, minPrice, maxPrice]);
+
+  const fetchCategoryFilters = async () => {
+    try {
+      const res = await fetch("/api/categories");
+      const data = await res.json();
+
+      const cats = data.categories || [];
+
+      // ✅ category names
+      const categoryNames = cats.map((c) => c.name);
+      setCategoryList(categoryNames);
+
+      // ✅ subcategories based on selectedCategory
+      let subNames = [];
+      if (selectedCategory !== "all") {
+        const selected = cats.find((c) => c.name === selectedCategory);
+        subNames = (selected?.subcategories || []).map((s) => s.name);
+      } else {
+        subNames = cats.flatMap((c) => (c.subcategories || []).map((s) => s.name));
+      }
+
+      // ✅ remove duplicates
+      const uniqueSubNames = Array.from(new Set(subNames));
+
+      setSubCategoryList(uniqueSubNames);
+    } catch (err) {
+      console.log("fetchCategoryFilters error:", err);
+    }
+  };
+
+useEffect(() => {
+  // This runs only in the browser
+  const someObj = window.someObj; // or fetch/init your data
+
+  $.each(someObj?.pages || [], function(i, page) {
+    console.log(page);
+  });
+}, []);
+
+
+  useEffect(() => {
+    fetchCategoryFilters();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/org-pricing");
+      const data = await res.json();
+
+      if (!res.ok) {
+        return alert("❌ " + (data.message || "Failed to load pricing data"));
+      }
+
+      setOrgs(data.companies || []);
+      setProducts(data.products || []);
+      setPricing(
+        (data.pricing || []).map((x) => ({
+          orgId: x.companyId,
+          productId: x.productId,
+          price: Number(x.price),
+        }))
+      );
+    } catch (err) {
+      alert("❌ " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Handle price change
   const handlePriceChange = (orgId, productId, value) => {
-    const price = Number(value);
-    setPricing(prev => {
-      const existing = prev.find(p => p.orgId === orgId && p.productId === productId);
-      return existing
-        ? prev.map(p => (p.orgId === orgId && p.productId === productId ? { ...p, price } : p))
-        : [...prev, { orgId, productId, price }];
+    const price = value === "" ? "" : Number(value);
+
+    setPricing((prev) => {
+      const existing = prev.find((p) => p.orgId === orgId && p.productId === productId);
+
+      if (existing) {
+        return prev.map((p) =>
+          p.orgId === orgId && p.productId === productId ? { ...p, price } : p
+        );
+      }
+
+      return [...prev, { orgId, productId, price }];
     });
   };
 
   const getOrgPrice = (orgId, productId) => {
-    const entry = pricing.find(p => p.orgId === orgId && p.productId === productId);
+    const entry = pricing.find((p) => p.orgId === orgId && p.productId === productId);
     return entry ? entry.price : "";
   };
 
   const isPriceCustomized = (orgId, productId, basePrice) => {
     const price = getOrgPrice(orgId, productId);
-    return price !== "" && price !== basePrice;
+    return price !== "" && Number(price) !== Number(basePrice);
   };
 
-  const handleSaveOrgPricing = (orgId) => {
-    const orgPricing = pricing.filter(p => p.orgId === orgId);
-    console.log("Saving pricing for org:", orgId, orgPricing);
-    alert("Organization pricing saved successfully");
+  // ✅ Save one org pricing
+  const handleSaveOrgPricing = async (orgId) => {
+    try {
+      setSavingOrgId(orgId);
+
+      const orgPricing = pricing
+        .filter((p) => p.orgId === orgId && p.price !== "")
+        .map((p) => ({
+          productId: p.productId,
+          price: Number(p.price),
+        }));
+
+      const res = await fetch(`/api/org-pricing/${orgId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pricing: orgPricing }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) return alert("❌ " + (data.message || "Save failed"));
+
+      alert("✅ Pricing saved successfully");
+      fetchData();
+    } catch (err) {
+      alert("❌ " + err.message);
+    } finally {
+      setSavingOrgId(null);
+    }
   };
 
+  // ✅ Filters
   const filteredOrgs =
-    selectedOrg === "all"
-      ? orgs
-      : orgs.filter(o => o.id === Number(selectedOrg));
+    selectedOrg === "all" ? orgs : orgs.filter((o) => o.id === Number(selectedOrg));
 
   const filteredProducts = useMemo(() => {
-    return products.filter(p => {
+    return products.filter((p) => {
       if (selectedProduct !== "all" && p.id !== Number(selectedProduct)) return false;
       if (selectedCategory !== "all" && p.category !== selectedCategory) return false;
       if (selectedSubcategory !== "all" && p.subcategory !== selectedSubcategory) return false;
-      if (minPrice !== "" && p.basePrice < Number(minPrice)) return false;
-      if (maxPrice !== "" && p.basePrice > Number(maxPrice)) return false;
+      if (minPrice !== "" && Number(p.basePrice) < Number(minPrice)) return false;
+      if (maxPrice !== "" && Number(p.basePrice) > Number(maxPrice)) return false;
       return true;
     });
-  }, [
-    products,
-    selectedProduct,
-    selectedCategory,
-    selectedSubcategory,
-    minPrice,
-    maxPrice
-  ]);
+  }, [products, selectedProduct, selectedCategory, selectedSubcategory, minPrice, maxPrice]);
 
-  const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE) || 1;
+
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
+  const handleImportPricing = async (file) => {
+    const XLSX = await import("xlsx");
+    const reader = new FileReader();
 
-  const categories = ["all", ...new Set(products.map(p => p.category))];
-  const subcategories = ["all", ...new Set(products.map(p => p.subcategory))];
+    reader.onload = async (e) => {
+      const wb = XLSX.read(e.target.result, { type: "binary" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws);
+
+      const cleaned = json.map((r) => ({
+        company_id: r["Company ID"],
+        product_id: r["Product ID"],
+        custom_price: r["Custom Price"],
+      }));
+
+      const res = await fetch("/api/org-pricing/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows: cleaned }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) return alert("❌ " + data.message);
+
+      alert(data.message);
+      fetchData();
+    };
+
+    reader.readAsBinaryString(file);
+  };
+
 
   return (
     <div className="container-xxl container-p-y">
-      <h4 className="mb-4 text-orange">Organization-Specific Pricing</h4>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h4 className="mb-0 text-orange">Organization-Specific Pricing</h4>
+        <button className="btn btn-sm btn-outline-primary" onClick={fetchData} disabled={loading}>
+          {loading ? "Loading..." : "Refresh"}
+        </button>
+      </div>
 
-      {/* Filters */}
+      <div className="d-flex justify-content-between align-center">
+        {/* Filters */}
+        <button
+          className="btn btn-success btn-sm mb-5"
+          onClick={() =>
+            (window.location.href = "/api/org-pricing/export")
+          }
+        >
+          Export Pricing Excel
+        </button>
+
+        <div className="mb-3">
+          <label htmlFor="importPricing" className="btn btn-sm btn-primary me-2">
+            Import Pricing Excel
+          </label>
+          <input
+            type="file"
+            id="importPricing"
+            accept=".xlsx, .xls"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              if (e.target.files.length) handleImportPricing(e.target.files[0]);
+              e.target.value = ""; // reset input so same file can be re-uploaded if needed
+            }}
+          />
+        </div>
+      </div>
+
       <div className="row mb-4 g-3 align-items-end">
         <div className="col-md-3">
+
           <label className="form-label">Organization</label>
-          <select className="form-select" value={selectedOrg} onChange={e => setSelectedOrg(e.target.value)}>
+          <select
+            className="form-select"
+            value={selectedOrg}
+            onChange={(e) => setSelectedOrg(e.target.value)}
+          >
             <option value="all">All Organizations</option>
-            {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+            {orgs.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className="col-md-3">
           <label className="form-label">Product</label>
-          <select className="form-select" value={selectedProduct} onChange={e => setSelectedProduct(e.target.value)}>
+          <select
+            className="form-select"
+            value={selectedProduct}
+            onChange={(e) => setSelectedProduct(e.target.value)}
+          >
             <option value="all">All Products</option>
-            {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className="col-md-2">
           <label className="form-label">Category</label>
-          <select className="form-select" value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}>
-            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          <select
+            className="form-select"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
+            <option value="all">All</option>
+            {categoryList.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+
           </select>
         </div>
 
         <div className="col-md-2">
           <label className="form-label">Subcategory</label>
-          <select className="form-select" value={selectedSubcategory} onChange={e => setSelectedSubcategory(e.target.value)}>
-            {subcategories.map(sc => <option key={sc} value={sc}>{sc}</option>)}
+          <select
+            className="form-select"
+            value={selectedSubcategory}
+            onChange={(e) => setSelectedSubcategory(e.target.value)}
+          >
+            <option value="all">All</option>
+            {subCategoryList.map((sc) => (
+              <option key={sc} value={sc}>
+                {sc}
+              </option>
+            ))}
+
           </select>
         </div>
 
         <div className="col-md-1">
           <label className="form-label">Min</label>
-          <input type="number" className="form-control" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
+          <input
+            type="number"
+            className="form-control"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+          />
         </div>
 
         <div className="col-md-1">
           <label className="form-label">Max</label>
-          <input type="number" className="form-control" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
+          <input
+            type="number"
+            className="form-control"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+          />
         </div>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="alert alert-info">
+          Loading pricing data...
+        </div>
+      )}
+
+      {/* No Orgs */}
+      {!loading && filteredOrgs.length === 0 && (
+        <div className="alert alert-warning">
+          No organizations found.
+        </div>
+      )}
+
       {/* Pricing Tables */}
-      {filteredOrgs.map(org => (
+      {filteredOrgs.map((org) => (
         <div key={org.id} className="card mb-4">
-          <div className="card-header bg-label-primary d-flex justify-content-between">
+          <div className="card-header bg-label-primary d-flex justify-content-between align-items-center">
             <div>
               <h5 className="mb-0">{org.name}</h5>
-              <small className="text-muted">GST: {org.gst}</small>
+              <small className="text-muted">GST: {org.gst || "-"}</small>
             </div>
-            <button className="btn btn-sm btn-orange" onClick={() => handleSaveOrgPricing(org.id)}>
-              Save Pricing
+
+            <button
+              className="btn btn-sm btn-orange"
+              onClick={() => handleSaveOrgPricing(org.id)}
+              disabled={savingOrgId === org.id}
+            >
+              {savingOrgId === org.id ? "Saving..." : "Save Pricing"}
             </button>
           </div>
 
           <div className="card-body">
-            <div className="table-responsive">
-              <table className="table table-bordered align-middle">
-                <thead className="table-light">
-                  <tr>
-                    <th>Product</th>
-                    <th>Category</th>
-                    <th>Subcategory</th>
-                    <th>Base Price</th>
-                    <th>Org Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedProducts.map(product => {
-                    const customized = isPriceCustomized(org.id, product.id, product.basePrice);
-                    return (
-                      <tr key={product.id}>
-                        <td>{product.name}</td>
-                        <td>{product.category}</td>
-                        <td>{product.subcategory}</td>
-                        <td>₹{product.basePrice}</td>
-                        <td>
-                          <input
-                            type="number"
-                            className={`form-control ${customized ? "border-primary" : ""}`}
-                            value={getOrgPrice(org.id, product.id)}
-                            onChange={e => handlePriceChange(org.id, product.id, e.target.value)}
-                          />
-                          {customized && <small className="text-orange">Custom price applied</small>}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {totalPages > 1 && (
-              <div className="d-flex justify-content-end gap-2 mt-3">
-                <button className="btn btn-sm btn-outline-orange" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Prev</button>
-                <span className="align-self-center">Page {currentPage} of {totalPages}</span>
-                <button className="btn btn-sm btn-outline-orange" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</button>
+            {paginatedProducts.length === 0 ? (
+              <div className="alert alert-secondary mb-0">
+                No products match filters.
               </div>
+            ) : (
+              <>
+                <div className="table-responsive">
+                  <table className="table table-bordered align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Subcategory</th>
+                        <th>Base Price</th>
+                        <th style={{ width: 220 }}>Org Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedProducts.map((product) => {
+                        const customized = isPriceCustomized(org.id, product.id, product.basePrice);
+
+                        return (
+                          <tr key={product.id}>
+                            <td>{product.name}</td>
+                            <td>{product.category || "-"}</td>
+                            <td>{product.subcategory || "-"}</td>
+                            <td>₹{product.basePrice}</td>
+                            <td>
+                              <input
+                                type="number"
+                                className={`form-control ${customized ? "border-primary" : ""}`}
+                                value={getOrgPrice(org.id, product.id) ?? ""} // <- add this
+                                onChange={(e) =>
+                                  handlePriceChange(org.id, product.id, e.target.value)
+                                }
+                              />
+                              {customized && (
+                                <small className="text-orange">Custom price applied</small>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="d-flex justify-content-end gap-2 mt-3">
+                    <button
+                      className="btn btn-sm btn-outline-orange"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => p - 1)}
+                    >
+                      Prev
+                    </button>
+                    <span className="align-self-center">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      className="btn btn-sm btn-outline-orange"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

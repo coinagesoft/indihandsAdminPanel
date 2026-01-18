@@ -1,82 +1,113 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const CategoryManagementPage = () => {
-  const [categories, setCategories] = useState([
-    {
-      id: 1,
-      name: "Electronics",
-      status: "active",
-      subcategories: [
-        { id: 11, name: "Mobile Phones", status: "active" },
-        { id: 12, name: "Laptops", status: "active" },
-        { id: 13, name: "Accessories", status: "inactive" },
-      ],
-    },
-    {
-      id: 2,
-      name: "Industrial Supplies",
-      status: "active",
-      subcategories: [
-        { id: 21, name: "Safety Equipment", status: "active" },
-        { id: 22, name: "Tools & Machinery", status: "active" },
-      ],
-    },
-    {
-      id: 3,
-      name: "Office Essentials",
-      status: "inactive",
-      subcategories: [
-        { id: 31, name: "Stationery", status: "active" },
-        { id: 32, name: "Office Furniture", status: "inactive" },
-      ],
-    },
-  ]);
+  const [categories, setCategories] = useState([]);
 
   const [categoryName, setCategoryName] = useState("");
   const [subCategoryName, setSubCategoryName] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
 
   /* ================= CATEGORY ================= */
-  const addCategory = () => {
-    if (!categoryName.trim()) return;
+  const addCategory = async () => {
+    try {
+      if (!categoryName.trim()) return;
 
-    setCategories((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: categoryName,
-        status: "active",
-        subcategories: [],
-      },
-    ]);
-    setCategoryName("");
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: categoryName }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      alert("✅ Category Added");
+      setCategoryName("");
+      fetchCategories();
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
   };
+
+  const deleteCategory = async (id) => {
+    try {
+      if (!confirm("Delete this category?")) return;
+
+      const res = await fetch("/api/categories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      alert("✅ Category Deleted");
+      fetchCategories();
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
+  };
+
+  const deleteSubCategory = async (id) => {
+    try {
+      if (!confirm("Delete this subcategory?")) return;
+
+      const res = await fetch("/api/subcategories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      alert("✅ Subcategory Deleted");
+      fetchCategories();
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
+  };
+
 
   /* ================= SUBCATEGORY ================= */
-  const addSubCategory = () => {
-    if (!subCategoryName.trim() || !selectedCategoryId) return;
+  const addSubCategory = async () => {
+    try {
+      if (!subCategoryName.trim() || !selectedCategoryId) return;
 
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.id === Number(selectedCategoryId)
-          ? {
-              ...cat,
-              subcategories: [
-                ...cat.subcategories,
-                {
-                  id: Date.now(),
-                  name: subCategoryName,
-                  status: "active",
-                },
-              ],
-            }
-          : cat
-      )
-    );
+      const res = await fetch("/api/subcategories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categoryId: Number(selectedCategoryId),
+          name: subCategoryName,
+        }),
+      });
 
-    setSubCategoryName("");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      alert("✅ Subcategory Added");
+      setSubCategoryName("");
+      fetchCategories();
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
   };
+
+
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    const res = await fetch("/api/categories");
+    const data = await res.json();
+    setCategories(data.categories || []);
+  };
+
 
   return (
     <div className="container-xxl container-p-y">
@@ -146,15 +177,17 @@ const CategoryManagementPage = () => {
                 <div key={cat.id} className="mb-4 border rounded p-3">
                   <div className="d-flex justify-content-between align-items-center">
                     <h6 className="mb-0">{cat.name}</h6>
-                    <span className="badge bg-orange text-capitalize">
-                      {cat.status}
-                    </span>
+
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => deleteCategory(cat.id)}
+                    >
+                      Delete
+                    </button>
                   </div>
 
                   {cat.subcategories.length === 0 ? (
-                    <p className="text-muted mt-2 mb-0">
-                      No subcategories
-                    </p>
+                    <p className="text-muted mt-2 mb-0">No subcategories</p>
                   ) : (
                     <ul className="list-group list-group-flush mt-2">
                       {cat.subcategories.map((sub) => (
@@ -162,10 +195,14 @@ const CategoryManagementPage = () => {
                           key={sub.id}
                           className="list-group-item d-flex justify-content-between align-items-center"
                         >
-                          {sub.name}
-                          <span className="badge bg-secondary">
-                            {sub.status}
-                          </span>
+                          <span>{sub.name}</span>
+
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => deleteSubCategory(sub.id)}
+                          >
+                            Delete
+                          </button>
                         </li>
                       ))}
                     </ul>
@@ -173,6 +210,7 @@ const CategoryManagementPage = () => {
                 </div>
               ))}
             </div>
+
           </div>
         </div>
       </div>
