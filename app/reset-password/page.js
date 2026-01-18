@@ -1,29 +1,33 @@
 "use client";
-import React, { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ResetPasswordPage() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-
-  const token = searchParams.get("token");
-
+  const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Get token from URL query string AFTER hydration
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const t = query.get("token");
+    if (!t) {
+      alert("❌ Token missing");
+      router.push("/login");
+    } else {
+      setToken(t);
+    }
+  }, [router]);
+
   const handleReset = async () => {
+    if (!token) return;
+    if (!password.trim()) return alert("❌ Password required");
+    if (password !== confirm) return alert("❌ Passwords do not match");
+
+    setLoading(true);
     try {
-      if (!token) {
-        alert("❌ Token missing");
-        router.push("/login");
-        return;
-      }
-      if (!password.trim()) return alert("❌ Password required");
-      if (password !== confirm) return alert("❌ Password not matched");
-
-      setLoading(true);
-
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,12 +48,12 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="container-xxl pt-6 mt-6">
-      <div className="card p-4 mx-auto" style={{ maxWidth: 450 }}>
-        <h4 className="mb-3">Reset Password</h4>
+      <div className="card p-4 mx-auto shadow-sm" style={{ maxWidth: 450 }}>
+        <h4 className="mb-4 text-center">Reset Password</h4>
 
         <input
           type="password"
-          className="form-control mb-2"
+          className="form-control mb-3"
           placeholder="New Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -58,7 +62,7 @@ export default function ResetPasswordPage() {
 
         <input
           type="password"
-          className="form-control mb-3"
+          className="form-control mb-4"
           placeholder="Confirm Password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
@@ -68,7 +72,7 @@ export default function ResetPasswordPage() {
         <button
           className="btn btn-orange w-100"
           onClick={handleReset}
-          disabled={loading}
+          disabled={loading || !token}
         >
           {loading ? "Saving..." : "Save Password"}
         </button>
@@ -76,6 +80,3 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
-
-// Prevent prerendering
-export const dynamic = "force-dynamic";
