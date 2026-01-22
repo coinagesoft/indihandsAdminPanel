@@ -319,62 +319,82 @@ const paginatedCatalogProducts = catalogProducts.slice(
       }}
     >
       {catalogs.map((c) => (
-        <div
-          key={c.id}
-          className={`card catalog-card shadow-sm ${selectedCatalog?.id === c.id ? "border-primary" : ""}`}
-          onClick={() => setSelectedCatalog(c)}
-          style={{
-            minWidth: "220px",
-            cursor: "pointer",
-            borderRadius: "12px",
-            flex: "0 0 auto",
-            transition: "transform 0.2s, box-shadow 0.2s",
-          }}
-        >
-          {/* Image */}
-          <div style={{ width: "100%", height: "150px", overflow: "hidden" }}>
-            {c.image ? (
-              <img
-                src={c.image}
-                alt={c.name}
-                className="img-fluid w-100 h-100"
-                style={{ objectFit: "cover", transition: "transform 0.3s" }}
-              />
-            ) : (
-              <div className="bg-light d-flex justify-content-center align-items-center text-muted" style={{ height: "100%" }}>
-                No Image
-              </div>
-            )}
-          </div>
+     <div
+  key={c.id}
+  className={`card catalog-card shadow-sm ${selectedCatalog?.id === c.id ? "border-primary" : ""}`}
+  onClick={() => setSelectedCatalog(c)}
+  style={{
+    minWidth: "220px",
+    cursor: "pointer",
+    borderRadius: "12px",
+    flex: "0 0 auto",
+    transition: "transform 0.2s, box-shadow 0.2s",
+  }}
+>
+  {/* Image */}
+  <div
+    style={{
+      width: "100%",
+      paddingTop: "75%", // maintain aspect ratio (4:3)
+      position: "relative",
+      overflow: "hidden",
+      borderTopLeftRadius: "12px",
+      borderTopRightRadius: "12px",
+    }}
+  >
+    {c.image ? (
+      <img
+        src={c.image}
+        alt={c.name}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover", // ensures full coverage
+          transition: "transform 0.3s",
+        }}
+      />
+    ) : (
+      <div
+        className="bg-light d-flex justify-content-center align-items-center text-muted"
+        style={{ height: "100%", position: "absolute", top: 0, left: 0 }}
+      >
+        No Image
+      </div>
+    )}
+  </div>
 
-          {/* Title & Description */}
-          <div className="card-body text-center py-3">
-            <h6 className="mb-1 fw-bold">{c.name}</h6>
-            <small className="text-muted">{c.desc}</small>
-          </div>
+  {/* Title & Description */}
+  <div className="card-body text-center py-3">
+    <h6 className="mb-1 fw-bold">{c.name}</h6>
+    <small className="text-muted">{c.desc}</small>
+  </div>
 
-          {/* Footer Buttons */}
-          <div className="card-footer text-center d-flex gap-2 justify-content-center py-2">
-            <button
-              className="btn btn-sm btn-outline-orange"
-              onClick={(e) => {
-                e.stopPropagation();
-                openEditCatalogModal(c);
-              }}
-            >
-              Edit
-            </button>
-            <button
-              className="btn btn-sm btn-outline-danger"
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteCatalog(c.id);
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        </div>
+  {/* Footer Buttons */}
+  <div className="card-footer text-center d-flex gap-2 justify-content-center py-2">
+    <button
+      className="btn btn-sm btn-outline-orange"
+      onClick={(e) => {
+        e.stopPropagation();
+        openEditCatalogModal(c);
+      }}
+    >
+      Edit
+    </button>
+    <button
+      className="btn btn-sm btn-outline-danger"
+      onClick={(e) => {
+        e.stopPropagation();
+        deleteCatalog(c.id);
+      }}
+    >
+      Delete
+    </button>
+  </div>
+</div>
+
       ))}
     </div>
   </div>
