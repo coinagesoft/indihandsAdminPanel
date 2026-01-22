@@ -332,39 +332,43 @@ const paginatedCatalogProducts = catalogProducts.slice(
   }}
 >
   {/* Image */}
-  <div
-    style={{
-      width: "100%",
-      paddingTop: "75%", // maintain aspect ratio (4:3)
-      position: "relative",
-      overflow: "hidden",
-      borderTopLeftRadius: "12px",
-      borderTopRightRadius: "12px",
-    }}
-  >
-    {c.image ? (
-      <img
-        src={c.image}
-        alt={c.name}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover", // ensures full coverage
-          transition: "transform 0.3s",
-        }}
-      />
-    ) : (
-      <div
-        className="bg-light d-flex justify-content-center align-items-center text-muted"
-        style={{ height: "100%", position: "absolute", top: 0, left: 0 }}
-      >
-        No Image
-      </div>
-    )}
-  </div>
+<div
+  style={{
+    width: "100%",
+    paddingTop: "75%", // maintain aspect ratio (4:3)
+    position: "relative",
+    overflow: "hidden",
+    borderTopLeftRadius: "12px",
+    borderTopRightRadius: "12px",
+    backgroundColor: "#f0f0f0", // optional: placeholder background
+  }}
+>
+  {c.image ? (
+    <img
+      src={c.image}
+      alt={c.name}
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        width: "100%",
+        height: "100%",
+        objectFit: "contain", // no cropping, full image visible
+        transform: "translate(-50%, -50%)",
+        transition: "transform 0.3s",
+        backgroundColor: "#f0f0f0", // optional: in case of empty space
+      }}
+    />
+  ) : (
+    <div
+      className="bg-light d-flex justify-content-center align-items-center text-muted"
+      style={{ height: "100%", position: "absolute", top: 0, left: 0 }}
+    >
+      No Image
+    </div>
+  )}
+</div>
+
 
   {/* Title & Description */}
   <div className="card-body text-center py-3">
