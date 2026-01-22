@@ -260,25 +260,21 @@ const uploadCatalogToCloudinary = async (file) => {
   };
 
 
-  const deleteCatalog = async (catalogId) => {
-    if (!confirm("Are you sure you want to delete this catalog?")) return;
+const deleteCatalog = async (catalogId) => {
+  if (!confirm("Are you sure?")) return;
 
-    try {
-      const res = await fetch(`/api/catalogs/${catalogId}`, {
-        method: "DELETE",
-      });
+  const res = await fetch(`/api/catalogs/${catalogId}`, {
+    method: "DELETE",
+  });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Delete failed");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message);
 
-      alert("✅ Catalog deleted");
+  alert("✅ Catalog deleted");
+  fetchCatalogs();
+};
 
-      await fetchCatalogs();
-    } catch (err) {
-      console.error("Delete catalog error:", err);
-      alert("❌ " + err.message);
-    }
-  };
+
 
   useEffect(() => {
     fetchCatalogs()

@@ -31,7 +31,13 @@ const Page = () => {
   /* ---------------- FETCH OVERVIEW ---------------- */
   const fetchOverview = async () => {
     try {
-      const res = await fetch("/api/dashboard/overview");
+         const token = localStorage.getItem("token");
+
+      const res = await fetch("/api/dashboard/overview", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
       const data = await res.json();
       setOverview(data);
     } catch (err) {
@@ -42,9 +48,15 @@ const Page = () => {
   /* ---------------- FETCH CHART ---------------- */
   const fetchChart = async () => {
     try {
+         const token = localStorage.getItem("token");
+
       const res = await fetch(
         `/api/dashboard/chart?view=${view}&month=${selectedMonth}&year=${selectedYear}`
-      );
+      , {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
       const data = await res.json();
       setChartValues(data);
     } catch (err) {
@@ -55,11 +67,20 @@ const Page = () => {
   /* ---------------- FETCH RECENT PROPOSALS ---------------- */
   const fetchRecentProposals = async () => {
     try {
-      const res = await fetch("/api/dashboard/recent-proposals");
+   const token = localStorage.getItem("token");
+
+const res = await fetch("/api/dashboard/recent-proposals", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
+
       const data = await res.json();
-      setRecentProposals(data);
+      console.log("data",data)
+    setRecentProposals(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setRecentProposals([]); 
     }
   };
 
