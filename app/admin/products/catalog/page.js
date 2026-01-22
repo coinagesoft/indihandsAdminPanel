@@ -335,7 +335,7 @@ const paginatedCatalogProducts = catalogProducts.slice(
 <div
   style={{
     width: "100%",
-    paddingTop: "75%",
+    aspectRatio: "1 / 1", // ✅ always square
     position: "relative",
     overflow: "hidden",
     borderTopLeftRadius: "12px",
@@ -349,24 +349,21 @@ const paginatedCatalogProducts = catalogProducts.slice(
       alt={c.name}
       style={{
         position: "absolute",
-        top: "50%",
-        left: "50%",
+        inset: 0,
         width: "100%",
         height: "100%",
-        objectFit: "cover",   // ✅ fill the circle area
-        transform: "translate(-50%, -50%)",
-        
+        objectFit: "cover",
       }}
     />
   ) : (
-    <div
-      className="bg-light d-flex justify-content-center align-items-center text-muted"
-      style={{ height: "100%", position: "absolute", top: 0, left: 0 }}
+    <div className="bg-light d-flex justify-content-center align-items-center text-muted"
+      style={{ height: "100%" }}
     >
       No Image
     </div>
   )}
 </div>
+
 
 
 
