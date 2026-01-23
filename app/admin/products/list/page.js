@@ -94,9 +94,9 @@ const Page = () => {
   const itemsPerPage = 5;
 
   const filteredProducts = products.filter((p) => {
-  const matchSearch =
-  p.name.toLowerCase().includes(search.toLowerCase()) ||
-  (p.sku || "").toLowerCase().includes(search.toLowerCase());
+    const matchSearch =
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.sku || "").toLowerCase().includes(search.toLowerCase());
 
     const matchCategory = category === "All" || p.category === category;
     const matchSubCategory = subCategory === "All" || p.subCategory === subCategory;
@@ -109,20 +109,23 @@ const Page = () => {
     currentPage * itemsPerPage
   );
 
-  // --- Existing Edit Handlers ---
-  // const openEditModal = (product) => {
-  //   setSelectedProduct({
-  //     ...product,
-  //     images: Array.isArray(product.images) ? product.images : [],
-  //     catalogs: Array.isArray(product.catalogs) ? product.catalogs : [],
-  //   });
-  //   setIsEditModalOpen(true);
-  // };
+  const normalizeImages = (images) => {
+    if (Array.isArray(images)) return images;
+    if (typeof images === "string") {
+      try {
+        const parsed = JSON.parse(images);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
   const openEditModal = (product) => {
     setSelectedProduct({
       ...product,
       featureImage: product.featureImage,   // URL
-      images: product.images || [],
+      images: normalizeImages(product.images), // ✅ FIX HERE
       // Array of URLs
     });
     setIsEditModalOpen(true);
@@ -175,7 +178,7 @@ const Page = () => {
         sku: selectedProduct.sku,
         category: selectedProduct.category,
         subCategory: selectedProduct.subCategory,
-         hsn: selectedProduct.hsn,
+        hsn: selectedProduct.hsn,
         stock: selectedProduct.stock,
         price: selectedProduct.price,
         status: selectedProduct.status,
@@ -375,6 +378,7 @@ const Page = () => {
     setCurrentPage(page);
   };
 
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -439,28 +443,27 @@ const Page = () => {
       )}
 
       <div className="card mb-4">
-        
         <div className="card-body">
-   <div className="text-end">
-   <button
-  className="btn btn-success btn-sm mb-3"
-  onClick={() => {
-    const params = new URLSearchParams({
-      search,
-      category,
-      subCategory,
-      status,
-    });
+          <div className="text-end">
+            <button
+              className="btn btn-success btn-sm mb-3"
+              onClick={() => {
+                const params = new URLSearchParams({
+                  search,
+                  category,
+                  subCategory,
+                  status,
+                });
 
-    window.location.href = `/api/products/bulk-export?${params.toString()}`;
-  }}
->
-  <i className="bi bi-file-earmark-excel"></i> Export Excel
-</button>
+                window.location.href = `/api/products/bulk-export?${params.toString()}`;
+              }}
+            >
+              <i className="bi bi-file-earmark-excel"></i> Export Excel
+            </button>
 
-   </div>
+          </div>
           <div className="row g-3">
-            
+
             <div className="col-md-3">
               <label className="form-label">Search</label>
               <input
@@ -472,22 +475,22 @@ const Page = () => {
             </div>
             <div className="col-md-3">
               <label className="form-label">Category</label>
-          <select
-  className="form-select form-select-sm"
-  value={category}
-  onChange={(e) => {
-    setCategory(e.target.value);
-    setSubCategory("All");
-    setCurrentPage(1);
-  }}
->
-  <option value="All">All</option>
-  {categoryList.map((c) => (
-    <option key={c} value={c}>
-      {c}
-    </option>
-  ))}
-</select>
+              <select
+                className="form-select form-select-sm"
+                value={category}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  setSubCategory("All");
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="All">All</option>
+                {categoryList.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
 
 
 
@@ -501,11 +504,11 @@ const Page = () => {
                 onChange={(e) => setSubCategory(e.target.value)}
               >
                 <option value="All">All</option>
-              {subCategoryList.map((sc, index) => (
-  <option key={`${sc}-${index}`} value={sc}>
-    {sc}
-  </option>
-))}
+                {subCategoryList.map((sc, index) => (
+                  <option key={`${sc}-${index}`} value={sc}>
+                    {sc}
+                  </option>
+                ))}
 
               </select>
 
@@ -531,7 +534,7 @@ const Page = () => {
         <div className="card-header">
 
           <h5 className="card-title mb-0">Products</h5>
-          
+
         </div>
         <div className="card-datatable table-responsive" style={{ overflowX: "auto" }}>
           <table className="table table-striped table-hover mb-0 text-nowrap">
@@ -696,31 +699,31 @@ const Page = () => {
                     ></button>
                   </div>
 
-                  <div className="modal-body">
-                    <div className="row g-3">
-                      {Array.isArray(galleryProduct.images) && galleryProduct.images.length > 0 ? (
-                        galleryProduct.images.map((img, i) => (
-                          <div key={i} className="col-6 col-md-4 col-lg-3">
-                            <div className="border rounded p-2 h-100 d-flex align-items-center justify-content-center">
-                              <img
-                                src={img}
-                                alt={`gallery-${i}`}
-                                className="img-fluid rounded"
-                                style={{
-                                  maxHeight: "150px",
-                                  objectFit: "cover",
-                                  width: "100%",
-                                }}
-                              />
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-muted text-center">No gallery images found</p>
-                      )}
-                    </div>
+                 <div className="modal-body">
+  <div className="row g-3">
+    {normalizeImages(galleryProduct.images).length > 0 ? (
+      normalizeImages(galleryProduct.images).map((img, i) => (
+        <div key={i} className="col-6 col-md-4 col-lg-3">
+          <div className="border rounded p-2 h-100 d-flex align-items-center justify-content-center">
+            <img
+              src={img}
+              alt={`gallery-${i}`}
+              className="img-fluid rounded"
+              style={{
+                maxHeight: "150px",
+                objectFit: "cover",
+                width: "100%",
+              }}
+            />
+          </div>
+        </div>
+      ))
+    ) : (
+      <p className="text-muted text-center">No gallery images found</p>
+    )}
+  </div>
+</div>
 
-                  </div>
                 </div>
               </div>
             </div>
@@ -739,7 +742,7 @@ const Page = () => {
 
                   {/* Header */}
                   <div className="modal-header py-2">
-    
+
 
                     <h5 className="modal-title">Edit Product</h5>
                     <button type="button" className="btn-close" onClick={closeEditModal}></button>

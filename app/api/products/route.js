@@ -88,7 +88,6 @@ const [result] = await db.query(
 
 
 
-
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
@@ -133,20 +132,21 @@ export async function GET(req) {
         p.product_name AS name,
         p.category,
         p.sub_category AS subCategory,
-            p.hsn AS hsn, 
+        p.hsn AS hsn, 
         p.stock_qty AS stock,
         p.sku,
         p.base_price AS price,
         p.status,
         p.featured_image AS featureImage,
-          COALESCE(
-    (
-      SELECT JSON_ARRAYAGG(g.image_url)
-      FROM product_gallery_images g
-      WHERE g.product_id = p.id
-    ),
-    JSON_ARRAY()
-  ) AS images
+
+        COALESCE(
+          (
+            SELECT JSON_ARRAYAGG(g.image_url)
+            FROM product_gallery_images g
+            WHERE g.product_id = p.id
+          ),
+          JSON_ARRAY()
+        ) AS images
 
       FROM products p
       ${where}
@@ -156,6 +156,17 @@ export async function GET(req) {
       [...values, limit, offset]
     );
 
+    // ✅ FIX: Ensure images is always an array
+    const formattedProducts = products.map((p) => ({
+      ...p,
+      images:
+        typeof p.images === "string"
+          ? JSON.parse(p.images)
+          : Array.isArray(p.images)
+          ? p.images
+          : [],
+    }));
+
     // 🔹 Total count (pagination)
     const [[{ total }]] = await db.query(
       `SELECT COUNT(*) AS total FROM products p ${where}`,
@@ -164,7 +175,7 @@ export async function GET(req) {
 
     return new Response(
       JSON.stringify({
-        products,
+        products: formattedProducts, // ✅ send formatted
         pagination: {
           page,
           limit,
@@ -182,4 +193,5 @@ export async function GET(req) {
     );
   }
 }
+
 
