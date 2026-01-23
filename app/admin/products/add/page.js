@@ -88,15 +88,20 @@ const handleSubmit = async (e) => {
   }
 
   const body = {
-    product_name: form.productName.value,
-    sku: form.sku.value,
+    product_name: form.productName.value.trim(),
+    sku: form.sku.value.trim(),
+    barcode: form.barcode.value.trim(),           // ✅ added
+    description: form.description.value.trim(),   // ✅ added
+
     category: form.category.value,
     subCategory: form.subCategory.value,
-     hsn: form.hsn.value,
+
+    hsn: form.hsn.value.trim(),                   // ✅ added
     stock: Number(form.stockQty.value),
     price: Number(form.basePrice.value),
-    status: form.status.value === "active" ? "Available" : "Out of Stock",
-    
+
+    status: form.status.value,                    // ✅ fixed (no "active" check)
+
     featuredImage: featuredImageUrl,
     images: galleryUrls,
   };
@@ -108,10 +113,15 @@ const handleSubmit = async (e) => {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Failed to create product");
+
+  if (!res.ok) {
+    alert("❌ " + (data?.message || data?.error || "Failed to create product"));
+    return;
+  }
 
   alert("✅ Product created");
 };
+
 
 
 

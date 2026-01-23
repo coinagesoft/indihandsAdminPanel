@@ -30,37 +30,40 @@ export async function POST(req) {
   try {
     const data = await req.json();
 
-    const {
-      product_name,
-      sku,
-      category,
-      subCategory,
-      stock,
-      price,
-      status,
-      featuredImage,
-      images,
-      hsn
-    } = data;
+  const {
+  product_name,
+  sku,
+  barcode,
+  description,
+  category,
+  subCategory,
+  stock,
+  price,
+  status,
+  featuredImage,
+  images,
+  hsn
+} = data;
 
-    console.log("✅ POST HIT:", data);
+const [result] = await db.query(
+  `INSERT INTO products 
+  (product_name, sku, barcode, description, category, sub_category, hsn, stock_qty, base_price, status, featured_image)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  [
+    product_name,
+    sku,
+    barcode || null,
+    description || null,
+    category,
+    subCategory,
+    hsn || null,
+    stock,
+    price,
+    status,
+    featuredImage || null,
+  ]
+);
 
-    const [result] = await db.query(
-      `INSERT INTO products 
-      (product_name, sku, category, sub_category,hsn, stock_qty, base_price, status, featured_image)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        product_name,
-        sku,
-        category,
-        subCategory,
-         hsn || null,
-        stock,
-        price,
-        status,
-        featuredImage || null,
-      ]
-    );
 
     const productId = result.insertId;
 
