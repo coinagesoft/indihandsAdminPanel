@@ -556,7 +556,7 @@ const Page = () => {
 
           {/* Footer Buttons */}
           <div className="col-12 mt-3 d-flex justify-content-between flex-wrap gap-2">
-            <button
+            {/* <button
               type="button"
               className="btn btn-outline-warning"
               disabled={!newBranch.loginEmail?.trim()}
@@ -574,7 +574,7 @@ const Page = () => {
               }}
             >
               Send Set Password Link
-            </button>
+            </button> */}
 
             <button type="submit" className="btn btn-orange px-4">
               Save Branch
@@ -733,7 +733,7 @@ const Page = () => {
 
             {/* Footer */}
             <div className="col-12 mt-3 d-flex justify-content-between flex-wrap gap-2">
-              <button
+              {/* <button
                 type="button"
                 className="btn btn-outline-warning"
                 disabled={!editingBranch.loginEmail?.trim()}
@@ -751,7 +751,7 @@ const Page = () => {
                 }}
               >
                 Send Reset Password Link
-              </button>
+              </button> */}
 
               <button type="submit" className="btn btn-orange px-4">
                 Save Changes
