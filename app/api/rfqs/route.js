@@ -2,21 +2,21 @@ import { db } from "../../db";
 
 export async function GET() {
   try {
-    // ✅ Organizations
+    
     const [orgRows] = await db.query(`
       SELECT id, company_name AS name
       FROM companies
       ORDER BY id DESC
     `);
 
-    // ✅ Branches
+
     const [branchRows] = await db.query(`
       SELECT id, company_id AS orgId, branch_name AS name
       FROM company_branches
       ORDER BY id DESC
     `);
 
-    // ✅ RFQs
+   
     const [rfqRows] = await db.query(`
       SELECT 
         r.id,
@@ -30,10 +30,11 @@ export async function GET() {
       FROM rfqs r
       JOIN companies c ON c.id = r.company_id
       JOIN company_branches b ON b.id = r.branch_id
+       WHERE r.status != 'Draft'
       ORDER BY r.id DESC
     `);
 
-    // ✅ RFQ Products + Product data
+  
     const [productRows] = await db.query(`
       SELECT
         rp.rfq_id AS rfqId,
