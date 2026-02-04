@@ -65,14 +65,14 @@ const Page = () => {
         return alert("⚠️ Proposal already exists: " + data.proposal_number);
       }
 
-      if (!res.ok) return alert("❌ " + data.message);
+      // if (!res.ok) return alert("❌ " + data.message);
 
       // ✅ DB generated proposal no show in UI
       if (data.proposal_number) {
         setHeader((prev) => ({ ...prev, quotationNo: data.proposal_number }));
       }
 
-      alert("✅ Proposal saved. ID = " + data.proposalId);
+      alert("✅ Proposal sent ");
     } finally {
       setSaving(false);
     }
