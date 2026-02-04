@@ -2,16 +2,16 @@ import puppeteer from "puppeteer";
 import { db } from "../../../../db";
 import fs from "fs";
 import path from "path";
-
+const isProd = "production";
 export async function GET(req, { params }) {
   try {
     // ✅ Next.js dynamic params fix
-    const { rfqid } = await params;
-    const rfqId = Number(rfqid);
+ const { rfqid } =await params; // NO await
+const rfqId = Number(rfqid);
 
-    if (!rfqId) {
-      return Response.json({ message: "Invalid rfqId" }, { status: 400 });
-    }
+   if (!rfqid || isNaN(rfqId)) {
+  return Response.json({ message: "Invalid rfqId" }, { status: 400 });
+}
 
     // ✅ Proposal data fetch
     const [[proposal]] = await db.query(
@@ -234,11 +234,11 @@ const formattedDate = new Date().toISOString().slice(0, 10);
     </html>
     `;
 
-    // ✅ Puppeteer PDF
-    const browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+const browser = await puppeteer.launch({
+  headless: true, // headless browser
+  args: ["--no-sandbox", "--disable-setuid-sandbox"], // safe for production too
+});
+
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1200, height: 800 });
