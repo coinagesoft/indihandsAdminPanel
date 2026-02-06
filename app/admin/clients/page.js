@@ -159,7 +159,6 @@ const Page = () => {
     const data = await res.json();
     if (!res.ok) return alert("❌ " + data.message);
 
-    // ✅ Send "Set Password" link immediately (using your existing reset link API)
     const resetRes = await fetch("/api/auth/request-reset", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -168,9 +167,9 @@ const Page = () => {
 
     const resetData = await resetRes.json();
     if (!resetRes.ok) {
-      alert("⚠️ Branch created but email not sent: " + resetData.message);
+      alert("⚠️ Branch created  " + resetData.message);
     } else {
-      alert("✅ Branch created & Set Password link sent to email!");
+      alert("✅ Branch created ");
     }
 
     await fetchCompanies();
@@ -432,9 +431,7 @@ const Page = () => {
               onChange={(e) => setNewBranch({ ...newBranch, loginEmail: e.target.value })}
               required
             />
-            <small className="text-muted d-block mt-1">
-              Client will receive “Set Password” link on this email.
-            </small>
+         
           </div>
 
           {/* Shipping + Billing */}
