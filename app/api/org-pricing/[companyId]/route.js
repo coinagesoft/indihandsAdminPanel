@@ -17,21 +17,37 @@ export async function POST(req, { params }) {
       return Response.json({ message: "Pricing array required" }, { status: 400 });
     }
 
-    for (const p of pricing) {
-      const productId = Number(p.productId);
-      const price = Number(p.price);
+  for (const p of pricing) {
+  const productId = Number(p.productId);
 
-      if (!productId || isNaN(price)) continue;
+  // 🔴 REMOVE custom price
+  if (p.price === null) {
+    await db.query(
+      `
+      DELETE FROM company_product_pricing
+      WHERE company_id = ? AND product_id = ?
+      `,
+      [companyIdNum, productId]
+    );
+    continue;
+  }
 
-      await db.query(
-        `
-        INSERT INTO company_product_pricing (company_id, product_id, custom_price)
-        VALUES (?, ?, ?)
-        ON DUPLICATE KEY UPDATE custom_price = ?, updated_at = CURRENT_TIMESTAMP
-        `,
-        [companyIdNum, productId, price, price]
-      );
-    }
+  const price = Number(p.price);
+  if (isNaN(price)) continue;
+
+  // ✅ ADD / UPDATE custom price
+  await db.query(
+    `
+    INSERT INTO company_product_pricing (company_id, product_id, custom_price)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      custom_price = ?,
+      updated_at = CURRENT_TIMESTAMP
+    `,
+    [companyIdNum, productId, price, price]
+  );
+}
+
 
     return Response.json({ message: "Pricing saved successfully" }, { status: 200 });
   } catch (err) {
