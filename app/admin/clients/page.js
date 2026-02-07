@@ -159,15 +159,14 @@ const Page = () => {
     const data = await res.json();
     if (!res.ok) return alert("❌ " + data.message);
 
-    const resetRes = await fetch("/api/auth/request-reset", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: newBranch.loginEmail }),
-    });
+    // const resetRes = await fetch("/api/auth/request-reset", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ email: newBranch.loginEmail }),
+    // });
 
-    const resetData = await resetRes.json();
-    if (!resetRes.ok) {
-      alert("⚠️ Branch created  " + resetData.message);
+    if (!data.ok) {
+      alert("✅ Branch created  ");
     } else {
       alert("✅ Branch created ");
     }
