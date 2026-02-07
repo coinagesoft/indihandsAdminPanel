@@ -135,11 +135,12 @@ useEffect(() => {
       setSavingOrgId(orgId);
 
       const orgPricing = pricing
-        .filter((p) => p.orgId === orgId && p.price !== "")
-        .map((p) => ({
-          productId: p.productId,
-          price: Number(p.price),
-        }));
+      .filter((p) => p.orgId === orgId)
+.map((p) => ({
+  productId: p.productId,
+  price: p.price === "" ? null : Number(p.price),
+}));
+
 
       const res = await fetch(`/api/org-pricing/${orgId}`, {
         method: "POST",
