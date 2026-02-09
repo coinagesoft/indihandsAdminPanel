@@ -13,6 +13,7 @@ const EMPTY_BRANCH = {
   phones: [],
   emails: [],
   loginEmail: "",
+  password: "",
 };
 
 const EMPTY_COMPANY = {
@@ -99,16 +100,19 @@ const Page = () => {
   const [newCompany, setNewCompany] = useState(EMPTY_COMPANY);
   const [newBranch, setNewBranch] = useState(EMPTY_BRANCH);
   const [editingBranch, setEditingBranch] = useState(EMPTY_BRANCH);
+const [editingCompany, setEditingCompany] = useState(EMPTY_COMPANY);
 
   const companyModalRef = useRef(null);
   const branchCreateModalRef = useRef(null);
   const branchEditModalRef = useRef(null);
 
   /* ===================== MODALS ===================== */
-  const openCompanyModal = () => {
-    setNewCompany({ ...EMPTY_COMPANY, id: Date.now() });
-    new bootstrap.Modal(companyModalRef.current).show();
-  };
+const openCompanyModal = () => {
+  setEditingCompany(EMPTY_COMPANY); // 👈 important
+  setNewCompany({ ...EMPTY_COMPANY });
+  new bootstrap.Modal(companyModalRef.current).show();
+};
+
 
   const openAddBranchModal = () => {
     setNewBranch({ ...EMPTY_BRANCH, id: Date.now(), phones: [""], emails: [""] });
@@ -119,11 +123,34 @@ const Page = () => {
     setEditingBranch({
       ...EMPTY_BRANCH,
       ...branch,
+      password: "",
       phones: branch.phones || [],
       emails: branch.emails || [],
     });
     new bootstrap.Modal(branchEditModalRef.current).show();
   };
+
+const handleCompanyUpdate = async (e) => {
+  e.preventDefault();
+
+  const res = await fetch(`/api/companies/${editingCompany.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      companyName: editingCompany.companyName,
+      companyEmail: editingCompany.companyEmail,
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) return alert("❌ " + data.message);
+
+  alert("✅ Company updated");
+  await fetchCompanies();
+  setEditingCompany(EMPTY_COMPANY);
+  new bootstrap.Modal(companyModalRef.current).hide();
+};
+
 
   /* ===================== HANDLERS ===================== */
   const handleCompanyCreate = async (e) => {
@@ -143,6 +170,7 @@ const Page = () => {
 
     alert("✅ Company created");
     await fetchCompanies();
+
     new bootstrap.Modal(companyModalRef.current).hide();
   };
 
@@ -172,6 +200,7 @@ const Page = () => {
     }
 
     await fetchCompanies();
+    setNewBranch(EMPTY_BRANCH);
     new bootstrap.Modal(branchCreateModalRef.current).hide();
   };
 
@@ -190,6 +219,7 @@ const Page = () => {
 
     alert("✅ Branch updated");
     await fetchCompanies();
+    setEditingBranch({ ...editingBranch, password: "" }); // ✅ ADD
     new bootstrap.Modal(branchEditModalRef.current).hide();
   };
 
@@ -252,32 +282,50 @@ const Page = () => {
         {/* RIGHT */}
         <div className="col-lg-9">
           <div className="card p-4">
-                    <div className="d-flex justify-content-between align-items-center mb-2">
-  <h5 className="text-orange mb-0">{selectedCompany?.companyName}</h5>
+          <div className="d-flex justify-content-between align-items-center mb-2">
+  <h5 className="text-orange mb-0">
+    {selectedCompany?.companyName}
+  </h5>
 
-  <button
-    className="btn btn-sm btn-outline-danger"
-    disabled={!selectedCompany?.id}
-    onClick={async () => {
-      if (!selectedCompany?.id) return;
+  <div className="d-flex gap-2">
+    <button
+      className="btn btn-sm btn-outline-orange"
+      disabled={!selectedCompany?.id}
+      onClick={() => {
+        setEditingCompany(selectedCompany);
+        new bootstrap.Modal(companyModalRef.current).show();
+      }}
+    >
+      Edit Company
+    </button>
 
-      const ok = confirm("⚠️ Are you sure? This will delete company & all branches.");
-      if (!ok) return;
+    <button
+      className="btn btn-sm btn-outline-danger"
+      disabled={!selectedCompany?.id}
+      onClick={async () => {
+        if (!selectedCompany?.id) return;
 
-      const res = await fetch(`/api/companies/${selectedCompany.id}`, {
-        method: "DELETE",
-      });
+        const ok = confirm(
+          "⚠️ Are you sure? This will delete company & all branches."
+        );
+        if (!ok) return;
 
-      const data = await res.json();
-      if (!res.ok) return alert("❌ " + data.message);
+        const res = await fetch(`/api/companies/${selectedCompany.id}`, {
+          method: "DELETE",
+        });
 
-      alert("✅ Company deleted");
-      await fetchCompanies(); // refresh list
-    }}
-  >
-    Delete Company
-  </button>
+        const data = await res.json();
+        if (!res.ok) return alert("❌ " + data.message);
+
+        alert("✅ Company deleted");
+        await fetchCompanies();
+      }}
+    >
+      Delete Company
+    </button>
+  </div>
 </div>
+
 
             <div className="d-flex justify-content-between my-3">
               <h6>Branches</h6>
@@ -293,7 +341,6 @@ const Page = () => {
                 <div className="row small">
                   <div className="col-md-6"><b>GSTIN:</b> {b.gstin}</div>
                   <div className="col-md-6"><b>Contact:</b> {b.contactPerson}</div>
-                  <div className="col-md-6"><b>Login:</b> {b.loginEmail}</div>
 
                   <div className="col-md-6">
                     <b>Phones:</b>
@@ -305,40 +352,41 @@ const Page = () => {
                     <ul>{(b.emails || []).map((e, i) => <li key={i}>{e}</li>)}</ul>
                   </div>
 
-                  <div className="col-12"><b>Shipping:</b> {b.shippingAddress}</div>
-                  <div className="col-12"><b>Billing:</b> {b.billingAddress}</div>
+                  <div className="col-6"><b>Shipping:</b> {b.shippingAddress}</div>
+                  <div className="col-6"><b>Billing:</b> {b.billingAddress}</div>
+                  <div className="col-md-6"><b>Login:</b> {b.loginEmail}</div>
                 </div>
 
-               <div className="d-flex gap-2 mt-2">
-  <button
-    className="btn btn-sm btn-outline-orange"
-    onClick={() => openEditBranchModal(b)}
-  >
-    Edit Branch
-  </button>
+                <div className="d-flex gap-2 mt-2">
+                  <button
+                    className="btn btn-sm btn-outline-orange"
+                    onClick={() => openEditBranchModal(b)}
+                  >
+                    Edit Branch
+                  </button>
 
-  <button
-    className="btn btn-sm btn-outline-danger"
-    onClick={async () => {
-      const ok = confirm("⚠️ Are you sure you want to delete this branch?");
-      if (!ok) return;
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={async () => {
+                      const ok = confirm("⚠️ Are you sure you want to delete this branch?");
+                      if (!ok) return;
 
-      const res = await fetch(`/api/branches/${b.id}`, {
-        method: "DELETE",
-      });
+                      const res = await fetch(`/api/branches/${b.id}`, {
+                        method: "DELETE",
+                      });
 
-      const data = await res.json();
-      if (!res.ok) return alert("❌ " + data.message);
+                      const data = await res.json();
+                      if (!res.ok) return alert("❌ " + data.message);
 
-      alert("✅ Branch deleted");
-      await fetchCompanies();
-    }}
-  >
-    Delete Branch
-  </button>
-</div>
+                      alert("✅ Branch deleted");
+                      await fetchCompanies();
+                    }}
+                  >
+                    Delete Branch
+                  </button>
+                </div>
 
-                
+
               </div>
             ))}
           </div>
@@ -349,210 +397,235 @@ const Page = () => {
       <div className="modal fade" ref={companyModalRef}>
         <div className="modal-dialog">
           <div className="modal-content p-4">
-            <h5>Create Company</h5>
-            <form onSubmit={handleCompanyCreate}>
-              <input
-                className="form-control mb-2"
-                placeholder="Company Name"
-                value={newCompany.companyName}
-                onChange={(e) =>
-                  setNewCompany({ ...newCompany, companyName: e.target.value })
-                }
-              />
-              <input
-                className="form-control mb-2"
-                placeholder="Company Email"
-                value={newCompany.companyEmail}
-                onChange={(e) =>
-                  setNewCompany({ ...newCompany, companyEmail: e.target.value })
-                }
-              />
-              <button className="btn btn-orange">Create</button>
+            <h5>{editingCompany?.id ? "Edit Company" : "Create Company"}</h5>
+
+<form onSubmit={editingCompany?.id ? handleCompanyUpdate : handleCompanyCreate}>
+             <input
+  className="form-control mb-2"
+  placeholder="Company Name"
+  value={editingCompany?.id ? editingCompany.companyName : newCompany.companyName}
+  onChange={(e) => {
+    editingCompany?.id
+      ? setEditingCompany({ ...editingCompany, companyName: e.target.value })
+      : setNewCompany({ ...newCompany, companyName: e.target.value });
+  }}
+/>
+
+<input
+  className="form-control mb-2"
+  placeholder="Company Email"
+  value={editingCompany?.id ? editingCompany.companyEmail : newCompany.companyEmail}
+  onChange={(e) => {
+    editingCompany?.id
+      ? setEditingCompany({ ...editingCompany, companyEmail: e.target.value })
+      : setNewCompany({ ...newCompany, companyEmail: e.target.value });
+  }}
+/>
+
+             <button className="btn btn-orange">
+  {editingCompany?.id ? "Update" : "Create"}
+</button>
+
             </form>
           </div>
         </div>
       </div>
 
       {/* ===================== CREATE BRANCH MODAL ===================== */}
-<div className="modal fade" ref={branchCreateModalRef} tabIndex={-1}>
-  <div className="modal-dialog modal-lg modal-dialog-centered">
-    <div className="modal-content">
+      <div className="modal fade" ref={branchCreateModalRef} tabIndex={-1}>
+        <div className="modal-dialog modal-lg modal-dialog-centered">
+          <div className="modal-content">
 
-      <div className="modal-header py-2">
-        <h5 className="modal-title">Add Branch</h5>
-        <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div className="modal-body pt-3">
-        <form onSubmit={handleBranchCreate} className="row g-2">
-
-          {/* Branch + GSTIN */}
-          <div className="col-md-6">
-            <label className="form-label mb-1">Branch Name</label>
-            <input
-              className="form-control"
-              placeholder="e.g. Pune Branch"
-              value={newBranch.branchName || ""}
-              onChange={(e) => setNewBranch({ ...newBranch, branchName: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label mb-1">GSTIN</label>
-            <input
-              className="form-control"
-              placeholder="27ABCDE1234F1Z5"
-              value={newBranch.gstin || ""}
-              onChange={(e) => setNewBranch({ ...newBranch, gstin: e.target.value })}
-              required
-            />
-          </div>
-
-          {/* Contact + Login Email */}
-          <div className="col-md-6">
-            <label className="form-label mb-1">Contact Person</label>
-            <input
-              className="form-control"
-              placeholder="e.g. Ravi Kumar"
-              value={newBranch.contactPerson || ""}
-              onChange={(e) => setNewBranch({ ...newBranch, contactPerson: e.target.value })}
-            />
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label mb-1">Login Email</label>
-            <input
-              type="email"
-              className="form-control"
-              placeholder="client@email.com"
-              value={newBranch.loginEmail || ""}
-              onChange={(e) => setNewBranch({ ...newBranch, loginEmail: e.target.value })}
-              required
-            />
-         
-          </div>
-
-          {/* Shipping + Billing */}
-          <div className="col-md-6">
-            <label className="form-label mb-1">Shipping Address</label>
-            <textarea
-              className="form-control"
-              rows={2}
-              placeholder="Shipping address"
-              value={newBranch.shippingAddress || ""}
-              onChange={(e) => setNewBranch({ ...newBranch, shippingAddress: e.target.value })}
-            />
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label mb-1">Billing Address</label>
-            <textarea
-              className="form-control"
-              rows={2}
-              placeholder="Billing address"
-              value={newBranch.billingAddress || ""}
-              onChange={(e) => setNewBranch({ ...newBranch, billingAddress: e.target.value })}
-            />
-          </div>
-
-          {/* Phones */}
-          <div className="col-12 mt-2">
-            <div className="d-flex justify-content-between align-items-center mb-1">
-              <label className="form-label mb-0">Phones</label>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-primary"
-                onClick={() =>
-                  setNewBranch({ ...newBranch, phones: [...(newBranch.phones || []), ""] })
-                }
-              >
-                + Add
-              </button>
+            <div className="modal-header py-2">
+              <h5 className="modal-title">Add Branch</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            {(newBranch.phones || []).length === 0 && (
-              <small className="text-muted">No phone added</small>
-            )}
+            <div className="modal-body pt-3">
+              <form onSubmit={handleBranchCreate} className="row g-2">
 
-            {(newBranch.phones || []).map((p, idx) => (
-              <div key={idx} className="d-flex gap-2 mb-1">
-                <input
-                  className="form-control"
-                  placeholder={`Phone ${idx + 1}`}
-                  value={p}
-                  onChange={(e) => {
-                    const phones = [...newBranch.phones];
-                    phones[idx] = e.target.value;
-                    setNewBranch({ ...newBranch, phones });
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={() =>
-                    setNewBranch({
-                      ...newBranch,
-                      phones: newBranch.phones.filter((_, i) => i !== idx),
-                    })
-                  }
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
+                {/* Branch + GSTIN */}
+                <div className="col-md-6">
+                  <label className="form-label mb-1">Branch Name</label>
+                  <input
+                    className="form-control"
+                    placeholder="e.g. Pune Branch"
+                    value={newBranch.branchName || ""}
+                    onChange={(e) => setNewBranch({ ...newBranch, branchName: e.target.value })}
+                    required
+                  />
+                </div>
 
-          {/* Emails */}
-          <div className="col-12 mt-2">
-            <div className="d-flex justify-content-between align-items-center mb-1">
-              <label className="form-label mb-0">Emails</label>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-primary"
-                onClick={() =>
-                  setNewBranch({ ...newBranch, emails: [...(newBranch.emails || []), ""] })
-                }
-              >
-                + Add
-              </button>
-            </div>
+                <div className="col-md-6">
+                  <label className="form-label mb-1">GSTIN</label>
+                  <input
+                    className="form-control"
+                    placeholder="27ABCDE1234F1Z5"
+                    value={newBranch.gstin || ""}
+                    onChange={(e) => setNewBranch({ ...newBranch, gstin: e.target.value })}
+                    required
+                  />
+                </div>
 
-            {(newBranch.emails || []).length === 0 && (
-              <small className="text-muted">No email added</small>
-            )}
+                {/* Contact + Login Email */}
+                <div className="col-md-6">
+                  <label className="form-label mb-1">Contact Person</label>
+                  <input
+                    className="form-control"
+                    placeholder="e.g. Ravi Kumar"
+                    value={newBranch.contactPerson || ""}
+                    onChange={(e) => setNewBranch({ ...newBranch, contactPerson: e.target.value })}
+                  />
+                </div>
 
-            {(newBranch.emails || []).map((em, idx) => (
-              <div key={idx} className="d-flex gap-2 mb-1">
-                <input
-                  className="form-control"
-                  placeholder={`Email ${idx + 1}`}
-                  value={em}
-                  onChange={(e) => {
-                    const emails = [...newBranch.emails];
-                    emails[idx] = e.target.value;
-                    setNewBranch({ ...newBranch, emails });
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={() =>
-                    setNewBranch({
-                      ...newBranch,
-                      emails: newBranch.emails.filter((_, i) => i !== idx),
-                    })
-                  }
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
 
-          {/* Footer Buttons */}
-          <div className="col-12 mt-3 d-flex justify-content-between flex-wrap gap-2">
-            {/* <button
+
+
+                {/* Shipping + Billing */}
+                <div className="col-md-6">
+                  <label className="form-label mb-1">Shipping Address</label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    placeholder="Shipping address"
+                    value={newBranch.shippingAddress || ""}
+                    onChange={(e) => setNewBranch({ ...newBranch, shippingAddress: e.target.value })}
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label mb-1">Billing Address</label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    placeholder="Billing address"
+                    value={newBranch.billingAddress || ""}
+                    onChange={(e) => setNewBranch({ ...newBranch, billingAddress: e.target.value })}
+                  />
+                </div>
+
+                {/* Phones */}
+                <div className="col-12 mt-2">
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <label className="form-label mb-0">Phones</label>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() =>
+                        setNewBranch({ ...newBranch, phones: [...(newBranch.phones || []), ""] })
+                      }
+                    >
+                      + Add
+                    </button>
+                  </div>
+
+                  {(newBranch.phones || []).length === 0 && (
+                    <small className="text-muted">No phone added</small>
+                  )}
+
+                  {(newBranch.phones || []).map((p, idx) => (
+                    <div key={idx} className="d-flex gap-2 mb-1">
+                      <input
+                        className="form-control"
+                        placeholder={`Phone ${idx + 1}`}
+                        value={p}
+                        onChange={(e) => {
+                          const phones = [...newBranch.phones];
+                          phones[idx] = e.target.value;
+                          setNewBranch({ ...newBranch, phones });
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() =>
+                          setNewBranch({
+                            ...newBranch,
+                            phones: newBranch.phones.filter((_, i) => i !== idx),
+                          })
+                        }
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Emails */}
+                <div className="col-12 mt-2">
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <label className="form-label mb-0">Emails</label>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() =>
+                        setNewBranch({ ...newBranch, emails: [...(newBranch.emails || []), ""] })
+                      }
+                    >
+                      + Add
+                    </button>
+                  </div>
+
+                  {(newBranch.emails || []).length === 0 && (
+                    <small className="text-muted">No email added</small>
+                  )}
+
+                  {(newBranch.emails || []).map((em, idx) => (
+                    <div key={idx} className="d-flex gap-2 mb-1">
+                      <input
+                        className="form-control"
+                        placeholder={`Email ${idx + 1}`}
+                        value={em}
+                        onChange={(e) => {
+                          const emails = [...newBranch.emails];
+                          emails[idx] = e.target.value;
+                          setNewBranch({ ...newBranch, emails });
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() =>
+                          setNewBranch({
+                            ...newBranch,
+                            emails: newBranch.emails.filter((_, i) => i !== idx),
+                          })
+                        }
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label mb-1">Password</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Minimum 6 characters"
+                    value={newBranch.password || ""}
+                    onChange={(e) =>
+                      setNewBranch({ ...newBranch, password: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label mb-1">Login Email</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="client@email.com"
+                    value={newBranch.loginEmail || ""}
+                    onChange={(e) => setNewBranch({ ...newBranch, loginEmail: e.target.value })}
+                    required
+                  />
+
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="col-12 mt-3 d-flex justify-content-between flex-wrap gap-2">
+                  {/* <button
               type="button"
               className="btn btn-outline-warning"
               disabled={!newBranch.loginEmail?.trim()}
@@ -572,164 +645,178 @@ const Page = () => {
               Send Set Password Link
             </button> */}
 
-            <button type="submit" className="btn btn-orange px-4">
-              Save Branch
-            </button>
+                  <button type="submit" className="btn btn-orange px-4">
+                    Save Branch
+                  </button>
+                </div>
+
+              </form>
+            </div>
           </div>
-
-        </form>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
 
 
       {/* ===================== EDIT BRANCH MODAL ===================== */}
-      {/* ===================== EDIT BRANCH MODAL ===================== */}
-<div className="modal fade" ref={branchEditModalRef} tabIndex={-1}>
-  <div className="modal-dialog modal-lg modal-dialog-centered">
-    <div className="modal-content">
+      <div className="modal fade" ref={branchEditModalRef} tabIndex={-1}>
+        <div className="modal-dialog modal-lg modal-dialog-centered">
+          <div className="modal-content">
 
-      <div className="modal-header py-2">
-        <h5 className="modal-title">Edit Branch</h5>
-        <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div className="modal-body pt-3">
-        {editingBranch && (
-          <form onSubmit={handleBranchUpdate} className="row g-2">
-
-            {/* Basic Fields */}
-            {[
-              { label: "Branch Name", key: "branchName", type: "text" },
-              { label: "GSTIN", key: "gstin", type: "text" },
-              { label: "Contact Person", key: "contactPerson", type: "text" },
-              { label: "Login Email", key: "loginEmail", type: "email" },
-            ].map(({ label, key, type }) => (
-              <div key={key} className="col-md-6">
-                <label className="form-label mb-1">{label}</label>
-                <input
-                  className="form-control"
-                  type={type}
-                  value={editingBranch[key] || ""}
-                  onChange={(e) => setEditingBranch({ ...editingBranch, [key]: e.target.value })}
-                />
-              </div>
-            ))}
-
-            {/* Addresses */}
-            <div className="col-md-6">
-              <label className="form-label mb-1">Shipping Address</label>
-              <textarea
-                className="form-control"
-                rows={2}
-                value={editingBranch.shippingAddress || ""}
-                onChange={(e) => setEditingBranch({ ...editingBranch, shippingAddress: e.target.value })}
-              />
+            <div className="modal-header py-2">
+              <h5 className="modal-title">Edit Branch</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <div className="col-md-6">
-              <label className="form-label mb-1">Billing Address</label>
-              <textarea
-                className="form-control"
-                rows={2}
-                value={editingBranch.billingAddress || ""}
-                onChange={(e) => setEditingBranch({ ...editingBranch, billingAddress: e.target.value })}
-              />
-            </div>
+            <div className="modal-body pt-3">
+              {editingBranch && (
+                <form onSubmit={handleBranchUpdate} className="row g-2">
 
-            {/* Phones */}
-            <div className="col-12 mt-2">
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <label className="form-label mb-0">Phones</label>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() =>
-                    setEditingBranch({
-                      ...editingBranch,
-                      phones: [...(editingBranch.phones || []), ""],
-                    })
-                  }
-                >
-                  + Add
-                </button>
-              </div>
+                  {/* Basic Fields */}
+                  {[
+                    { label: "Branch Name", key: "branchName", type: "text" },
+                    { label: "GSTIN", key: "gstin", type: "text" },
+                    { label: "Contact Person", key: "contactPerson", type: "text" },
+                    { label: "Login Email", key: "loginEmail", type: "email" },
+                  ].map(({ label, key, type }) => (
+                    <div key={key} className="col-md-6">
+                      <label className="form-label mb-1">{label}</label>
+                      <input
+                        className="form-control"
+                        type={type}
+                        value={editingBranch[key] || ""}
+                        onChange={(e) => setEditingBranch({ ...editingBranch, [key]: e.target.value })}
+                      />
+                    </div>
+                  ))}
 
-              {(editingBranch.phones || []).map((p, idx) => (
-                <div key={idx} className="d-flex gap-2 mb-1">
-                  <input
-                    className="form-control"
-                    value={p}
-                    placeholder={`Phone ${idx + 1}`}
-                    onChange={(e) => {
-                      const phones = [...editingBranch.phones];
-                      phones[idx] = e.target.value;
-                      setEditingBranch({ ...editingBranch, phones });
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => {
-                      const phones = editingBranch.phones.filter((_, i) => i !== idx);
-                      setEditingBranch({ ...editingBranch, phones });
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
+                  {/* Addresses */}
+                  <div className="col-md-6">
+                    <label className="form-label mb-1">Shipping Address</label>
+                    <textarea
+                      className="form-control"
+                      rows={2}
+                      value={editingBranch.shippingAddress || ""}
+                      onChange={(e) => setEditingBranch({ ...editingBranch, shippingAddress: e.target.value })}
+                    />
+                  </div>
 
-            {/* Emails */}
-            <div className="col-12 mt-2">
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <label className="form-label mb-0">Emails</label>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() =>
-                    setEditingBranch({
-                      ...editingBranch,
-                      emails: [...(editingBranch.emails || []), ""],
-                    })
-                  }
-                >
-                  + Add
-                </button>
-              </div>
+                  <div className="col-md-6">
+                    <label className="form-label mb-1">Billing Address</label>
+                    <textarea
+                      className="form-control"
+                      rows={2}
+                      value={editingBranch.billingAddress || ""}
+                      onChange={(e) => setEditingBranch({ ...editingBranch, billingAddress: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label mb-1">
+                      New Password <small className="text-muted">(optional)</small>
+                    </label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      placeholder="Leave blank to keep current password"
+                      value={editingBranch.password || ""}
+                      onChange={(e) =>
+                        setEditingBranch({ ...editingBranch, password: e.target.value })
+                      }
+                    />
+                  </div>
 
-              {(editingBranch.emails || []).map((em, idx) => (
-                <div key={idx} className="d-flex gap-2 mb-1">
-                  <input
-                    className="form-control"
-                    value={em}
-                    placeholder={`Email ${idx + 1}`}
-                    onChange={(e) => {
-                      const emails = [...editingBranch.emails];
-                      emails[idx] = e.target.value;
-                      setEditingBranch({ ...editingBranch, emails });
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => {
-                      const emails = editingBranch.emails.filter((_, i) => i !== idx);
-                      setEditingBranch({ ...editingBranch, emails });
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
 
-            {/* Footer */}
-            <div className="col-12 mt-3 d-flex justify-content-between flex-wrap gap-2">
-              {/* <button
+                  {/* Phones */}
+                  <div className="col-12 mt-2">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <label className="form-label mb-0">Phones</label>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() =>
+                          setEditingBranch({
+                            ...editingBranch,
+                            phones: [...(editingBranch.phones || []), ""],
+                          })
+                        }
+                      >
+                        + Add
+                      </button>
+                    </div>
+
+                    {(editingBranch.phones || []).map((p, idx) => (
+                      <div key={idx} className="d-flex gap-2 mb-1">
+                        <input
+                          className="form-control"
+                          value={p}
+                          placeholder={`Phone ${idx + 1}`}
+                          onChange={(e) => {
+                            const phones = [...editingBranch.phones];
+                            phones[idx] = e.target.value;
+                            setEditingBranch({ ...editingBranch, phones });
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => {
+                            const phones = editingBranch.phones.filter((_, i) => i !== idx);
+                            setEditingBranch({ ...editingBranch, phones });
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Emails */}
+                  <div className="col-12 mt-2">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <label className="form-label mb-0">Emails</label>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() =>
+                          setEditingBranch({
+                            ...editingBranch,
+                            emails: [...(editingBranch.emails || []), ""],
+                          })
+                        }
+                      >
+                        + Add
+                      </button>
+                    </div>
+
+                    {(editingBranch.emails || []).map((em, idx) => (
+                      <div key={idx} className="d-flex gap-2 mb-1">
+                        <input
+                          className="form-control"
+                          value={em}
+                          placeholder={`Email ${idx + 1}`}
+                          onChange={(e) => {
+                            const emails = [...editingBranch.emails];
+                            emails[idx] = e.target.value;
+                            setEditingBranch({ ...editingBranch, emails });
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => {
+                            const emails = editingBranch.emails.filter((_, i) => i !== idx);
+                            setEditingBranch({ ...editingBranch, emails });
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="col-12 mt-3 d-flex justify-content-between flex-wrap gap-2">
+                    {/* <button
                 type="button"
                 className="btn btn-outline-warning"
                 disabled={!editingBranch.loginEmail?.trim()}
@@ -749,17 +836,17 @@ const Page = () => {
                 Send Reset Password Link
               </button> */}
 
-              <button type="submit" className="btn btn-orange px-4">
-                Save Changes
-              </button>
-            </div>
+                    <button type="submit" className="btn btn-orange px-4">
+                      Save Changes
+                    </button>
+                  </div>
 
-          </form>
-        )}
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
 
 

@@ -1,12 +1,14 @@
 import { db } from "../../../../db";
 import bcrypt from "bcryptjs";
 
-/* ✅ Add new branch to company */
+
+
+
 
 
 export async function POST(req, { params }) {
   try {
-    const { id } = await params;
+    const { id } =await  params;
     const companyId = Number(id);
 
     if (!companyId) {
@@ -23,7 +25,10 @@ export async function POST(req, { params }) {
       phones = [],
       emails = [],
       loginEmail,
+      password,
     } = body;
+
+    /* ================= VALIDATIONS ================= */
 
     if (!branchName?.trim())
       return Response.json({ message: "Branch name required" }, { status: 400 });
@@ -34,36 +39,48 @@ export async function POST(req, { params }) {
     if (!loginEmail?.trim())
       return Response.json({ message: "Login email required" }, { status: 400 });
 
-    // ✅ Check if loginEmail already exists in users
+    if (!password?.trim() || password.trim().length < 6)
+      return Response.json(
+        { message: "Password must be at least 6 characters" },
+        { status: 400 }
+      );
+
+    /* ================= DUPLICATE CHECKS ================= */
+
     const [existingUser] = await db.query(
-      "SELECT id FROM users WHERE email = ? LIMIT 1",
+      "SELECT id FROM users WHERE email=? LIMIT 1",
       [loginEmail.trim()]
     );
 
-    if (existingUser.length > 0) {
+    if (existingUser.length) {
       return Response.json(
-        { message: "This login email already exists in users" },
+        { message: "This login email already exists" },
         { status: 400 }
       );
     }
 
-    // ✅ Check if loginEmail already exists in branches
     const [existingBranch] = await db.query(
-      "SELECT id FROM company_branches WHERE login_email = ? LIMIT 1",
+      "SELECT id FROM company_branches WHERE login_email=? LIMIT 1",
       [loginEmail.trim()]
     );
 
-    if (existingBranch.length > 0) {
+    if (existingBranch.length) {
       return Response.json(
         { message: "This login email already exists in branches" },
         { status: 400 }
       );
     }
 
-    // ✅ Insert into company_branches (password_hash null)
+    /* ================= PASSWORD HASH ================= */
+
+    const passwordHash = await bcrypt.hash(password.trim(), 10);
+
+    /* ================= INSERT BRANCH ================= */
+
     const [branchResult] = await db.query(
-      `INSERT INTO company_branches 
-      (company_id, branch_name, phones, emails, gstin, contact_person, shipping_address, billing_address, login_email, password_hash)
+      `INSERT INTO company_branches
+      (company_id, branch_name, phones, emails, gstin, contact_person,
+       shipping_address, billing_address, login_email, password_hash)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         companyId,
@@ -75,23 +92,24 @@ export async function POST(req, { params }) {
         shippingAddress || null,
         billingAddress || null,
         loginEmail.trim(),
-        null, // ✅ password will be set via reset link
+        passwordHash,
       ]
     );
 
-    // ✅ Insert into users (Client account)
+    /* ================= INSERT USER ================= */
+
     const [userResult] = await db.query(
       `INSERT INTO users (email, role, active, password_hash)
-       VALUES (?, 'Client', 1, ?)`,
+       VALUES (?, 'client', 1, ?)`,
       [
-        loginEmail.trim(),    // email
-        null,                 // password will be set via reset link
+        loginEmail.trim(),
+        passwordHash,
       ]
     );
 
     return Response.json(
       {
-        message: "Branch created & Client user added",
+        message: "Branch & client user created successfully",
         branchId: branchResult.insertId,
         userId: userResult.insertId,
       },
@@ -102,4 +120,6 @@ export async function POST(req, { params }) {
     return Response.json({ message: "Server error" }, { status: 500 });
   }
 }
+
+
 

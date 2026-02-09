@@ -44,7 +44,9 @@ async function generateNextProposalNumber() {
   return `QTN-${baseKey}-${String(nextSeq).padStart(3, "0")}`;
 }
 
+
 /* ---------------- POST (UPSERT) ---------------- */
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -56,9 +58,11 @@ export async function POST(req) {
       proposal_date,
       billing_address,
       shipping_address,
-      place, // ✅ optional (if you store it)
+      place, 
       items = [],
+       charges = [],
     } = body;
+const safeCharges = Array.isArray(charges) ? charges : [];
 
     // ✅ validations
     if (!rfqId || !companyId || !branchId) {
@@ -72,9 +76,16 @@ export async function POST(req) {
       return Response.json({ message: "proposal_date is required" }, { status: 400 });
     }
 
-    if (!Array.isArray(items) || items.length === 0) {
-      return Response.json({ message: "items required" }, { status: 400 });
-    }
+   if (
+  (!Array.isArray(items) || items.length === 0) &&
+  safeCharges.length === 0
+) {
+  return Response.json(
+    { message: "At least one item or charge is required" },
+    { status: 400 }
+  );
+}
+
 
     /* ✅ 1) Fetch Pricing Defaults */
     const [[pricingDefaults]] = await db.query(`
@@ -90,6 +101,7 @@ export async function POST(req) {
       igst_rate: 0,
       delivery_charges: 0,
       branding_charges: 0,
+      
     };
 
     /* ✅ 2) Calculate totals */
@@ -143,16 +155,35 @@ export async function POST(req) {
       };
     });
 
+    
     const deliveryCharges = Number(defaults.delivery_charges || 0);
     const brandingCharges = Number(defaults.branding_charges || 0);
+let extra_charges_amount = 0;
+let extra_charges_tax = 0;
 
-    const grand_total =
-      subtotal +
-      cgst_total +
-      sgst_total +
-      igst_total +
-      deliveryCharges +
-      brandingCharges;
+for (const ch of safeCharges) {
+  const amount = Number(ch.amount || 0);
+  const taxPercent = Number(ch.taxPercent || 0);
+
+  const tax = (amount * taxPercent) / 100;
+
+  extra_charges_amount += amount;
+  extra_charges_tax += tax;
+}
+
+
+ const grand_total =
+  subtotal +
+  cgst_total +
+  sgst_total +
+  igst_total +
+  deliveryCharges +
+  brandingCharges +
+  extra_charges_amount +
+  extra_charges_tax;
+
+
+
 
     /* ✅ 3) Check existing proposal for same RFQ */
     const [[existingProposal]] = await db.query(
@@ -252,14 +283,43 @@ export async function POST(req) {
       );
     }
 
-    return Response.json(
-      {
-        message: existingProposal ? "✅ Proposal updated successfully" : "✅ Proposal created successfully",
-        proposalId,
-        proposal_number, // ✅ same RFQ always same number
-      },
-      { status: 200 }
-    );
+    /* ✅ 4.5) Replace proposal charges */
+await db.query(
+  `DELETE FROM proposal_charges WHERE proposal_id = ?`,
+  [proposalId]
+);
+
+for (const ch of charges) {
+  if (!ch.label || !ch.amount) continue;
+
+  await db.query(
+    `
+   INSERT INTO proposal_charges
+(proposal_id, label, amount, tax_percent)
+VALUES (?, ?, ?, ?)
+
+    `,
+    [
+      proposalId,
+      ch.label,
+      Number(ch.amount),
+       Number(ch.taxPercent || 0),
+    ]
+  );
+}
+
+ return Response.json({
+  message: existingProposal
+    ? "✅ Proposal updated successfully"
+    : "✅ Proposal created successfully",
+  proposalId,
+  proposal_number,
+  charges_summary: {
+    amount: extra_charges_amount,
+    tax: extra_charges_tax,
+  },
+});
+
   } catch (err) {
     console.error("POST /api/proposals error:", err);
     return Response.json({ message: "Server error" }, { status: 500 });

@@ -16,11 +16,12 @@ const Page = () => {
     place: "",
     billingAddress: "",
     shippingAddress: "",
-    companyId: null,   // ✅ add
+    companyId: null,   
     branchId: null,
   });
   const [items, setItems] = useState([]);
   const [saving, setSaving] = useState(false);
+const [charges, setCharges] = useState([]);
 
   /* ================= HANDLERS ================= */
   const handleSaveProposal = async () => {
@@ -50,6 +51,13 @@ const Page = () => {
           sgst_rate: x.sgst,
           igst_rate: x.igst,
         })),
+         charges: charges
+    .filter(c => c.label && c.amount > 0)
+    .map(c => ({
+      label: c.label,
+      amount: c.amount,
+      taxPercent: c.taxPercent || 0
+    })),
       };
 
       const res = await fetch("/api/proposals", {
@@ -65,7 +73,7 @@ const Page = () => {
         return alert("⚠️ Proposal already exists: " + data.proposal_number);
       }
 
-      // if (!res.ok) return alert("❌ " + data.message);
+   
 
       // ✅ DB generated proposal no show in UI
       if (data.proposal_number) {
@@ -110,6 +118,30 @@ const Page = () => {
     }));
 
     setItems(data.items || []);
+    // fetch proposal charges
+const chargesRes = await fetch(`/api/proposals/${rfqId}/charges`);
+
+if (!chargesRes.ok) {
+  const err = await chargesRes.json();
+  console.error("Charges API error:", err);
+  setCharges([]);
+  return;
+}
+
+const chargesData = await chargesRes.json();
+console.log("Charges API data:", chargesData);
+
+setCharges(
+  (chargesData.charges || []).map(c => ({
+    label: c.label,
+    amount: Number(c.amount),
+    taxPercent: Number(c.taxPercent || 0),
+  }))
+);
+
+
+
+
   };
 
 
@@ -133,8 +165,26 @@ const Page = () => {
     { subtotal: 0, cgst: 0, sgst: 0, igst: 0 }
   );
 
-  const grandTotal =
-    totals.subtotal + totals.cgst + totals.sgst + totals.igst;
+const chargesSummary = charges.reduce(
+  (acc, c) => {
+    const amt = Number(c.amount || 0);
+    const tax = (amt * Number(c.taxPercent || 0)) / 100;
+    acc.amount += amt;
+    acc.tax += tax;
+    return acc;
+  },
+  { amount: 0, tax: 0 }
+);
+
+
+const grandTotal =
+  totals.subtotal +
+  totals.cgst +
+  totals.sgst +
+  totals.igst +
+  chargesSummary.amount +
+  chargesSummary.tax;
+
 
   useEffect(() => {
     fetchAcceptedRfqs();
@@ -321,6 +371,20 @@ const Page = () => {
               </div>
             </div>
 
+{charges.length > 0 && (
+  <div className="mb-3">
+    <h6>Additional Charges</h6>
+    <ul className="mb-0">
+      {charges.map((c, i) => (
+        <li key={i}>
+          {c.label}: ₹ {Number(c.amount).toFixed(2)}
+          {c.taxPercent > 0 && ` (+${c.taxPercent}% tax)`}
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+
 
             {/* Totals */}
             <div className="card-body px-0">
@@ -328,32 +392,44 @@ const Page = () => {
                 <div className="col-md-6" />
                 <div className="col-md-6">
                   <table className="table">
-                    <tbody>
-                      <tr>
-                        <td>Total Before Tax</td>
-                        <td>₹ {totals.subtotal.toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <td>CGST Total</td>
-                        <td>₹ {totals.cgst.toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <td>SGST Total</td>
-                        <td>₹ {totals.sgst.toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <td>IGST Total</td>
-                        <td>₹ {totals.igst.toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <td>Total Tax</td>
-                        <td>₹ {(totals.cgst + totals.sgst + totals.igst).toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <th>Grand Total</th>
-                        <th>₹ {grandTotal.toFixed(2)}</th>
-                      </tr>
-                    </tbody>
+                 <tbody>
+  <tr>
+    <td>Total Before Tax</td>
+    <td>₹ {totals.subtotal.toFixed(2)}</td>
+  </tr>
+  <tr>
+    <td>CGST Total</td>
+    <td>₹ {totals.cgst.toFixed(2)}</td>
+  </tr>
+  <tr>
+    <td>SGST Total</td>
+    <td>₹ {totals.sgst.toFixed(2)}</td>
+  </tr>
+  <tr>
+    <td>IGST Total</td>
+    <td>₹ {totals.igst.toFixed(2)}</td>
+  </tr>
+
+  {chargesSummary.amount > 0 && (
+    <tr>
+      <td>Additional Charges</td>
+      <td>₹ {chargesSummary.amount.toFixed(2)}</td>
+    </tr>
+  )}
+
+  {chargesSummary.tax > 0 && (
+    <tr>
+      <td>Charges Tax</td>
+      <td>₹ {chargesSummary.tax.toFixed(2)}</td>
+    </tr>
+  )}
+
+  <tr className="fw-bold">
+    <th>Grand Total</th>
+    <th>₹ {grandTotal.toFixed(2)}</th>
+  </tr>
+</tbody>
+
                   </table>
                 </div>
               </div>
