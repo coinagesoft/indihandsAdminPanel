@@ -1,10 +1,12 @@
 import { db } from "../../../db";
 
+
 export async function POST(req) {
   try {
     const body = await req.json();
     const { products } = body;
 
+    /* ================= VALIDATION ================= */
     if (!Array.isArray(products) || products.length === 0) {
       return Response.json(
         { message: "Products array required" },
@@ -12,34 +14,35 @@ export async function POST(req) {
       );
     }
 
+    /* ================= MAP DATA ================= */
     const rows = products.map((p) => ({
-      product_name: p.productName || "",
-      sku: p.sku || "",
-      barcode: p.barcode || null,
-      category: p.category || "",
-      sub_category: p.subCategory || "",
-      hsn: p.hsn || null,
-      size: p.size || null,
-      weight: p.weight || null,
-      description: p.description || null,
+      product_name: p.productName?.trim() || "",
+      sku: p.sku?.trim() || "",
+      barcode: p.barcode?.trim() || null,
+      category: p.category?.trim() || "",
+      sub_category: p.subCategory?.trim() || "",
+      hsn: p.hsn?.trim() || null,
+      size: p.size?.trim() || null,          // ✅ NEW
+      weight: p.weight?.trim() || null,      // ✅ NEW
+      description: p.description?.trim() || null,
       stock_qty: Number(p.stockQty ?? 0),
       base_price: Number(p.basePrice ?? 0),
-      status: p.status || "Available",
+      status: p.status?.trim() || "Available",
     }));
 
+    console.log("📦 Import rows:", rows);
 
-    console.log("rows", rows)
+    /* ================= ROW-LEVEL VALIDATION ================= */
+  rows.forEach((r, i) => {
+  if (!r.product_name || !r.category || isNaN(r.base_price)) {
+    throw new Error(
+      `Row ${i + 2}: Product Name, Category and Base Price are required`
+    );
+  }
+});
 
-    // ✅ Fixed validation
-    for (const r of rows) {
-      if (!r.product_name || !r.category || isNaN(r.base_price)) {
-        return Response.json(
-          { message: "Excel must contain Product Name, Category and Base Price" },
-          { status: 400 }
-        );
-      }
-    }
 
+    /* ================= PREPARE SQL VALUES ================= */
     const values = rows.map((r) => [
       r.product_name,
       r.sku,
@@ -47,33 +50,47 @@ export async function POST(req) {
       r.category,
       r.sub_category,
       r.hsn,
-      size,
-      weight,
-      r.size,
-      r.weight,
+      r.size,         // ✅
+      r.weight,       // ✅
       r.description,
       r.stock_qty,
       r.base_price,
       r.status,
     ]);
 
-
+    /* ================= INSERT ================= */
     await db.query(
       `
-  INSERT INTO products
-  (product_name, sku, barcode, category, sub_category, hsn, description, stock_qty, base_price, status)
-  VALUES ?
-  `,
+      INSERT INTO products
+      (
+        product_name,
+        sku,
+        barcode,
+        category,
+        sub_category,
+        hsn,
+        size,
+        weight,
+        description,
+        stock_qty,
+        base_price,
+        status
+      )
+      VALUES ?
+      `,
       [values]
     );
-
 
     return Response.json(
       { message: `✅ ${rows.length} products imported successfully` },
       { status: 201 }
     );
   } catch (err) {
-    console.error("POST /api/products/bulk-import error:", err);
-    return Response.json({ message: "Server error" }, { status: 500 });
+    console.error("❌ POST /api/products/bulk-import error:", err);
+    return Response.json(
+      { message: "Server error", error: err.message },
+      { status: 500 }
+    );
   }
 }
+
