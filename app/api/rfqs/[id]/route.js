@@ -1,27 +1,103 @@
 import { db } from "../../../db";
 
 export async function PATCH(req, { params }) {
-  try {
-    const { id } = await params;         // ✅ Next.js 15 fix
-    const Id = Number(id);
+  const connection = await db.getConnection();
 
-    if (!Id) {
-      return Response.json({ message: "Invalid rfq id" }, { status: 400 });
+  try {
+    const { id } = await params;
+    const rfqId = Number(id);
+
+    if (!rfqId) {
+      return Response.json({ message: "Invalid RFQ id" }, { status: 400 });
     }
 
-    const body = await req.json();
-    const { status } = body;
+    const { status } = await req.json();
 
     const allowed = ["Submitted", "Under Review", "Accepted", "Rejected"];
     if (!allowed.includes(status)) {
       return Response.json({ message: "Invalid status" }, { status: 400 });
     }
 
-    await db.query(`UPDATE rfqs SET status = ? WHERE id = ?`, [status, Id]);
+    await connection.beginTransaction();
 
-    return Response.json({ message: "Status updated" }, { status: 200 });
+    /* 1️⃣ Fetch current RFQ status */
+    const [[rfq]] = await connection.query(
+      `SELECT status FROM rfqs WHERE id = ? FOR UPDATE`,
+      [rfqId]
+    );
+
+    if (!rfq) {
+      await connection.rollback();
+      return Response.json({ message: "RFQ not found" }, { status: 404 });
+    }
+
+    const prevStatus = rfq.status;
+
+    /* 2️⃣ Reduce stock ONLY if moving to Accepted */
+    if (prevStatus !== "Accepted" && status === "Accepted") {
+      const [items] = await connection.query(
+        `
+        SELECT product_id, quantity
+        FROM rfq_products
+        WHERE rfq_id = ?
+        `,
+        [rfqId]
+      );
+
+      for (const item of items) {
+        const [[product]] = await connection.query(
+          `
+          SELECT stock_qty
+          FROM products
+          WHERE id = ?
+          FOR UPDATE
+          `,
+          [item.product_id]
+        );
+
+        if (!product) {
+          throw new Error(`Product ${item.product_id} not found`);
+        }
+
+        if (product.stock_qty < item.quantity) {
+          throw new Error(
+            `Insufficient stock for product ID ${item.product_id}`
+          );
+        }
+
+        await connection.query(
+          `
+          UPDATE products
+          SET stock_qty = stock_qty - ?
+          WHERE id = ?
+          `,
+          [item.quantity, item.product_id]
+        );
+      }
+    }
+
+    /* 3️⃣ Update RFQ status */
+    await connection.query(
+      `UPDATE rfqs SET status = ? WHERE id = ?`,
+      [status, rfqId]
+    );
+
+    await connection.commit();
+
+    return Response.json(
+      { message: "RFQ status updated successfully" },
+      { status: 200 }
+    );
+
   } catch (err) {
-    console.error("PATCH /api/rfqs/[Id] error:", err);
-    return Response.json({ message: "Server error" }, { status: 500 });
+    await connection.rollback();
+    console.error("PATCH /api/rfqs/[id] error:", err);
+
+    return Response.json(
+      { message: err.message || "Server error" },
+      { status: 500 }
+    );
+  } finally {
+    connection.release();
   }
 }
