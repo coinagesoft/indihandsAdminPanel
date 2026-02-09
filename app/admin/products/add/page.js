@@ -1,14 +1,14 @@
 "use client";
-import React, { useState ,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 
 const Page = () => {
   const [featuredPreview, setFeaturedPreview] = useState(null);
   const [galleryPreviews, setGalleryPreviews] = useState([]);
   const [products, setProducts] = useState([]);
   const [excelFile, setExcelFile] = useState(null);
-const [categories, setCategories] = useState([]);
-const [selectedCategory, setSelectedCategory] = useState("");
-const [subcategories, setSubcategories] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [subcategories, setSubcategories] = useState([]);
 
   const handleFeaturedChange = (e) => {
     const file = e.target.files[0];
@@ -16,23 +16,23 @@ const [subcategories, setSubcategories] = useState([]);
       setFeaturedPreview(URL.createObjectURL(file));
     }
   };
-useEffect(() => {
-  const fetchCategories = async () => {
-    const res = await fetch("/api/categories");
-    const data = await res.json();
-    setCategories(data.categories || []);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const res = await fetch("/api/categories");
+      const data = await res.json();
+      setCategories(data.categories || []);
+    };
+
+    fetchCategories();
+  }, []);
+
+  const handleCategoryChange = (e) => {
+    const value = e.target.value;
+    setSelectedCategory(value);
+
+    const selected = categories.find(c => c.name === value);
+    setSubcategories(selected?.subcategories || []);
   };
-
-  fetchCategories();
-}, []);
-
-const handleCategoryChange = (e) => {
-  const value = e.target.value;
-  setSelectedCategory(value);
-
-  const selected = categories.find(c => c.name === value);
-  setSubcategories(selected?.subcategories || []);
-};
 
   const handleGalleryChange = (e) => {
     const files = Array.from(e.target.files);
@@ -44,144 +44,148 @@ const handleCategoryChange = (e) => {
     const file = e.target.files[0];
     if (file) setExcelFile(file);
   };
-const uploadToCloudinary = async (file) => {
-  try {
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", "products");
+  const uploadToCloudinary = async (file) => {
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", "products");
 
-    console.log("➡️ Cloudinary request start...");
+      console.log("➡️ Cloudinary request start...");
 
-    const res = await fetch("https://api.cloudinary.com/v1_1/dxb1whlam/image/upload", {
-      method: "POST",
-      body: fd,
-    });
+      const res = await fetch("https://api.cloudinary.com/v1_1/dxb1whlam/image/upload", {
+        method: "POST",
+        body: fd,
+      });
 
-    console.log("✅ Cloudinary status:", res.status);
+      console.log("✅ Cloudinary status:", res.status);
 
-    const data = await res.json();
-    console.log("✅ Cloudinary response:", data);
+      const data = await res.json();
+      console.log("✅ Cloudinary response:", data);
 
-    if (!res.ok) throw new Error(data?.error?.message || "Cloudinary upload failed");
+      if (!res.ok) throw new Error(data?.error?.message || "Cloudinary upload failed");
 
-    return data.secure_url;
-  } catch (err) {
-    console.error("❌ Cloudinary upload failed:", err);
-    throw err;
-  }
-};
+      return data.secure_url;
+    } catch (err) {
+      console.error("❌ Cloudinary upload failed:", err);
+      throw err;
+    }
+  };
 
   // Publish single product
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const form = e.target;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
 
-  let featuredImageUrl = null;
-  if (form.featuredImage.files[0]) {
-    featuredImageUrl = await uploadToCloudinary(form.featuredImage.files[0]);
-  }
+    let featuredImageUrl = null;
+    if (form.featuredImage.files[0]) {
+      featuredImageUrl = await uploadToCloudinary(form.featuredImage.files[0]);
+    }
 
-  const galleryUrls = [];
-  for (const file of Array.from(form.galleryImages.files)) {
-    const url = await uploadToCloudinary(file);
-    galleryUrls.push(url);
-  }
+    const galleryUrls = [];
+    for (const file of Array.from(form.galleryImages.files)) {
+      const url = await uploadToCloudinary(file);
+      galleryUrls.push(url);
+    }
 
-  const body = {
-    product_name: form.productName.value.trim(),
-    sku: form.sku.value.trim(),
-    barcode: form.barcode.value.trim(),           // ✅ added
-    description: form.description.value.trim(),   // ✅ added
+    const body = {
+      product_name: form.productName.value.trim(),
+      sku: form.sku.value.trim(),
+      barcode: form.barcode.value.trim(),           // ✅ added
+      description: form.description.value.trim(),   // ✅ added
 
-    category: form.category.value,
-    subCategory: form.subCategory.value,
+      category: form.category.value,
+      subCategory: form.subCategory.value,
 
-    hsn: form.hsn.value.trim(),                   // ✅ added
-    stock: Number(form.stockQty.value),
-    price: Number(form.basePrice.value),
+      hsn: form.hsn.value.trim(),
+      size: form.size.value.trim(),     // ✅ ADD
+      weight: form.weight.value.trim(),                 // ✅ added
+      stock: Number(form.stockQty.value),
+      price: Number(form.basePrice.value),
 
-    status: form.status.value,                    // ✅ fixed (no "active" check)
+      status: form.status.value,                    // ✅ fixed (no "active" check)
 
-    featuredImage: featuredImageUrl,
-    images: galleryUrls,
-  };
+      featuredImage: featuredImageUrl,
+      images: galleryUrls,
+    };
 
-  const res = await fetch("/api/products", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    alert("❌ " + (data?.message || data?.error || "Failed to create product"));
-    return;
-  }
-
-  alert("✅ Product created");
-};
-
-
-
-
-// --- helper to convert file to base64
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (err) => reject(err);
-  });
-}
-
-
-const handleExcelImport = async () => {
-  if (!excelFile) return alert("Please select an Excel file");
-
-  const XLSX = await import("xlsx");
-  const reader = new FileReader();
-
-  reader.onload = async (evt) => {
-    const data = evt.target.result;
-    const workbook = XLSX.read(data, { type: "binary" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-    if (jsonData.length === 0) return alert("Excel empty आहे");
-
-    const mapped = jsonData.map((x) => ({
-      productName: x.productName?.toString().trim() || "",
-      sku: x.sku?.toString().trim() || "",
-      barcode: x.barcode?.toString().trim() || "",
-      category: x.category?.toString().trim() || "",
-      subCategory: x.subCategory?.toString().trim() || "",
-      hsn: x.hsn?.toString().trim() || "",
-      description: x.description?.toString().trim() || "",
-      stockQty: Number(x.stockQty ?? 0),
-      basePrice: Number(x.basePrice ?? 0),
-      status: x.status?.toString().trim() || "Available",
-    }));
-
-    setProducts(mapped);
-
-    const res = await fetch("/api/products/bulk-import", {
+    const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ products: mapped }),
+      body: JSON.stringify(body),
     });
 
-    const result = await res.json();
+    const data = await res.json();
 
-    console.log("excel data",result)
-    if (!res.ok) return alert("❌ " + result.message);
-    alert(result.message);
+    if (!res.ok) {
+      alert("❌ " + (data?.message || data?.error || "Failed to create product"));
+      return;
+    }
+
+    alert("✅ Product created");
   };
 
-  reader.readAsBinaryString(excelFile);
-};
+
+
+
+  // --- helper to convert file to base64
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (err) => reject(err);
+    });
+  }
+
+
+  const handleExcelImport = async () => {
+    if (!excelFile) return alert("Please select an Excel file");
+
+    const XLSX = await import("xlsx");
+    const reader = new FileReader();
+
+    reader.onload = async (evt) => {
+      const data = evt.target.result;
+      const workbook = XLSX.read(data, { type: "binary" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      if (jsonData.length === 0) return alert("Excel empty आहे");
+
+      const mapped = jsonData.map((x) => ({
+        productName: x.productName?.toString().trim() || "",
+        sku: x.sku?.toString().trim() || "",
+        barcode: x.barcode?.toString().trim() || "",
+        category: x.category?.toString().trim() || "",
+        subCategory: x.subCategory?.toString().trim() || "",
+        hsn: x.hsn?.toString().trim() || "",
+        size: x.size?.toString().trim() || "",
+        weight: x.weight?.toString().trim() || "",
+        description: x.description?.toString().trim() || "",
+        stockQty: Number(x.stockQty ?? 0),
+        basePrice: Number(x.basePrice ?? 0),
+        status: x.status?.toString().trim() || "Available",
+      }));
+
+      setProducts(mapped);
+
+      const res = await fetch("/api/products/bulk-import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ products: mapped }),
+      });
+
+      const result = await res.json();
+
+      console.log("excel data", result)
+      if (!res.ok) return alert("❌ " + result.message);
+      alert(result.message);
+    };
+
+    reader.readAsBinaryString(excelFile);
+  };
 
 
 
@@ -241,7 +245,9 @@ const handleExcelImport = async () => {
                     <th>SKU</th>
                     <th>Category</th>
                     <th>Subcategory</th>
-                       <th>HSN</th>
+                    <th>HSN</th>
+                    <th>Size</th>
+                    <th>Weight</th>
                     <th>Stock</th>
                     <th>Price</th>
                   </tr>
@@ -253,7 +259,9 @@ const handleExcelImport = async () => {
                       <td>{p.sku}</td>
                       <td>{p.category}</td>
                       <td>{p.subCategory}</td>
-                       <td>{p.hsn}</td> 
+                      <td>{p.hsn}</td>
+                      <td>{p.size || "-"}</td>
+                      <td>{p.weight || "-"}</td>
                       <td>{p.stockQty}</td>
                       <td>₹{p.basePrice}</td>
                     </tr>
@@ -310,14 +318,40 @@ const handleExcelImport = async () => {
                   </div>
                 </div>
                 <div className="form-floating form-floating-outline mt-4">
-  <input
-    type="text"
-    className="form-control"
-    name="hsn"
-    placeholder="HSN Code"
-  />
-  <label>HSN Code</label>
-</div>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="hsn"
+                    placeholder="HSN Code"
+                  />
+                  <label>HSN Code</label>
+                </div>
+                <div className="row gx-5 mt-4">
+                  <div className="col">
+                    <div className="form-floating form-floating-outline">
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="size"
+                        placeholder="Size (e.g. 12x10 inch, Large)"
+                      />
+                      <label>Size</label>
+                    </div>
+                  </div>
+
+                  <div className="col">
+                    <div className="form-floating form-floating-outline">
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="weight"
+                        placeholder="Weight (e.g. 1.5 kg, 800 g)"
+                      />
+                      <label>Weight</label>
+                    </div>
+                  </div>
+                </div>
+
 
 
                 <div className="mt-5">
@@ -397,7 +431,7 @@ const handleExcelImport = async () => {
             </div>
 
 
-         
+
           </div>
 
           {/* RIGHT */}
@@ -432,49 +466,49 @@ const handleExcelImport = async () => {
               </div>
               <div className="card-body">
                 <div className="form-floating form-floating-outline mb-4">
-                 <select
-  className="form-select"
-  name="category"
-  required
-  value={selectedCategory}
-  onChange={handleCategoryChange}
->
-  <option value="">Select Category</option>
-  {categories.map(c => (
-    <option key={c.name} value={c.name}>
-      {c.name}
-    </option>
-  ))}
-</select>
+                  <select
+                    className="form-select"
+                    name="category"
+                    required
+                    value={selectedCategory}
+                    onChange={handleCategoryChange}
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map(c => (
+                      <option key={c.name} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
 
                   <label>Category</label>
                 </div>
 
                 <div className="form-floating form-floating-outline mb-4">
-                 <select className="form-select" name="subCategory">
-  <option value="">Select SubCategory</option>
-  {subcategories.map(sc => (
-    <option key={sc.name} value={sc.name}>
-      {sc.name}
-    </option>
-  ))}
-</select>
+                  <select className="form-select" name="subCategory">
+                    <option value="">Select SubCategory</option>
+                    {subcategories.map(sc => (
+                      <option key={sc.name} value={sc.name}>
+                        {sc.name}
+                      </option>
+                    ))}
+                  </select>
 
                   <label>Sub Category</label>
                 </div>
 
                 <div className="form-floating form-floating-outline">
                   <select className="form-select" name="status">
-                  <option value="Available">Available</option>
-                <option value="Out of Stock">Out of Stock</option>
+                    <option value="Available">Available</option>
+                    <option value="Out of Stock">Out of Stock</option>
                   </select>
                   <label>Status</label>
                 </div>
-                
+
               </div>
-              
+
             </div>
-              {/* Inventory */}
+            {/* Inventory */}
             <div className="card mb-6">
               <div className="card-header"><h5 className="mb-0">Inventory</h5></div>
               <div className="card-body">

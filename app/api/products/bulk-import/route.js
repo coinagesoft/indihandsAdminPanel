@@ -12,54 +12,60 @@ export async function POST(req) {
       );
     }
 
-  const rows = products.map((p) => ({
-  product_name: p.productName || "",
-  sku: p.sku || "",
-  barcode: p.barcode || null,
-  category: p.category || "",
-  sub_category: p.subCategory || "",
-  hsn: p.hsn || null,
-  description: p.description || null,
-  stock_qty: Number(p.stockQty ?? 0),
-  base_price: Number(p.basePrice ?? 0),
-  status: p.status || "Available",
-}));
+    const rows = products.map((p) => ({
+      product_name: p.productName || "",
+      sku: p.sku || "",
+      barcode: p.barcode || null,
+      category: p.category || "",
+      sub_category: p.subCategory || "",
+      hsn: p.hsn || null,
+      size: p.size || null,
+      weight: p.weight || null,
+      description: p.description || null,
+      stock_qty: Number(p.stockQty ?? 0),
+      base_price: Number(p.basePrice ?? 0),
+      status: p.status || "Available",
+    }));
 
 
-    console.log("rows",rows)
+    console.log("rows", rows)
 
     // ✅ Fixed validation
     for (const r of rows) {
       if (!r.product_name || !r.category || isNaN(r.base_price)) {
         return Response.json(
-{ message: "Excel must contain Product Name, Category and Base Price" },
+          { message: "Excel must contain Product Name, Category and Base Price" },
           { status: 400 }
         );
       }
     }
 
-  const values = rows.map((r) => [
-  r.product_name,
-  r.sku,
-  r.barcode,
-  r.category,
-  r.sub_category,
-  r.hsn,
-  r.description,
-  r.stock_qty,   // ✅ FIX
-  r.base_price,
-  r.status,
-]);
+    const values = rows.map((r) => [
+      r.product_name,
+      r.sku,
+      r.barcode,
+      r.category,
+      r.sub_category,
+      r.hsn,
+      size,
+      weight,
+      r.size,
+      r.weight,
+      r.description,
+      r.stock_qty,
+      r.base_price,
+      r.status,
+    ]);
 
 
-  await db.query(
-  `
+    await db.query(
+      `
   INSERT INTO products
   (product_name, sku, barcode, category, sub_category, hsn, description, stock_qty, base_price, status)
   VALUES ?
   `,
-  [values]
-);
+      [values]
+    );
 
 
     return Response.json(

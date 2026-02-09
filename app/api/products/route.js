@@ -42,13 +42,15 @@ export async function POST(req) {
   status,
   featuredImage,
   images,
-  hsn
+  hsn,
+   size,          
+      weight
 } = data;
 
 const [result] = await db.query(
   `INSERT INTO products 
-  (product_name, sku, barcode, description, category, sub_category, hsn, stock_qty, base_price, status, featured_image)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  (product_name, sku, barcode, description, category, sub_category, hsn, size, weight, stock_qty,  base_price, status, featured_image)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)`,
   [
     product_name,
     sku,
@@ -57,6 +59,8 @@ const [result] = await db.query(
     category,
     subCategory,
     hsn || null,
+    size || null,     
+    weight || null,
     stock,
     price,
     status,
@@ -133,6 +137,8 @@ export async function GET(req) {
         p.category,
         p.sub_category AS subCategory,
         p.hsn AS hsn, 
+          p.size,         
+        p.weight, 
         p.stock_qty AS stock,
         p.sku,
         p.base_price AS price,

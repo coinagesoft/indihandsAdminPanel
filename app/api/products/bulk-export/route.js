@@ -19,6 +19,8 @@ export async function GET(req) {
         category,
         sub_category,
         hsn,
+          size,         
+        weight,
         description,
         stock_qty,
         base_price,
@@ -62,6 +64,8 @@ export async function GET(req) {
       { header: "Category", key: "category", width: 18 },
       { header: "Sub Category", key: "sub_category", width: 18 },
       { header: "HSN", key: "hsn", width: 15 },
+       { header: "Size", key: "size", width: 18 },       
+      { header: "Weight", key: "weight", width: 15 }, 
       { header: "Description", key: "description", width: 30 },
       { header: "Stock Qty", key: "stock_qty", width: 12 },
       { header: "Base Price", key: "base_price", width: 12 },
@@ -69,7 +73,13 @@ export async function GET(req) {
       { header: "Featured Image", key: "featured_image", width: 35 },
     ];
 
-    rows.forEach((row) => sheet.addRow(row));
+     rows.forEach((row) => {
+      sheet.addRow({
+        ...row,
+        size: row.size || "",       
+        weight: row.weight || "",   
+      });
+    });
 
     sheet.getRow(1).font = { bold: true };
 

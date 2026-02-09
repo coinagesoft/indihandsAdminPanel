@@ -124,6 +124,8 @@ const Page = () => {
   const openEditModal = (product) => {
     setSelectedProduct({
       ...product,
+       size: product.size || "",
+    weight: product.weight || "",
       featureImage: product.featureImage,   // URL
       images: normalizeImages(product.images), // ✅ FIX HERE
       // Array of URLs
@@ -179,6 +181,8 @@ const Page = () => {
         category: selectedProduct.category,
         subCategory: selectedProduct.subCategory,
         hsn: selectedProduct.hsn,
+          size: selectedProduct.size,      
+  weight: selectedProduct.weight, 
         stock: selectedProduct.stock,
         price: selectedProduct.price,
         status: selectedProduct.status,
@@ -546,6 +550,8 @@ const Page = () => {
                 <th>Category</th>
                 <th>Subcategory</th>
                 <th>HSN</th>
+                <th>Size</th>
+                <th>Weight</th>
                 <th>Stock</th>
                 <th>SKU</th>
                 <th>Price</th>
@@ -584,9 +590,12 @@ const Page = () => {
                     <td>{p.name}</td>
                     <td>{p.category}</td>
                     <td>{p.subCategory}</td>
-                    <td>{p.hsn}</td>
+                    <td>{p.hsn || "-"}</td>
+                    <td>{p.size || "-"}</td>
+                    <td>{p.weight || "-"}</td>
+
                     <td>{p.stock}</td>
-                    <td>{p.sku}</td>
+                    <td>{p.sku || "-"}</td>
                     <td>Rs.{p.price}</td>
                     <td>
                       <span className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"}`}>
@@ -699,30 +708,30 @@ const Page = () => {
                     ></button>
                   </div>
 
-                 <div className="modal-body">
-  <div className="row g-3">
-    {normalizeImages(galleryProduct.images).length > 0 ? (
-      normalizeImages(galleryProduct.images).map((img, i) => (
-        <div key={i} className="col-6 col-md-4 col-lg-3">
-          <div className="border rounded p-2 h-100 d-flex align-items-center justify-content-center">
-            <img
-              src={img}
-              alt={`gallery-${i}`}
-              className="img-fluid rounded"
-              style={{
-                maxHeight: "150px",
-                objectFit: "cover",
-                width: "100%",
-              }}
-            />
-          </div>
-        </div>
-      ))
-    ) : (
-      <p className="text-muted text-center">No gallery images found</p>
-    )}
-  </div>
-</div>
+                  <div className="modal-body">
+                    <div className="row g-3">
+                      {normalizeImages(galleryProduct.images).length > 0 ? (
+                        normalizeImages(galleryProduct.images).map((img, i) => (
+                          <div key={i} className="col-6 col-md-4 col-lg-3">
+                            <div className="border rounded p-2 h-100 d-flex align-items-center justify-content-center">
+                              <img
+                                src={img}
+                                alt={`gallery-${i}`}
+                                className="img-fluid rounded"
+                                style={{
+                                  maxHeight: "150px",
+                                  objectFit: "cover",
+                                  width: "100%",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted text-center">No gallery images found</p>
+                      )}
+                    </div>
+                  </div>
 
                 </div>
               </div>
@@ -749,252 +758,239 @@ const Page = () => {
                   </div>
 
                   {/* Body */}
-                  <div className="modal-body">
-                    <div className="row g-2">
+                 <div className="modal-body">
+  <div className="row g-3">
 
-                      {/* Product Name */}
-                      <div className="col-md-4">
-                        <label className="form-label mb-1">Product Name</label>
-                        <input
-                          className="form-control form-control-sm"
-                          value={selectedProduct.name}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, name: e.target.value })
-                          }
-                        />
-                      </div>
+    {/* ================= ROW 1 ================= */}
+    <div className="col-md-4">
+      <label className="form-label">Product Name</label>
+      <input
+        className="form-control form-control-sm"
+        value={selectedProduct.name}
+        onChange={(e) =>
+          setSelectedProduct({ ...selectedProduct, name: e.target.value })
+        }
+      />
+    </div>
 
-                      {/* SKU */}
-                      <div className="col-md-4">
-                        <label className="form-label mb-1">SKU</label>
-                        <input
-                          className="form-control form-control-sm"
-                          value={selectedProduct.sku}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, sku: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label mb-1">HSN</label>
-                        <input
-                          className="form-control form-control-sm"
-                          value={selectedProduct.hsn}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, hsn: e.target.value })
-                          }
-                        />
-                      </div>
+    <div className="col-md-4">
+      <label className="form-label">SKU</label>
+      <input
+        className="form-control form-control-sm"
+        value={selectedProduct.sku}
+        onChange={(e) =>
+          setSelectedProduct({ ...selectedProduct, sku: e.target.value })
+        }
+      />
+    </div>
 
-                      {/* Category */}
-                      <div className="col-md-6">
-                        <label className="form-label mb-1">Category</label>
+    <div className="col-md-4">
+      <label className="form-label">HSN</label>
+      <input
+        className="form-control form-control-sm"
+        value={selectedProduct.hsn || ""}
+        onChange={(e) =>
+          setSelectedProduct({ ...selectedProduct, hsn: e.target.value })
+        }
+      />
+    </div>
 
-                        <select
-                          className="form-select form-select-sm"
-                          value={selectedProduct.category || ""}
-                          onChange={(e) => {
-                            setSelectedProduct({
-                              ...selectedProduct,
-                              category: e.target.value,
-                              subCategory: "", // ✅ reset subcategory when category changes
-                            });
-                          }}
-                        >
-                          <option value="">Select Category</option>
-                          {categoryList.map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+    {/* ================= ROW 2 ================= */}
+    <div className="col-md-4">
+      <label className="form-label">Size</label>
+      <input
+        className="form-control form-control-sm"
+        placeholder="12 x 10 x 8 inch"
+        value={selectedProduct.size || ""}
+        onChange={(e) =>
+          setSelectedProduct({ ...selectedProduct, size: e.target.value })
+        }
+      />
+    </div>
 
-                      <div className="col-md-6">
-                        <label className="form-label mb-1">Subcategory</label>
+    <div className="col-md-4">
+      <label className="form-label">Weight</label>
+      <input
+        className="form-control form-control-sm"
+        placeholder="1.5 kg"
+        value={selectedProduct.weight || ""}
+        onChange={(e) =>
+          setSelectedProduct({ ...selectedProduct, weight: e.target.value })
+        }
+      />
+    </div>
 
-                        <select
-                          className="form-select form-select-sm"
-                          value={selectedProduct.subCategory || ""}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, subCategory: e.target.value })
-                          }
-                          disabled={!selectedProduct.category}
-                        >
-                          <option value="">Select Subcategory</option>
+    <div className="col-md-4">
+      <label className="form-label">Stock</label>
+      <input
+        type="number"
+        className="form-control form-control-sm"
+        value={selectedProduct.stock}
+        onChange={(e) =>
+          setSelectedProduct({
+            ...selectedProduct,
+            stock: Number(e.target.value),
+          })
+        }
+      />
+    </div>
 
-                          {subCategoryList.map((sc) => (
-                            <option key={sc} value={sc}>
-                              {sc}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+    {/* ================= ROW 3 ================= */}
+    <div className="col-md-4">
+      <label className="form-label">Price</label>
+      <input
+        type="number"
+        className="form-control form-control-sm"
+        value={selectedProduct.price}
+        onChange={(e) =>
+          setSelectedProduct({
+            ...selectedProduct,
+            price: Number(e.target.value),
+          })
+        }
+      />
+    </div>
 
+    <div className="col-md-4">
+      <label className="form-label">Status</label>
+      <select
+        className="form-select form-select-sm"
+        value={selectedProduct.status}
+        onChange={(e) =>
+          setSelectedProduct({ ...selectedProduct, status: e.target.value })
+        }
+      >
+        <option value="Available">Available</option>
+        <option value="Out of Stock">Out of Stock</option>
+      </select>
+    </div>
 
-                      {/* Stock */}
-                      <div className="col-md-4">
-                        <label className="form-label mb-1">Stock</label>
-                        <input
-                          type="number"
-                          className="form-control form-control-sm"
-                          value={selectedProduct.stock}
-                          onChange={(e) =>
-                            setSelectedProduct({
-                              ...selectedProduct,
-                              stock: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
+    <div className="col-md-4"></div> {/* spacer for alignment */}
 
-                      {/* Price */}
-                      <div className="col-md-4">
-                        <label className="form-label mb-1">Price</label>
-                        <input
-                          type="number"
-                          className="form-control form-control-sm"
-                          value={selectedProduct.price}
-                          onChange={(e) =>
-                            setSelectedProduct({
-                              ...selectedProduct,
-                              price: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
+    {/* ================= ROW 4 ================= */}
+    <div className="col-md-6">
+      <label className="form-label">Category</label>
+      <select
+        className="form-select form-select-sm"
+        value={selectedProduct.category || ""}
+        onChange={(e) =>
+          setSelectedProduct({
+            ...selectedProduct,
+            category: e.target.value,
+            subCategory: "",
+          })
+        }
+      >
+        <option value="">Select Category</option>
+        {categoryList.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </select>
+    </div>
 
-                      {/* Status */}
-                      <div className="col-md-4">
-                        <label className="form-label mb-1">Status</label>
-                        <select
-                          className="form-select form-select-sm"
-                          value={selectedProduct.status}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, status: e.target.value })
-                          }
-                        >
-                          <option value="Available">Available</option>
-                          <option value="Out of Stock">Out of Stock</option>
-                        </select>
-                      </div>
+    <div className="col-md-6">
+      <label className="form-label">Subcategory</label>
+      <select
+        className="form-select form-select-sm"
+        value={selectedProduct.subCategory || ""}
+        disabled={!selectedProduct.category}
+        onChange={(e) =>
+          setSelectedProduct({
+            ...selectedProduct,
+            subCategory: e.target.value,
+          })
+        }
+      >
+        <option value="">Select Subcategory</option>
+        {subCategoryList.map((sc) => (
+          <option key={sc} value={sc}>
+            {sc}
+          </option>
+        ))}
+      </select>
+    </div>
 
-                      {/* Feature Image (FILE + PATH DISPLAY) */}
-                      <div className="col-12">
-                        <label className="form-label mb-1">Feature Image</label>
-                        <input
-                          type="file"
-                          className="form-control form-control-sm"
-                          onChange={(e) => {
-                            const file = e.target.files[0];
-                            if (file) {
-                              setSelectedProduct({
-                                ...selectedProduct,
-                                featureImage: file,
-                              });
-                            }
-                          }}
-                        />
+    {/* ================= FEATURE IMAGE ================= */}
+    <div className="col-12">
+      <label className="form-label">Feature Image</label>
+      <input
+        type="file"
+        className="form-control form-control-sm"
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) {
+            setSelectedProduct({ ...selectedProduct, featureImage: file });
+          }
+        }}
+      />
+      <small className="text-muted d-block mt-1">
+        {selectedProduct.featureImage instanceof File
+          ? selectedProduct.featureImage.name
+          : selectedProduct.featureImage || "No image selected"}
+      </small>
+    </div>
 
-                        <small className="text-muted">
-                          Selected :
-                          {" "}
-                          {selectedProduct.featureImage
-                            ? selectedProduct.featureImage instanceof File
-                              ? selectedProduct.featureImage.name
-                              : selectedProduct.featureImage
-                            : "No image selected"}
-                        </small>
-                      </div>
+    {/* ================= GALLERY ================= */}
+    <div className="col-12">
+      <label className="form-label me-2">Gallery Images </label>
 
-                      {/* Gallery Images (FILE + PATH DISPLAY) */}
-                      <div className="col-12">
-                        <label className="form-label mb-1">Gallery Images</label>
+      {(selectedProduct.images || []).map((img, index) => (
+        <div key={index} className="d-flex align-items-center gap-2 mb-2">
+          <input
+            type="file"
+            className="form-control form-control-sm"
+            style={{ maxWidth: 260 }}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const updated = [...selectedProduct.images];
+                updated[index] = file;
+                setSelectedProduct({ ...selectedProduct, images: updated });
+              }
+            }}
+          />
 
-                        {(selectedProduct.images || []).map((img, index) => (
-                          <div
-                            key={index}
-                            className="d-flex align-items-center gap-2 mb-1"
-                          >
-                            {/* File picker */}
-                            <input
-                              type="file"
-                              className="form-control form-control-sm"
-                              style={{ width: 400 }}   // 🔒 fixed width
-                              onChange={(e) => {
-                                const file = e.target.files[0];
-                                if (file) {
-                                  const newImages = [...selectedProduct.images];
-                                  newImages[index] = file;
-                                  setSelectedProduct({
-                                    ...selectedProduct,
-                                    images: newImages,
-                                  });
-                                }
-                              }}
-                            />
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            readOnly
+            value={
+              img instanceof File ? img.name : img || "No image"
+            }
+          />
 
-                            {/* Path / filename */}
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              readOnly
-                              style={{
-                                width: 360,            // 🔒 fixed width
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                              }}
-                              title={
-                                img
-                                  ? img instanceof File
-                                    ? img.name
-                                    : img
-                                  : "No image"
-                              }
-                              value={
-                                img
-                                  ? img instanceof File
-                                    ? img.name
-                                    : img
-                                  : "No image"
-                              }
-                            />
+          <button
+            className="btn btn-sm btn-outline-danger"
+            onClick={() =>
+              setSelectedProduct({
+                ...selectedProduct,
+                images: selectedProduct.images.filter((_, i) => i !== index),
+              })
+            }
+          >
+            ✕
+          </button>
+        </div>
+      ))}
 
-                            {/* Remove */}
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => {
-                                const newImages = selectedProduct.images.filter(
-                                  (_, i) => i !== index
-                                );
-                                setSelectedProduct({
-                                  ...selectedProduct,
-                                  images: newImages,
-                                });
-                              }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
+      <button
+        className="btn btn-sm btn-outline-primary"
+        onClick={() =>
+          setSelectedProduct({
+            ...selectedProduct,
+            images: [...(selectedProduct.images || []), null],
+          })
+        }
+      >
+        + Add Image
+      </button>
+    </div>
 
-                        <button
-                          className="btn btn-sm btn-outline-primary mt-1"
-                          onClick={() =>
-                            setSelectedProduct({
-                              ...selectedProduct,
-                              images: [...(selectedProduct.images || []), null],
-                            })
-                          }
-                        >
-                          + Add Image
-                        </button>
-                      </div>
+  </div>
+</div>
 
-
-                    </div>
-                  </div>
 
                   {/* Footer */}
                   <div className="modal-footer py-2">
