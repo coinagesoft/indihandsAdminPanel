@@ -2,7 +2,7 @@ import { db } from "../../../../db";
 
 export async function GET(req, { params }) {
   try {
-    const rfqId = Number(params.rfqid);
+    const {rfqId} = await params;;
 
     const [[row]] = await db.query(
       `SELECT id, proposal_number FROM proposals WHERE rfq_id = ? LIMIT 1`,
