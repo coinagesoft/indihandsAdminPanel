@@ -154,20 +154,24 @@ const Page = () => {
 
       if (jsonData.length === 0) return alert("Excel empty आहे");
 
-      const mapped = jsonData.map((x) => ({
-        productName: x.productName?.toString().trim() || "",
-        sku: x.sku?.toString().trim() || "",
-        barcode: x.barcode?.toString().trim() || "",
-        category: x.category?.toString().trim() || "",
-        subCategory: x.subCategory?.toString().trim() || "",
-        hsn: x.hsn?.toString().trim() || "",
-        size: x.size?.toString().trim() || "",
-        weight: x.weight?.toString().trim() || "",
-        description: x.description?.toString().trim() || "",
-        stockQty: Number(x.stockQty ?? 0),
-        basePrice: Number(x.basePrice ?? 0),
-        status: x.status?.toString().trim() || "Available",
-      }));
+    const mapped = jsonData.map((x, index) => ({
+  productName: x["Product Name"]?.toString().trim() || "",
+  sku: x["SKU"]?.toString().trim() || "",
+  barcode: x["Barcode"]?.toString().trim() || "",
+  category: x["Category"]?.toString().trim() || "",
+  subCategory: x["Sub Category"]?.toString().trim() || "",
+  hsn: x["HSN"]?.toString().trim() || "",
+  size: x["Size"]?.toString().trim() || "",
+  weight: x["Weight"]?.toString().trim() || "",
+  description: x["Description"]?.toString().trim() || "",
+  stockQty: Number(x["Stock Qty"] ?? 0),
+  basePrice: Number(x["Base Price"] ?? 0),
+  status: x["Status"]?.toString().trim() || "Available",
+
+  // 🔍 helpful for debugging
+  __row: index + 2,
+}));
+
 
       setProducts(mapped);
 
