@@ -9,6 +9,8 @@ const Page = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [subcategories, setSubcategories] = useState([]);
+  const [status, setStatus] = useState("Available");
+  const [stockQty, setStockQty] = useState(0);
 
   const handleFeaturedChange = (e) => {
     const file = e.target.files[0];
@@ -71,10 +73,50 @@ const Page = () => {
     }
   };
 
+  const handleStatusChange = (e) => {
+    const value = e.target.value;
+    setStatus(value);
+
+    if (value === "Out of Stock") {
+      setStockQty(0); // auto fix
+    }
+  };
+
+  const handleStockChange = (e) => {
+    const qty = Number(e.target.value);
+    setStockQty(qty);
+
+    if (qty === 0) {
+      setStatus("Out of Stock");
+    } else {
+      setStatus("Available");
+    }
+  };
+
   // Publish single product
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.target;
+
+    // 🔐 INVENTORY vs STATUS VALIDATION
+
+    // ✅ Read values FIRST
+    const status = form.status.value;
+    const stockQty = Number(form.stockQty.value);
+
+    // 🔐 INVENTORY vs STATUS VALIDATION
+
+    // Case 1: Out of Stock but inventory > 0
+    if (status === "Out of Stock" && stockQty > 0) {
+      alert("❌ If status is Out of Stock, inventory must be 0");
+      return;
+    }
+
+    // Case 2: Available but inventory is 0
+    if (status === "Available" && stockQty === 0) {
+      alert("❌ If status is Available, inventory must be greater than 0");
+      return;
+    }
 
     let featuredImageUrl = null;
     if (form.featuredImage.files[0]) {
@@ -90,23 +132,24 @@ const Page = () => {
     const body = {
       product_name: form.productName.value.trim(),
       sku: form.sku.value.trim(),
-      barcode: form.barcode.value.trim(),           // ✅ added
-      description: form.description.value.trim(),   // ✅ added
+      barcode: form.barcode.value.trim(),           
+      description: form.description.value.trim(),   
 
       category: form.category.value,
       subCategory: form.subCategory.value,
 
       hsn: form.hsn.value.trim(),
-      size: form.size.value.trim(),     // ✅ ADD
-      weight: form.weight.value.trim(),                 // ✅ added
+      size: form.size.value.trim(),     
+      weight: form.weight.value.trim(),                 
       stock: Number(form.stockQty.value),
       price: Number(form.basePrice.value),
 
-      status: form.status.value,                    // ✅ fixed (no "active" check)
+      status: form.status.value,                   
 
       featuredImage: featuredImageUrl,
       images: galleryUrls,
     };
+
 
     const res = await fetch("/api/products", {
       method: "POST",
@@ -152,25 +195,25 @@ const Page = () => {
 
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-      if (jsonData.length === 0) return alert("Excel empty आहे");
+      if (jsonData.length === 0) return alert("Excel is empty");
 
-    const mapped = jsonData.map((x, index) => ({
-  productName: x["Product Name"]?.toString().trim() || "",
-  sku: x["SKU"]?.toString().trim() || "",
-  barcode: x["Barcode"]?.toString().trim() || "",
-  category: x["Category"]?.toString().trim() || "",
-  subCategory: x["Sub Category"]?.toString().trim() || "",
-  hsn: x["HSN"]?.toString().trim() || "",
-  size: x["Size"]?.toString().trim() || "",
-  weight: x["Weight"]?.toString().trim() || "",
-  description: x["Description"]?.toString().trim() || "",
-  stockQty: Number(x["Stock Qty"] ?? 0),
-  basePrice: Number(x["Base Price"] ?? 0),
-  status: x["Status"]?.toString().trim() || "Available",
+      const mapped = jsonData.map((x, index) => ({
+        productName: x["Product Name"]?.toString().trim() || "",
+        sku: x["SKU"]?.toString().trim() || "",
+        barcode: x["Barcode"]?.toString().trim() || "",
+        category: x["Category"]?.toString().trim() || "",
+        subCategory: x["Sub Category"]?.toString().trim() || "",
+        hsn: x["HSN"]?.toString().trim() || "",
+        size: x["Size"]?.toString().trim() || "",
+        weight: x["Weight"]?.toString().trim() || "",
+        description: x["Description"]?.toString().trim() || "",
+        stockQty: Number(x["Stock Qty"] ?? 0),
+        basePrice: Number(x["Base Price"] ?? 0),
+        status: x["Status"]?.toString().trim() || "Available",
 
-  // 🔍 helpful for debugging
-  __row: index + 2,
-}));
+        // 🔍 helpful for debugging
+        __row: index + 2,
+      }));
 
 
       setProducts(mapped);
@@ -500,14 +543,19 @@ const Page = () => {
 
                   <label>Sub Category</label>
                 </div>
-
                 <div className="form-floating form-floating-outline">
-                  <select className="form-select" name="status">
+                  <select
+                    className="form-select"
+                    name="status"
+                    value={status}
+                    onChange={handleStatusChange}
+                  >
                     <option value="Available">Available</option>
                     <option value="Out of Stock">Out of Stock</option>
                   </select>
                   <label>Status</label>
                 </div>
+
 
               </div>
 
@@ -517,9 +565,20 @@ const Page = () => {
               <div className="card-header"><h5 className="mb-0">Inventory</h5></div>
               <div className="card-body">
                 <div className="form-floating form-floating-outline">
-                  <input type="number" min="0" className="form-control" name="stockQty" placeholder="Stock Quantity" required />
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control"
+                    name="stockQty"
+                    placeholder="Stock Quantity"
+                    value={stockQty}
+                    onChange={handleStockChange}
+                    disabled={status === "Out of Stock"}
+                    required
+                  />
                   <label>Stock Quantity</label>
                 </div>
+
                 <small className="text-muted d-block mt-2">Stock status will be managed automatically.</small>
               </div>
             </div>

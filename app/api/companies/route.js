@@ -19,6 +19,7 @@ export async function GET() {
         shipping_address AS shippingAddress,
         billing_address AS billingAddress,
         login_email AS loginEmail,
+        password_hash,
         phones,
         emails
       FROM company_branches

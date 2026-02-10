@@ -124,8 +124,8 @@ const Page = () => {
   const openEditModal = (product) => {
     setSelectedProduct({
       ...product,
-       size: product.size || "",
-    weight: product.weight || "",
+      size: product.size || "",
+      weight: product.weight || "",
       featureImage: product.featureImage,   // URL
       images: normalizeImages(product.images), // ✅ FIX HERE
       // Array of URLs
@@ -142,6 +142,22 @@ const Page = () => {
   const saveChanges = async () => {
     try {
       if (!selectedProduct?.id) return;
+      // 🔐 FINAL INVENTORY vs STATUS VALIDATION (EDIT)
+
+      const stockQty = Number(selectedProduct.stock);
+      const statusVal = selectedProduct.status;
+
+      // Out of Stock but stock > 0 ❌
+      if (statusVal === "Out of Stock" && stockQty > 0) {
+        alert("❌ Stock must be 0 when status is Out of Stock");
+        return;
+      }
+
+      // Available but stock = 0 ❌
+      if (statusVal === "Available" && stockQty === 0) {
+        alert("❌ Stock must be greater than 0 when status is Available");
+        return;
+      }
 
       // ✅ Start from existing URL (keep old)
       let featuredImageUrl =
@@ -181,8 +197,8 @@ const Page = () => {
         category: selectedProduct.category,
         subCategory: selectedProduct.subCategory,
         hsn: selectedProduct.hsn,
-          size: selectedProduct.size,      
-  weight: selectedProduct.weight, 
+        size: selectedProduct.size,
+        weight: selectedProduct.weight,
         stock: selectedProduct.stock,
         price: selectedProduct.price,
         status: selectedProduct.status,
@@ -758,238 +774,250 @@ const Page = () => {
                   </div>
 
                   {/* Body */}
-                 <div className="modal-body">
-  <div className="row g-3">
+                  <div className="modal-body">
+                    <div className="row g-3">
 
-    {/* ================= ROW 1 ================= */}
-    <div className="col-md-4">
-      <label className="form-label">Product Name</label>
-      <input
-        className="form-control form-control-sm"
-        value={selectedProduct.name}
-        onChange={(e) =>
-          setSelectedProduct({ ...selectedProduct, name: e.target.value })
-        }
-      />
-    </div>
+                      {/* ================= ROW 1 ================= */}
+                      <div className="col-md-4">
+                        <label className="form-label">Product Name</label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={selectedProduct.name}
+                          onChange={(e) =>
+                            setSelectedProduct({ ...selectedProduct, name: e.target.value })
+                          }
+                        />
+                      </div>
 
-    <div className="col-md-4">
-      <label className="form-label">SKU</label>
-      <input
-        className="form-control form-control-sm"
-        value={selectedProduct.sku}
-        onChange={(e) =>
-          setSelectedProduct({ ...selectedProduct, sku: e.target.value })
-        }
-      />
-    </div>
+                      <div className="col-md-4">
+                        <label className="form-label">SKU</label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={selectedProduct.sku}
+                          onChange={(e) =>
+                            setSelectedProduct({ ...selectedProduct, sku: e.target.value })
+                          }
+                        />
+                      </div>
 
-    <div className="col-md-4">
-      <label className="form-label">HSN</label>
-      <input
-        className="form-control form-control-sm"
-        value={selectedProduct.hsn || ""}
-        onChange={(e) =>
-          setSelectedProduct({ ...selectedProduct, hsn: e.target.value })
-        }
-      />
-    </div>
+                      <div className="col-md-4">
+                        <label className="form-label">HSN</label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={selectedProduct.hsn || ""}
+                          onChange={(e) =>
+                            setSelectedProduct({ ...selectedProduct, hsn: e.target.value })
+                          }
+                        />
+                      </div>
 
-    {/* ================= ROW 2 ================= */}
-    <div className="col-md-4">
-      <label className="form-label">Size</label>
-      <input
-        className="form-control form-control-sm"
-        placeholder="12 x 10 x 8 inch"
-        value={selectedProduct.size || ""}
-        onChange={(e) =>
-          setSelectedProduct({ ...selectedProduct, size: e.target.value })
-        }
-      />
-    </div>
+                      {/* ================= ROW 2 ================= */}
+                      <div className="col-md-4">
+                        <label className="form-label">Size</label>
+                        <input
+                          className="form-control form-control-sm"
+                          placeholder="12 x 10 x 8 inch"
+                          value={selectedProduct.size || ""}
+                          onChange={(e) =>
+                            setSelectedProduct({ ...selectedProduct, size: e.target.value })
+                          }
+                        />
+                      </div>
 
-    <div className="col-md-4">
-      <label className="form-label">Weight</label>
-      <input
-        className="form-control form-control-sm"
-        placeholder="1.5 kg"
-        value={selectedProduct.weight || ""}
-        onChange={(e) =>
-          setSelectedProduct({ ...selectedProduct, weight: e.target.value })
-        }
-      />
-    </div>
+                      <div className="col-md-4">
+                        <label className="form-label">Weight</label>
+                        <input
+                          className="form-control form-control-sm"
+                          placeholder="1.5 kg"
+                          value={selectedProduct.weight || ""}
+                          onChange={(e) =>
+                            setSelectedProduct({ ...selectedProduct, weight: e.target.value })
+                          }
+                        />
+                      </div>
 
-    <div className="col-md-4">
-      <label className="form-label">Stock</label>
-      <input
-        type="number"
-        className="form-control form-control-sm"
-        value={selectedProduct.stock}
-        onChange={(e) =>
-          setSelectedProduct({
-            ...selectedProduct,
-            stock: Number(e.target.value),
-          })
-        }
-      />
-    </div>
+                      <div className="col-md-4">
+                        <label className="form-label">Stock</label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={selectedProduct.stock}
+                          disabled={selectedProduct.status === "Out of Stock"}
+                          onChange={(e) => {
+                            const qty = Number(e.target.value);
 
-    {/* ================= ROW 3 ================= */}
-    <div className="col-md-4">
-      <label className="form-label">Price</label>
-      <input
-        type="number"
-        className="form-control form-control-sm"
-        value={selectedProduct.price}
-        onChange={(e) =>
-          setSelectedProduct({
-            ...selectedProduct,
-            price: Number(e.target.value),
-          })
-        }
-      />
-    </div>
+                            setSelectedProduct({
+                              ...selectedProduct,
+                              stock: qty,
+                              status: qty === 0 ? "Out of Stock" : "Available",
+                            });
+                          }}
 
-    <div className="col-md-4">
-      <label className="form-label">Status</label>
-      <select
-        className="form-select form-select-sm"
-        value={selectedProduct.status}
-        onChange={(e) =>
-          setSelectedProduct({ ...selectedProduct, status: e.target.value })
-        }
-      >
-        <option value="Available">Available</option>
-        <option value="Out of Stock">Out of Stock</option>
-      </select>
-    </div>
+                        />
+                      </div>
 
-    <div className="col-md-4"></div> {/* spacer for alignment */}
+                      {/* ================= ROW 3 ================= */}
+                      <div className="col-md-4">
+                        <label className="form-label">Price</label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={selectedProduct.price}
+                          onChange={(e) =>
+                            setSelectedProduct({
+                              ...selectedProduct,
+                              price: Number(e.target.value),
+                            })
+                          }
+                        />
+                      </div>
 
-    {/* ================= ROW 4 ================= */}
-    <div className="col-md-6">
-      <label className="form-label">Category</label>
-      <select
-        className="form-select form-select-sm"
-        value={selectedProduct.category || ""}
-        onChange={(e) =>
-          setSelectedProduct({
-            ...selectedProduct,
-            category: e.target.value,
-            subCategory: "",
-          })
-        }
-      >
-        <option value="">Select Category</option>
-        {categoryList.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
-    </div>
+                      <div className="col-md-4">
+                        <label className="form-label">Status</label>
+                        <select
+                          className="form-select form-select-sm"
+                          value={selectedProduct.status}
+                          onChange={(e) => {
+                            const value = e.target.value;
 
-    <div className="col-md-6">
-      <label className="form-label">Subcategory</label>
-      <select
-        className="form-select form-select-sm"
-        value={selectedProduct.subCategory || ""}
-        disabled={!selectedProduct.category}
-        onChange={(e) =>
-          setSelectedProduct({
-            ...selectedProduct,
-            subCategory: e.target.value,
-          })
-        }
-      >
-        <option value="">Select Subcategory</option>
-        {subCategoryList.map((sc) => (
-          <option key={sc} value={sc}>
-            {sc}
-          </option>
-        ))}
-      </select>
-    </div>
+                            setSelectedProduct({
+                              ...selectedProduct,
+                              status: value,
+                              stock: value === "Out of Stock" ? 0 : selectedProduct.stock,
+                            });
+                          }}
 
-    {/* ================= FEATURE IMAGE ================= */}
-    <div className="col-12">
-      <label className="form-label">Feature Image</label>
-      <input
-        type="file"
-        className="form-control form-control-sm"
-        onChange={(e) => {
-          const file = e.target.files[0];
-          if (file) {
-            setSelectedProduct({ ...selectedProduct, featureImage: file });
-          }
-        }}
-      />
-      <small className="text-muted d-block mt-1">
-        {selectedProduct.featureImage instanceof File
-          ? selectedProduct.featureImage.name
-          : selectedProduct.featureImage || "No image selected"}
-      </small>
-    </div>
+                        >
+                          <option value="Available">Available</option>
+                          <option value="Out of Stock">Out of Stock</option>
+                        </select>
+                      </div>
 
-    {/* ================= GALLERY ================= */}
-    <div className="col-12">
-      <label className="form-label me-2">Gallery Images </label>
+                      <div className="col-md-4"></div> {/* spacer for alignment */}
 
-      {(selectedProduct.images || []).map((img, index) => (
-        <div key={index} className="d-flex align-items-center gap-2 mb-2">
-          <input
-            type="file"
-            className="form-control form-control-sm"
-            style={{ maxWidth: 260 }}
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                const updated = [...selectedProduct.images];
-                updated[index] = file;
-                setSelectedProduct({ ...selectedProduct, images: updated });
-              }
-            }}
-          />
+                      {/* ================= ROW 4 ================= */}
+                      <div className="col-md-6">
+                        <label className="form-label">Category</label>
+                        <select
+                          className="form-select form-select-sm"
+                          value={selectedProduct.category || ""}
+                          onChange={(e) =>
+                            setSelectedProduct({
+                              ...selectedProduct,
+                              category: e.target.value,
+                              subCategory: "",
+                            })
+                          }
+                        >
+                          <option value="">Select Category</option>
+                          {categoryList.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-          <input
-            type="text"
-            className="form-control form-control-sm"
-            readOnly
-            value={
-              img instanceof File ? img.name : img || "No image"
-            }
-          />
+                      <div className="col-md-6">
+                        <label className="form-label">Subcategory</label>
+                        <select
+                          className="form-select form-select-sm"
+                          value={selectedProduct.subCategory || ""}
+                          disabled={!selectedProduct.category}
+                          onChange={(e) =>
+                            setSelectedProduct({
+                              ...selectedProduct,
+                              subCategory: e.target.value,
+                            })
+                          }
+                        >
+                          <option value="">Select Subcategory</option>
+                          {subCategoryList.map((sc) => (
+                            <option key={sc} value={sc}>
+                              {sc}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-          <button
-            className="btn btn-sm btn-outline-danger"
-            onClick={() =>
-              setSelectedProduct({
-                ...selectedProduct,
-                images: selectedProduct.images.filter((_, i) => i !== index),
-              })
-            }
-          >
-            ✕
-          </button>
-        </div>
-      ))}
+                      {/* ================= FEATURE IMAGE ================= */}
+                      <div className="col-12">
+                        <label className="form-label">Feature Image</label>
+                        <input
+                          type="file"
+                          className="form-control form-control-sm"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              setSelectedProduct({ ...selectedProduct, featureImage: file });
+                            }
+                          }}
+                        />
+                        <small className="text-muted d-block mt-1">
+                          {selectedProduct.featureImage instanceof File
+                            ? selectedProduct.featureImage.name
+                            : selectedProduct.featureImage || "No image selected"}
+                        </small>
+                      </div>
 
-      <button
-        className="btn btn-sm btn-outline-primary"
-        onClick={() =>
-          setSelectedProduct({
-            ...selectedProduct,
-            images: [...(selectedProduct.images || []), null],
-          })
-        }
-      >
-        + Add Image
-      </button>
-    </div>
+                      {/* ================= GALLERY ================= */}
+                      <div className="col-12">
+                        <label className="form-label me-2">Gallery Images </label>
 
-  </div>
-</div>
+                        {(selectedProduct.images || []).map((img, index) => (
+                          <div key={index} className="d-flex align-items-center gap-2 mb-2">
+                            <input
+                              type="file"
+                              className="form-control form-control-sm"
+                              style={{ maxWidth: 260 }}
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  const updated = [...selectedProduct.images];
+                                  updated[index] = file;
+                                  setSelectedProduct({ ...selectedProduct, images: updated });
+                                }
+                              }}
+                            />
+
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              readOnly
+                              value={
+                                img instanceof File ? img.name : img || "No image"
+                              }
+                            />
+
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() =>
+                                setSelectedProduct({
+                                  ...selectedProduct,
+                                  images: selectedProduct.images.filter((_, i) => i !== index),
+                                })
+                              }
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() =>
+                            setSelectedProduct({
+                              ...selectedProduct,
+                              images: [...(selectedProduct.images || []), null],
+                            })
+                          }
+                        >
+                          + Add Image
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
 
 
                   {/* Footer */}

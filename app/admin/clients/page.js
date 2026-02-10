@@ -355,6 +355,7 @@ const handleCompanyUpdate = async (e) => {
                   <div className="col-6"><b>Shipping:</b> {b.shippingAddress}</div>
                   <div className="col-6"><b>Billing:</b> {b.billingAddress}</div>
                   <div className="col-md-6"><b>Login:</b> {b.loginEmail}</div>
+                   {/* <div className="col-md-6"><b>Password:</b> {b.password_hash}</div> */}
                 </div>
 
                 <div className="d-flex gap-2 mt-2">
