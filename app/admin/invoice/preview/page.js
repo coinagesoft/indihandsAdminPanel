@@ -90,6 +90,7 @@ const [charges, setCharges] = useState([]);
     window.open(`/api/proposals/pdf/${selectedRfq}`, "_blank");
   };
 
+  
   const handleRfqSelect = async (e) => {
     const rfqId = e.target.value;
     setSelectedRfq(rfqId);
