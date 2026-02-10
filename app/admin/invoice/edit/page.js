@@ -131,13 +131,13 @@ const Page = () => {
   };
 
   /* ================= RFQ SELECT ================= */
- const handleRfqSelect = async (e) => {
+const handleRfqSelect = async (e) => {
   const rfqId = e.target.value;
   setSelectedRfq(rfqId);
 
   if (!rfqId) return;
 
-  // 1️⃣ RFQ details (header + items)
+  // 1️⃣ RFQ details
   const res = await fetch(`/api/rfqs/${rfqId}/details`);
   const data = await res.json();
   if (!res.ok) return alert("❌ " + data.message);
@@ -145,6 +145,21 @@ const Page = () => {
   // 2️⃣ Existing proposal (if any)
   const prRes = await fetch(`/api/proposals/by-rfq/${rfqId}`);
   const prData = await prRes.json();
+
+  if (prRes.ok && prData?.proposalId) {
+    const chargesRes = await fetch(`/api/proposals/${rfqId}/charges`);
+    const chargesData = await chargesRes.json();
+
+    setCharges(
+      (chargesData.charges || []).map(c => ({
+        label: c.label,
+        amount: Number(c.amount),
+        taxPercent: Number(c.taxPercent || 0),
+      }))
+    );
+  } else {
+    setCharges([]); // charges optional
+  }
 
   const selected = acceptedRfqs.find(x => x.id == rfqId);
 
@@ -164,28 +179,8 @@ const Page = () => {
   }));
 
   setItems(data.items || []);
-
-  // 3️⃣ ✅ FETCH ADDITIONAL CHARGES (THIS WAS MISSING)
-const chargesRes = await fetch(`/api/proposals/${rfqId}/charges`);
-
-if (!chargesRes.ok) {
-  const err = await chargesRes.json();
-  console.error("Charges API error:", err);
-  setCharges([]);
-  return;
-}
-
-const chargesData = await chargesRes.json();
-console.log("Charges API data:", chargesData);
-
-setCharges(
-  (chargesData.charges || []).map(c => ({
-    label: c.label,
-    amount: Number(c.amount),
-    taxPercent: Number(c.taxPercent || 0),
-  }))
-);
 };
+
 
 
 
