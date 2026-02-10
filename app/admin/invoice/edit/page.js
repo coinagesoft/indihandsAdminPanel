@@ -43,68 +43,85 @@ const Page = () => {
     updated[index][field] = value;
     setItems(updated);
   };
+
+ const handleSaveProposal = async () => {
+  if (!selectedRfq) return alert("❌ Please select RFQ first");
+  if (!header.companyId || !header.branchId)
+    return alert("❌ companyId / branchId missing");
+
   
-  const handleSaveProposal = async () => {
-    if (!selectedRfq) return alert("❌ Please select RFQ first");
-    if (!header.companyId || !header.branchId) return alert("❌ companyId / branchId missing");
+  try {
+    setSaving(true);
 
-    try {
-      setSaving(true);
+    const payload = {
+      rfqId: Number(selectedRfq),
+      companyId: header.companyId,
+      branchId: header.branchId,
 
-      const payload = {
-        rfqId: Number(selectedRfq),
-        companyId: header.companyId,
-        branchId: header.branchId,
+      // ❌ proposal_number NEVER send from frontend
+      proposal_date: header.date,
+      place: header.place,
+      billing_address: header.billingAddress,
+      shipping_address: header.shippingAddress,
 
-        proposal_number: header.quotationNo,
-        proposal_date: header.date,
-        place: header.place,
-        billing_address: header.billingAddress,
-        shipping_address: header.shippingAddress,
+      items: items.map(x => ({
+        productId: x.productId,
+        quantity: x.qty,
+        rate: x.rate,
+        discount: x.discount,
+        cgst_rate: x.cgst,
+        sgst_rate: x.sgst,
+        igst_rate: x.igst,
+      })),
 
-        items: items.map((x) => ({
-          productId: x.productId,
-          quantity: x.qty,
-          rate: x.rate,
-          discount: x.discount,
-          cgst_rate: x.cgst,
-          sgst_rate: x.sgst,
-          igst_rate: x.igst,
+      charges: charges
+        .filter(c => c.label && c.amount > 0)
+        .map(c => ({
+          label: c.label,
+          amount: c.amount,
+          taxPercent: c.taxPercent || 0,
         })),
-       charges: charges
-  .filter(c => c.label && c.amount > 0)
-  .map(c => ({
-    label: c.label,
-    amount: c.amount,
-    taxPercent: c.taxPercent || 0
-  })),
+    };
 
-      };
+    const res = await fetch("/api/proposals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-      const res = await fetch("/api/proposals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    const data = await res.json();
 
-      const data = await res.json();
-
-      // ✅ if already exists
-      if (res.status === 409) {
-        setHeader((prev) => ({ ...prev, quotationNo: data.proposal_number })); // UI same as DB
-        return alert("⚠️ Proposal already exists. Proposal No: " + data.proposal_number);
-      }
-
-      if (!res.ok) return alert("❌ " + data.message);
-
-      // ✅ use DB returned proposal_number always
-      setHeader((prev) => ({ ...prev, quotationNo: data.proposal_number }));
-
-      alert("✅ Proposal saved. ID = " + data.proposalId);
-    } finally {
-      setSaving(false);
+    // already exists
+    if (res.status === 409) {
+      setHeader(prev => ({
+        ...prev,
+        quotationNo: data.proposal_number,
+      }));
+      return alert(
+        "⚠️ Proposal already exists. Proposal No: " +
+          data.proposal_number
+      );
     }
-  };
+
+    if (!res.ok) {
+      return alert("❌ " + (data.message || "Server error"));
+    }
+
+    // ✅ DB generated quotation no
+    setHeader(prev => ({
+      ...prev,
+      quotationNo: data.proposal_number,
+    }));
+
+    alert("✅ Proposal saved successfully");
+  } catch (err) {
+    console.error("Save proposal error:", err);
+    alert("❌ Internal server error");
+  } finally {
+    setSaving(false);
+  }
+};
+
 
 
 
