@@ -43,6 +43,7 @@ const Page = () => {
     updated[index][field] = value;
     setItems(updated);
   };
+  
   const handleSaveProposal = async () => {
     if (!selectedRfq) return alert("❌ Please select RFQ first");
     if (!header.companyId || !header.branchId) return alert("❌ companyId / branchId missing");
