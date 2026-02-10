@@ -158,6 +158,7 @@ const safeCharges = Array.isArray(charges) ? charges : [];
     
     const deliveryCharges = Number(defaults.delivery_charges || 0);
     const brandingCharges = Number(defaults.branding_charges || 0);
+
 let extra_charges_amount = 0;
 let extra_charges_tax = 0;
 
@@ -170,6 +171,7 @@ for (const ch of safeCharges) {
   extra_charges_amount += amount;
   extra_charges_tax += tax;
 }
+
 
 
  const grand_total =
@@ -289,24 +291,24 @@ await db.query(
   [proposalId]
 );
 
-for (const ch of charges) {
+for (const ch of safeCharges) {
   if (!ch.label || !ch.amount) continue;
 
   await db.query(
     `
-   INSERT INTO proposal_charges
-(proposal_id, label, amount, tax_percent)
-VALUES (?, ?, ?, ?)
-
+    INSERT INTO proposal_charges
+    (proposal_id, label, amount, tax_percent)
+    VALUES (?, ?, ?, ?)
     `,
     [
       proposalId,
       ch.label,
       Number(ch.amount),
-       Number(ch.taxPercent || 0),
+      Number(ch.taxPercent || 0),
     ]
   );
 }
+
 
  return Response.json({
   message: existingProposal
