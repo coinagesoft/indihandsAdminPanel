@@ -10,12 +10,8 @@ const OrgPricingPage = () => {
   // ✅ UI state
   const [selectedOrg, setSelectedOrg] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedSubcategory, setSelectedSubcategory] = useState("all");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [categoryList, setCategoryList] = useState([]);
-  const [subCategoryList, setSubCategoryList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savingOrgId, setSavingOrgId] = useState(null);
 
@@ -30,36 +26,9 @@ const OrgPricingPage = () => {
   // ✅ Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedProduct, selectedCategory, selectedSubcategory, minPrice, maxPrice]);
+  }, [selectedProduct, minPrice, maxPrice]);
 
-  const fetchCategoryFilters = async () => {
-    try {
-      const res = await fetch("/api/categories");
-      const data = await res.json();
-
-      const cats = data.categories || [];
-
-      // ✅ category names
-      const categoryNames = cats.map((c) => c.name);
-      setCategoryList(categoryNames);
-
-      // ✅ subcategories based on selectedCategory
-      let subNames = [];
-      if (selectedCategory !== "all") {
-        const selected = cats.find((c) => c.name === selectedCategory);
-        subNames = (selected?.subcategories || []).map((s) => s.name);
-      } else {
-        subNames = cats.flatMap((c) => (c.subcategories || []).map((s) => s.name));
-      }
-
-      // ✅ remove duplicates
-      const uniqueSubNames = Array.from(new Set(subNames));
-
-      setSubCategoryList(uniqueSubNames);
-    } catch (err) {
-      console.log("fetchCategoryFilters error:", err);
-    }
-  };
+ 
 
 useEffect(() => {
   // This runs only in the browser
@@ -71,9 +40,7 @@ useEffect(() => {
 }, []);
 
 
-useEffect(() => {
-  fetchCategoryFilters();
-}, [selectedCategory]);
+
 
 
   const fetchData = async () => {
@@ -167,13 +134,11 @@ useEffect(() => {
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (selectedProduct !== "all" && p.id !== Number(selectedProduct)) return false;
-      if (selectedCategory !== "all" && p.category !== selectedCategory) return false;
-      if (selectedSubcategory !== "all" && p.subcategory !== selectedSubcategory) return false;
       if (minPrice !== "" && Number(p.basePrice) < Number(minPrice)) return false;
       if (maxPrice !== "" && Number(p.basePrice) > Number(maxPrice)) return false;
       return true;
     });
-  }, [products, selectedProduct, selectedCategory, selectedSubcategory, minPrice, maxPrice]);
+  }, [products, selectedProduct, minPrice, maxPrice]);
 
   const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE) || 1;
 
@@ -284,39 +249,6 @@ useEffect(() => {
           </select>
         </div>
 
-        <div className="col-md-2">
-          <label className="form-label">Category</label>
-          <select
-            className="form-select"
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            <option value="all">All</option>
-            {categoryList.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-
-          </select>
-        </div>
-
-        <div className="col-md-2">
-          <label className="form-label">Subcategory</label>
-          <select
-            className="form-select"
-            value={selectedSubcategory}
-            onChange={(e) => setSelectedSubcategory(e.target.value)}
-          >
-            <option value="all">All</option>
-            {subCategoryList.map((sc) => (
-              <option key={sc} value={sc}>
-                {sc}
-              </option>
-            ))}
-
-          </select>
-        </div>
 
         <div className="col-md-1">
           <label className="form-label">Min</label>
@@ -359,7 +291,7 @@ useEffect(() => {
           <div className="card-header bg-label-primary d-flex justify-content-between align-items-center">
             <div>
               <h5 className="mb-0">{org.name}</h5>
-              <small className="text-muted">GST: {org.gst || "-"}</small>
+              {/* <small className="text-muted">GST: {org.gst || "-"}</small> */}
             </div>
 
             <button
@@ -383,8 +315,6 @@ useEffect(() => {
                     <thead className="table-light">
                       <tr>
                         <th>Product</th>
-                        <th>Category</th>
-                        <th>Subcategory</th>
                         <th>Base Price</th>
                         <th style={{ width: 220 }}>Org Price</th>
                       </tr>
@@ -396,8 +326,6 @@ useEffect(() => {
                         return (
                           <tr key={product.id}>
                             <td>{product.name}</td>
-                            <td>{product.category || "-"}</td>
-                            <td>{product.subcategory || "-"}</td>
                             <td>₹{product.basePrice}</td>
                             <td>
                               <input

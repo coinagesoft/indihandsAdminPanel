@@ -10,8 +10,6 @@ export async function PATCH(req, { params }) {
     const {
       name,
       sku,
-      category,
-      subCategory,
       hsn,
       size,
       weight,
@@ -34,8 +32,6 @@ export async function PATCH(req, { params }) {
       `UPDATE products SET 
         product_name = ?, 
         sku = ?, 
-        category = ?, 
-        sub_category = ?, 
          hsn = ?, 
             size           = ?,    
         weight         = ?,   
@@ -47,8 +43,6 @@ export async function PATCH(req, { params }) {
       [
         name,
         sku,
-        category,
-        subCategory,
         hsn || null,
         size || null,
         weight || null,

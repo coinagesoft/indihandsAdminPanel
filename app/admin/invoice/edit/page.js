@@ -8,7 +8,9 @@ const Page = () => {
   const [header, setHeader] = useState({
     quotationNo: "",
     date: "",
-    customerName: "",
+     clientName: "",
+  clientPhone: "",   // ✅ ADD
+  clientEmail: "",  
     company: "",
     gstin: "",
     place: "",
@@ -72,15 +74,9 @@ const Page = () => {
         cgst_rate: x.cgst,
         sgst_rate: x.sgst,
         igst_rate: x.igst,
-      })),
+      }))
 
-      charges: charges
-        .filter(c => c.label && c.amount > 0)
-        .map(c => ({
-          label: c.label,
-          amount: c.amount,
-          taxPercent: c.taxPercent || 0,
-        })),
+   
     };
 
     const res = await fetch("/api/proposals", {
@@ -155,41 +151,38 @@ const handleRfqSelect = async (e) => {
 
   if (!rfqId) return;
 
-  // 1️⃣ RFQ details
   const res = await fetch(`/api/rfqs/${rfqId}/details`);
   const data = await res.json();
   if (!res.ok) return alert("❌ " + data.message);
 
-  // 2️⃣ Existing proposal (if any)
-  const prRes = await fetch(`/api/proposals/by-rfq/${rfqId}`);
-  const prData = await prRes.json();
+  const companyId = data.header.companyId;
 
-  if (prRes.ok && prData?.proposalId) {
-    const chargesRes = await fetch(`/api/proposals/${rfqId}/charges`);
-    const chargesData = await chargesRes.json();
+  // company charges
+  const chargesRes = await fetch(`/api/companies/${companyId}/charges`);
+  const chargesData = await chargesRes.json();
 
-    setCharges(
-      (chargesData.charges || []).map(c => ({
-        label: c.label,
-        amount: Number(c.amount),
-        taxPercent: Number(c.taxPercent || 0),
-      }))
-    );
-  } else {
-    setCharges([]); // charges optional
-  }
+  setCharges(
+    (chargesData.charges || []).map(c => ({
+      label: c.label,
+      amount: Number(c.amount),
+      taxPercent: Number(c.taxPercent || 0),
+    }))
+  );
 
-  const selected = acceptedRfqs.find(x => x.id == rfqId);
+  const selected = acceptedRfqs.find(x => x.rfq_id == rfqId);
 
-  setHeader((prev) => ({
+  setHeader(prev => ({
     ...prev,
-    place: selected?.place || "",
-    quotationNo: selected?.proposalNumber || "",
+    quotationNo: selected?.proposal_number || "",
     date: new Date().toISOString().slice(0, 10),
 
-    companyId: data.header.companyId,
+    companyId,
     branchId: data.header.branchId,
-    customerName: data.header.customerName,
+
+    clientName: data.header.clientName,
+    clientPhone: data.header.clientPhone,
+    clientEmail: data.header.clientEmail,
+
     company: data.header.company,
     gstin: data.header.gstin,
     billingAddress: data.header.billing_address,
@@ -198,6 +191,8 @@ const handleRfqSelect = async (e) => {
 
   setItems(data.items || []);
 };
+
+
 
 
 
@@ -294,7 +289,8 @@ const grandTotal =
                 {[
                   ["quotationNo", "Quotation No"],
                   ["date", "Date", "date"],
-                  ["customerName", "Customer Name"],
+                  ["clientName", "Customer Name"],
+                   ["clientEmail", "Customer Email"],
                   ["company", "Company"],
                   ["gstin", "GSTIN"],
                   ["place", "Place of Supply"],
@@ -418,72 +414,29 @@ const grandTotal =
 
 
 
-              <h6 className="mt-4">Additional Charges</h6>
+<h6 className="mt-4">Additional Charges</h6>
 
-           {charges.map((c, i) => {
-  const chargeTax = (c.amount * (c.taxPercent || 0)) / 100;
-  const chargeTotal = Number(c.amount || 0) + chargeTax;
-
-  return (
-    <div className="row g-2 mb-2" key={i}>
-      <div className="col-md-4">
-        <input
-          className="form-control"
-          placeholder="Charge name"
-          value={c.label}
-          onChange={(e) => updateCharge(i, "label", e.target.value)}
-        />
+{charges.length === 0 ? (
+  <div className="text-muted">No additional charges</div>
+) : (
+  charges.map((c, i) => {
+    const tax = (Number(c.amount || 0) * Number(c.taxPercent || 0)) / 100;
+    return (
+      <div key={i} className="d-flex justify-content-between">
+        <span>
+          {c.label}
+          {c.taxPercent ? ` (${c.taxPercent}%)` : ""}
+        </span>
+        <span>
+          ₹ {(Number(c.amount) + tax).toFixed(2)}
+        </span>
       </div>
-
-      <div className="col-md-3">
-      <input
-  type="number"
-  className="form-control"
-  placeholder="Amount"
-  value={c.amount === 0 ? "" : c.amount}
-  onChange={(e) =>
-    updateCharge(i, "amount", e.target.value === "" ? 0 : +e.target.value)
-  }
-/>
-
-      </div>
-
-      <div className="col-md-2">
-      <input
-  type="number"
-  className="form-control"
-  placeholder="Tax %"
-  value={c.taxPercent === 0 ? "" : c.taxPercent}
-  onChange={(e) =>
-    updateCharge(i, "taxPercent", e.target.value === "" ? 0 : +e.target.value)
-  }
-/>
-
-      </div>
-
-      <div className="col-md-2 text-end pt-2">
-        {/* ₹ {chargeTotal.toFixed(2)} */}
-      </div>
-
-      <div className="col-md-1">
-        <button className="btn btn-danger" onClick={() => removeCharge(i)}>
-          ✕
-        </button>
-      </div>
-    </div>
-  );
-})}
+    );
+  })
+)}
 
 
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() =>
-                 setCharges([...charges, { label: "", amount: 0, taxPercent: 0 }])
 
-                }
-              >
-                + Add Charge
-              </button>
 
 
               {/* TOTALS */}

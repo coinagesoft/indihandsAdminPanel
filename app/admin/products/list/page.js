@@ -15,16 +15,12 @@ const Page = () => {
   const [loading, setLoading] = useState(false);
 
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-  const [subCategory, setSubCategory] = useState("All");
   const [status, setStatus] = useState("All");
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [galleryProduct, setGalleryProduct] = useState(null);
   const [catalogs, setCatalogs] = useState([]);
   const [newCatalogName, setNewCatalogName] = useState("");
   const [alreadyAssignedCatalogs, setAlreadyAssignedCatalogs] = useState([]);
-  const [categoryList, setCategoryList] = useState([]);
-  const [subCategoryList, setSubCategoryList] = useState([]);
 
   const openGalleryModal = (product) => {
     setGalleryProduct(product);
@@ -51,37 +47,6 @@ const Page = () => {
     return data.secure_url;
   };
 
-  const fetchCategoryFilters = async () => {
-    try {
-      const res = await fetch("/api/categories");
-      const data = await res.json();
-
-      const cats = data.categories || [];
-
-      // ✅ only category names
-      const categoryNames = cats.map((c) => c.name);
-
-      setCategoryList(categoryNames);
-
-      // ✅ subcategory names based on selected category
-      if (category !== "All") {
-        const selected = cats.find((c) => c.name === category);
-
-        const subNames = (selected?.subcategories || []).map((s) => s.name);
-        setSubCategoryList(subNames);
-      } else {
-        // if category = All, show all subcategories
-        const allSubs = cats.flatMap((c) => (c.subcategories || []).map((s) => s.name));
-        setSubCategoryList(allSubs);
-      }
-    } catch (err) {
-      console.error("fetchCategoryFilters error:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategoryFilters();
-  }, [category]);
 
 
   const closeGalleryModal = () => {
@@ -98,10 +63,9 @@ const Page = () => {
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       (p.sku || "").toLowerCase().includes(search.toLowerCase());
 
-    const matchCategory = category === "All" || p.category === category;
-    const matchSubCategory = subCategory === "All" || p.subCategory === subCategory;
+
     const matchStatus = status === "All" || p.status === status;
-    return matchSearch && matchCategory && matchSubCategory && matchStatus;
+    return matchSearch  && matchStatus;
   });
 
   const paginatedProducts = filteredProducts.slice(
@@ -194,8 +158,6 @@ const Page = () => {
       const body = {
         name: selectedProduct.name,
         sku: selectedProduct.sku,
-        category: selectedProduct.category,
-        subCategory: selectedProduct.subCategory,
         hsn: selectedProduct.hsn,
         size: selectedProduct.size,
         weight: selectedProduct.weight,
@@ -223,8 +185,6 @@ const Page = () => {
         page: currentPage,
         limit: itemsPerPage,
         search,
-        category,
-        subCategory,
         status,
       });
 
@@ -408,8 +368,6 @@ const Page = () => {
           page: currentPage,
           limit: itemsPerPage,
           search,
-          category,
-          subCategory,
           status,
         });
 
@@ -425,32 +383,14 @@ const Page = () => {
     };
 
     fetchProducts();
-  }, [currentPage, search, category, subCategory, status]);
+  }, [currentPage, search,  status]);
 
   const makeThumb = (url) =>
     url?.includes("/image/upload/")
       ? url.replace("/image/upload/", "/image/upload/w_80,h_80,c_fill,q_auto,f_auto/")
       : url;
 
-  useEffect(() => {
-    const loadSubcategories = async () => {
-      try {
-        const res = await fetch("/api/categories");
-        const data = await res.json();
-        const cats = data.categories || [];
 
-        const selectedCat = cats.find((c) => c.name === selectedProduct?.category);
-
-        setSubCategoryList((selectedCat?.subcategories || []).map((s) => s.name));
-      } catch (err) {
-        console.error("loadSubcategories error:", err);
-      }
-    };
-
-    if (selectedProduct?.category) {
-      loadSubcategories();
-    }
-  }, [selectedProduct?.category]);
 
 
   return (
@@ -470,8 +410,6 @@ const Page = () => {
               onClick={() => {
                 const params = new URLSearchParams({
                   search,
-                  category,
-                  subCategory,
                   status,
                 });
 
@@ -493,46 +431,7 @@ const Page = () => {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <div className="col-md-3">
-              <label className="form-label">Category</label>
-              <select
-                className="form-select form-select-sm"
-                value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value);
-                  setSubCategory("All");
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="All">All</option>
-                {categoryList.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
 
-
-
-
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Subcategory</label>
-              <select
-                className="form-select"
-                value={subCategory}
-                onChange={(e) => setSubCategory(e.target.value)}
-              >
-                <option value="All">All</option>
-                {subCategoryList.map((sc, index) => (
-                  <option key={`${sc}-${index}`} value={sc}>
-                    {sc}
-                  </option>
-                ))}
-
-              </select>
-
-            </div>
             <div className="col-md-3">
               <label className="form-label">Status</label>
               <select
@@ -563,8 +462,6 @@ const Page = () => {
                 <th>ID</th>
                 <th>Image</th>
                 <th>Product</th>
-                <th>Category</th>
-                <th>Subcategory</th>
                 <th>HSN</th>
                 <th>Size</th>
                 <th>Weight</th>
@@ -604,8 +501,6 @@ const Page = () => {
 
 
                     <td>{p.name}</td>
-                    <td>{p.category}</td>
-                    <td>{p.subCategory}</td>
                     <td>{p.hsn || "-"}</td>
                     <td>{p.size || "-"}</td>
                     <td>{p.weight || "-"}</td>
@@ -895,50 +790,7 @@ const Page = () => {
 
                       <div className="col-md-4"></div> {/* spacer for alignment */}
 
-                      {/* ================= ROW 4 ================= */}
-                      <div className="col-md-6">
-                        <label className="form-label">Category</label>
-                        <select
-                          className="form-select form-select-sm"
-                          value={selectedProduct.category || ""}
-                          onChange={(e) =>
-                            setSelectedProduct({
-                              ...selectedProduct,
-                              category: e.target.value,
-                              subCategory: "",
-                            })
-                          }
-                        >
-                          <option value="">Select Category</option>
-                          {categoryList.map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label">Subcategory</label>
-                        <select
-                          className="form-select form-select-sm"
-                          value={selectedProduct.subCategory || ""}
-                          disabled={!selectedProduct.category}
-                          onChange={(e) =>
-                            setSelectedProduct({
-                              ...selectedProduct,
-                              subCategory: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Select Subcategory</option>
-                          {subCategoryList.map((sc) => (
-                            <option key={sc} value={sc}>
-                              {sc}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+ 
 
                       {/* ================= FEATURE IMAGE ================= */}
                       <div className="col-12">

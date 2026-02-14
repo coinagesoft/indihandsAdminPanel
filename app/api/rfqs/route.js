@@ -26,7 +26,10 @@ export async function GET() {
         b.branch_name AS branch,
         r.submitted_at AS submittedAt,
         r.status,
-        r.notes
+        r.notes,
+        r.client_name,
+  r.client_phone,
+  r.client_email
       FROM rfqs r
       JOIN companies c ON c.id = r.company_id
       JOIN company_branches b ON b.id = r.branch_id
@@ -41,8 +44,6 @@ export async function GET() {
         p.id AS productId,
         p.product_name AS name,
         p.sku AS code,
-        p.category,
-        p.sub_category AS subcategory,
         p.hsn,
         rp.quantity
       FROM rfq_products rp
@@ -69,6 +70,10 @@ export async function GET() {
       submittedAt: r.submittedAt,
       status: r.status,
       notes: r.notes,
+        // ✅ ADD THESE
+  clientName: r.client_name || "",
+  clientPhone: r.client_phone || "",
+  clientEmail: r.client_email || "",
       products: productRows
         .filter((p) => p.rfqId === r.id)
         .map((p) => ({
@@ -76,8 +81,6 @@ export async function GET() {
           name: p.name,
           hsn:p.hsn,
           code: p.code,
-          category: p.category,
-          subcategory: p.subcategory,
           quantity: p.quantity,
         })),
     }));

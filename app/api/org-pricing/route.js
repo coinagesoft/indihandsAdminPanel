@@ -24,9 +24,7 @@ export async function GET() {
       SELECT 
         id,
         product_name AS name,
-        base_price AS basePrice,
-        category,
-        sub_category AS subcategory
+        base_price AS basePrice
       FROM products
       ORDER BY id DESC
     `);

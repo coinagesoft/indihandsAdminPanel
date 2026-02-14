@@ -35,8 +35,6 @@ export async function POST(req) {
   sku,
   barcode,
   description,
-  category,
-  subCategory,
   stock,
   price,
   status,
@@ -49,15 +47,13 @@ export async function POST(req) {
 
 const [result] = await db.query(
   `INSERT INTO products 
-  (product_name, sku, barcode, description, category, sub_category, hsn, size, weight, stock_qty,  base_price, status, featured_image)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)`,
+  (product_name, sku, barcode, description, hsn, size, weight, stock_qty,  base_price, status, featured_image)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   [
     product_name,
     sku,
     barcode || null,
     description || null,
-    category,
-    subCategory,
     hsn || null,
     size || null,     
     weight || null,
@@ -99,8 +95,6 @@ export async function GET(req) {
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 5;
     const search = searchParams.get("search") || "";
-    const category = searchParams.get("category");
-    const subCategory = searchParams.get("subCategory");
     const status = searchParams.get("status");
 
     const offset = (page - 1) * limit;
@@ -113,15 +107,7 @@ export async function GET(req) {
       values.push(`%${search}%`, `%${search}%`);
     }
 
-    if (category && category !== "All") {
-      where += ` AND p.category = ?`;
-      values.push(category);
-    }
-
-    if (subCategory && subCategory !== "All") {
-      where += ` AND p.sub_category = ?`;
-      values.push(subCategory);
-    }
+ 
 
     if (status && status !== "All") {
       where += ` AND p.status = ?`;
@@ -134,8 +120,7 @@ export async function GET(req) {
       SELECT 
         p.id,
         p.product_name AS name,
-        p.category,
-        p.sub_category AS subCategory,
+      
         p.hsn AS hsn, 
           p.size,         
         p.weight, 

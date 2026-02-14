@@ -100,11 +100,7 @@ const Sidebar = () => {
                 <div>Add Product</div>
               </Link>
             </li>
-             <li className={`menu-item ${pathname === "/admin/products/category" ? "active" : ""}`}>
-              <Link href="/admin/products/category" className="menu-link">
-                <div>Category</div>
-              </Link>
-            </li>
+           
             <li className={`menu-item ${pathname === "/admin/products/catalog" ? "active" : ""}`}>
               <Link href="/admin/products/catalog" className="menu-link">
                 <div>Catalog</div>

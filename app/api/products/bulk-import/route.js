@@ -19,8 +19,6 @@ export async function POST(req) {
       product_name: p.productName?.trim() || "",
       sku: p.sku?.trim() || "",
       barcode: p.barcode?.trim() || null,
-      category: p.category?.trim() || "",
-      sub_category: p.subCategory?.trim() || "",
       hsn: p.hsn?.trim() || null,
       size: p.size?.trim() || null,          // ✅ NEW
       weight: p.weight?.trim() || null,      // ✅ NEW
@@ -34,7 +32,7 @@ export async function POST(req) {
 
     /* ================= ROW-LEVEL VALIDATION ================= */
   rows.forEach((r, i) => {
-  if (!r.product_name || !r.category || isNaN(r.base_price)) {
+  if (!r.product_name || isNaN(r.base_price)) {
     throw new Error(
       `Row ${i + 2}: Product Name, Category and Base Price are required`
     );
@@ -47,8 +45,6 @@ export async function POST(req) {
       r.product_name,
       r.sku,
       r.barcode,
-      r.category,
-      r.sub_category,
       r.hsn,
       r.size,         // ✅
       r.weight,       // ✅
@@ -66,8 +62,6 @@ export async function POST(req) {
         product_name,
         sku,
         barcode,
-        category,
-        sub_category,
         hsn,
         size,
         weight,

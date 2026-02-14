@@ -22,7 +22,7 @@ const RFQPage = () => {
     try {
       const res = await fetch("/api/rfqs");
       const data = await res.json();
-
+ console.log("rfq",data)
       if (!res.ok) throw new Error(data.message || "Failed to load RFQs");
 
       setOrganizations(data.organizations || []);
@@ -189,7 +189,12 @@ const RFQPage = () => {
 
           <div className="card-body">
             <p className="text-muted">Submitted at: {rfq.submittedAt}</p>
-
+  {/* ✅ CLIENT DETAILS */}
+  <div className="mb-3 row">
+    <div className="col-4"><strong>Client:</strong> {rfq.clientName || "-"}</div>
+    <div className="col-3"><strong>Phone:</strong> {rfq.clientPhone || "-"}</div>
+    <div className="col-5"><strong>Email:</strong> {rfq.clientEmail || "-"}</div>
+  </div>
             <div className="table-responsive">
               <table className="table table-bordered">
                 <thead>
