@@ -17,8 +17,8 @@ const Page = () => {
 const [catPage, setCatPage] = useState(1);
 const catItemsPerPage = 5;
 
-  const [allProducts, setAllProducts] = useState([]);          // modal साठी
-  const [catalogProducts, setCatalogProducts] = useState([]);  // table साठी
+  const [allProducts, setAllProducts] = useState([]);          // modal
+  const [catalogProducts, setCatalogProducts] = useState([]);  // table 
 
   /* ===================== PRODUCTS STATE ===================== */
   const [products, setProducts] = useState([]);
@@ -420,8 +420,6 @@ const paginatedCatalogProducts = catalogProducts.slice(
               <tr>
                 <th>ID</th>
                 <th>Product</th>
-                <th>Category</th>
-                <th>Subcategory</th>
                 <th>Stock</th>
                 <th>SKU</th>
                 <th>Price</th>
@@ -434,8 +432,6 @@ const paginatedCatalogProducts = catalogProducts.slice(
                 <tr key={p.id}>
                   <td>{p.id}</td>
                   <td>{p.name}</td>
-                  <td>{p.category}</td>
-                  <td>{p.subCategory}</td>
                   <td>{p.stock}</td>
                   <td>{p.sku}</td>
                   <td>₹{p.price}</td>
@@ -510,8 +506,6 @@ const paginatedCatalogProducts = catalogProducts.slice(
                     <colgroup>
                       <col style={{ width: "50px" }} />   {/* Select */}
                       <col style={{ width: "200px" }} />  {/* Product */}
-                      <col style={{ width: "150px" }} />  {/* Category */}
-                      <col style={{ width: "150px" }} />  {/* Subcategory */}
                       <col style={{ width: "80px" }} />   {/* Stock */}
                       <col style={{ width: "200px" }} />  {/* SKU */}
                       <col style={{ width: "100px" }} />  {/* Price */}
@@ -520,8 +514,6 @@ const paginatedCatalogProducts = catalogProducts.slice(
                       <tr>
                         <th>Select</th>
                         <th>Product</th>
-                        <th>Category</th>
-                        <th>Subcategory</th>
                         <th>Stock</th>
                         <th>SKU</th>
                         <th>Price</th>
@@ -544,13 +536,6 @@ const paginatedCatalogProducts = catalogProducts.slice(
                               {p.name}
                             </td>
 
-                            <td className="text-truncate" style={{ maxWidth: "150px" }}>
-                              {p.category}
-                            </td>
-
-                            <td className="text-truncate" style={{ maxWidth: "150px" }}>
-                              {p.subCategory}
-                            </td>
 
                             <td>{p.stock}</td>
 

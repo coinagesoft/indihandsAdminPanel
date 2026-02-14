@@ -10,7 +10,9 @@ const Page = () => {
   const [header, setHeader] = useState({
     quotationNo: "",
     date: "",
-    customerName: "",
+      clientName: "",
+  clientPhone: "",   // ✅ ADD
+  clientEmail: "",  
     company: "",
     gstin: "",
     place: "",
@@ -51,13 +53,7 @@ const [charges, setCharges] = useState([]);
           sgst_rate: x.sgst,
           igst_rate: x.igst,
         })),
-         charges: charges
-    .filter(c => c.label && c.amount > 0)
-    .map(c => ({
-      label: c.label,
-      amount: c.amount,
-      taxPercent: c.taxPercent || 0
-    })),
+   
       };
 
       const res = await fetch("/api/proposals", {
@@ -90,59 +86,57 @@ const [charges, setCharges] = useState([]);
     window.open(`/api/proposals/pdf/${selectedRfq}`, "_blank");
   };
 
-  const handleRfqSelect = async (e) => {
-    const rfqId = e.target.value;
-    setSelectedRfq(rfqId);
+const handleRfqSelect = async (e) => {
+  const rfqId = e.target.value;
+  setSelectedRfq(rfqId);
 
-    if (!rfqId) return;
+  if (!rfqId) return;
 
-    const res = await fetch(`/api/rfqs/${rfqId}/details`);
-    const data = await res.json();
-    if (!res.ok) return alert("❌ " + data.message);
+  const res = await fetch(`/api/rfqs/${rfqId}/details`);
+  const data = await res.json();
+  if (!res.ok) return alert("❌ " + data.message);
 
-    const prRes = await fetch(`/api/proposals/by-rfq/${rfqId}`);
-    const prData = await prRes.json();
-    const selected = acceptedRfqs.find(x => x.id == rfqId);
-    setHeader((prev) => ({
-      ...prev,
-      place: selected?.place || "",
-      quotationNo: selected?.proposalNumber || "",
-      date: new Date().toISOString().slice(0, 10),
-      customerName: data.header.customerName,
-      company: data.header.company,
-      gstin: data.header.gstin,
-      billingAddress: data.header.billing_address,
-      shippingAddress: data.header.shipping_address,
-      companyId: data.header.companyId,   // ✅ add
-      branchId: data.header.branchId,
-    }));
+  const companyId = data.header.companyId;
 
-    setItems(data.items || []);
-    // fetch proposal charges
-const chargesRes = await fetch(`/api/proposals/${rfqId}/charges`);
+  // charges
+  const chargesRes = await fetch(`/api/companies/${companyId}/charges`);
+  if (chargesRes.ok) {
+    const chargesData = await chargesRes.json();
+    setCharges(
+      (chargesData.charges || []).map((c) => ({
+        label: c.label,
+        amount: Number(c.amount),
+        taxPercent: Number(c.taxPercent || 0),
+      }))
+    );
+  } else {
+    setCharges([]);
+  }
 
-if (!chargesRes.ok) {
-  const err = await chargesRes.json();
-  console.error("Charges API error:", err);
-  setCharges([]);
-  return;
-}
+  const selected = acceptedRfqs.find((x) => x.rfq_id == rfqId);
 
-const chargesData = await chargesRes.json();
-console.log("Charges API data:", chargesData);
+  setHeader((prev) => ({
+    ...prev,
+    quotationNo: selected?.proposal_number || "",
+    date: new Date().toISOString().slice(0, 10),
 
-setCharges(
-  (chargesData.charges || []).map(c => ({
-    label: c.label,
-    amount: Number(c.amount),
-    taxPercent: Number(c.taxPercent || 0),
-  }))
-);
+    clientName: data.header.clientName,
+    clientPhone: data.header.clientPhone,
+    clientEmail: data.header.clientEmail,
+
+    company: data.header.company,
+    gstin: data.header.gstin,
+    billingAddress: data.header.billing_address,
+    shippingAddress: data.header.shipping_address,
+
+    companyId,
+    branchId: data.header.branchId,
+  }));
+
+  setItems(data.items || []);
+};
 
 
-
-
-  };
 
 
   const calcAmount = (item) => {
@@ -266,9 +260,14 @@ const grandTotal =
                     <strong>Quotation No:</strong> {header.quotationNo}
                   </p>
                   <p className="mb-1">
-                    <strong>To:</strong> {header.customerName}
+                    <strong>To:</strong> {header.clientName}
                   </p>
-                  <p className="mb-1">{header.company}</p>
+                    <p className="mb-1">
+                    <strong>Customer Email:</strong> {header.clientEmail}
+                  </p>
+                    <p className="mb-1">
+                    <strong>Company Name:</strong> {header.company}
+                  </p>
                   <p className="mb-1">
                     <strong>GSTIN:</strong> {header.gstin}
                   </p>
@@ -375,12 +374,18 @@ const grandTotal =
   <div className="mb-3">
     <h6>Additional Charges</h6>
     <ul className="mb-0">
-      {charges.map((c, i) => (
-        <li key={i}>
-          {c.label}: ₹ {Number(c.amount).toFixed(2)}
-          {c.taxPercent > 0 && ` (+${c.taxPercent}% tax)`}
-        </li>
-      ))}
+      {charges.map((c, i) => {
+  const tax = (Number(c.amount || 0) * Number(c.taxPercent || 0)) / 100;
+  const total = Number(c.amount || 0) + tax;
+
+  return (
+    <li key={i}>
+      {c.label}: ₹ {total.toFixed(2)}
+      {c.taxPercent > 0 && ` (${c.taxPercent}% tax)`}
+    </li>
+  );
+})}
+
     </ul>
   </div>
 )}

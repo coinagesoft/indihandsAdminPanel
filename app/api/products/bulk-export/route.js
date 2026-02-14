@@ -7,8 +7,7 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
 
     const search = searchParams.get("search") || "";
-    const category = searchParams.get("category");
-    const subCategory = searchParams.get("subCategory");
+   
     const status = searchParams.get("status");
 
     let query = `
@@ -16,8 +15,6 @@ export async function GET(req) {
         product_name,
         sku,
         barcode,
-        category,
-        sub_category,
         hsn,
           size,         
         weight,
@@ -37,16 +34,6 @@ export async function GET(req) {
       params.push(`%${search}%`, `%${search}%`);
     }
 
-    if (category && category !== "All") {
-      query += ` AND category = ?`;
-      params.push(category);
-    }
-
-    if (subCategory && subCategory !== "All") {
-      query += ` AND sub_category = ?`;
-      params.push(subCategory);
-    }
-
     if (status && status !== "All") {
       query += ` AND status = ?`;
       params.push(status);
@@ -61,8 +48,6 @@ export async function GET(req) {
       { header: "Product Name", key: "product_name", width: 25 },
       { header: "SKU", key: "sku", width: 15 },
       { header: "Barcode", key: "barcode", width: 15 },
-      { header: "Category", key: "category", width: 18 },
-      { header: "Sub Category", key: "sub_category", width: 18 },
       { header: "HSN", key: "hsn", width: 15 },
        { header: "Size", key: "size", width: 18 },       
       { header: "Weight", key: "weight", width: 15 }, 

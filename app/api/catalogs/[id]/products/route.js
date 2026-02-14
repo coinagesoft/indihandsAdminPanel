@@ -119,8 +119,6 @@ export async function GET(req, context) {
         p.id,
         p.product_name AS name,
         p.sku,
-        p.category,
-        p.sub_category AS subCategory,
         p.stock_qty AS stock,
         p.base_price AS price,
         p.status,

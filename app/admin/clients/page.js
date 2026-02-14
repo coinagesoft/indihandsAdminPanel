@@ -24,78 +24,11 @@ const EMPTY_COMPANY = {
 };
 
 const Page = () => {
-  /* ===================== DUMMY DATA ===================== */
-  const dummyCompanies = [
-    {
-      id: 1,
-      companyName: "TCS",
-      companyEmail: "accounts@tcs.com",
-      branches: [
-        {
-          id: 101,
-          branchName: "TCS Pune",
-          gstin: "27ABCDE1234F1Z5",
-          shippingAddress: "Hinjewadi Phase 2, Pune",
-          billingAddress: "Hinjewadi Phase 2, Pune",
-          contactPerson: "Ravi Kumar",
-          phones: ["+91 9876543210"],
-          emails: ["ravi.pune@tcs.com"],
-          loginEmail: "pune@tcs.com",
-          password: "",
-        },
-        {
-          id: 102,
-          branchName: "TCS Mumbai",
-          gstin: "27ABCDE9999F1Z9",
-          shippingAddress: "Andheri East, Mumbai",
-          billingAddress: "Andheri East, Mumbai",
-          contactPerson: "Sneha Patil",
-          phones: ["+91 9123456789"],
-          emails: ["sneha.mum@tcs.com"],
-          loginEmail: "mumbai@tcs.com",
-          password: "",
-        },
-      ],
-    },
-
-    {
-      id: 2,
-      companyName: "Infosys",
-      companyEmail: "finance@infosys.com",
-      branches: [
-        {
-          id: 201,
-          branchName: "Infosys Bengaluru",
-          gstin: "29INFOSYS1234F1Z1",
-          shippingAddress: "Electronic City Phase 1, Bengaluru",
-          billingAddress: "Electronic City Phase 1, Bengaluru",
-          contactPerson: "Anil Sharma",
-          phones: ["+91 9988776655"],
-          emails: ["anil.sharma@infosys.com"],
-          loginEmail: "blr@infosys.com",
-          password: "",
-        },
-        {
-          id: 202,
-          branchName: "Infosys Pune",
-          gstin: "27INFOSYS5678F1Z3",
-          shippingAddress: "Hinjewadi Phase 3, Pune",
-          billingAddress: "Hinjewadi Phase 3, Pune",
-          contactPerson: "Pooja Kulkarni",
-          phones: ["+91 9090909090"],
-          emails: ["pooja.kulkarni@infosys.com"],
-          loginEmail: "pune@infosys.com",
-          password: "",
-        },
-      ],
-    },
-  ];
-
-
   /* ===================== STATE ===================== */
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [filter, setFilter] = useState("");
+const [companyCharges, setCompanyCharges] = useState([]);
 
   const [newCompany, setNewCompany] = useState(EMPTY_COMPANY);
   const [newBranch, setNewBranch] = useState(EMPTY_BRANCH);
@@ -108,10 +41,12 @@ const [editingCompany, setEditingCompany] = useState(EMPTY_COMPANY);
 
   /* ===================== MODALS ===================== */
 const openCompanyModal = () => {
-  setEditingCompany(EMPTY_COMPANY); // 👈 important
+  setEditingCompany(EMPTY_COMPANY);
   setNewCompany({ ...EMPTY_COMPANY });
+  setCompanyCharges([]);   // ✅ reset
   new bootstrap.Modal(companyModalRef.current).show();
 };
+
 
 
   const openAddBranchModal = () => {
@@ -139,6 +74,9 @@ const handleCompanyUpdate = async (e) => {
     body: JSON.stringify({
       companyName: editingCompany.companyName,
       companyEmail: editingCompany.companyEmail,
+         charges: companyCharges.filter(
+    c => c.label?.trim() && Number(c.amount) > 0
+  ),
     }),
   });
 
@@ -148,7 +86,8 @@ const handleCompanyUpdate = async (e) => {
   alert("✅ Company updated");
   await fetchCompanies();
   setEditingCompany(EMPTY_COMPANY);
-  new bootstrap.Modal(companyModalRef.current).hide();
+const modal = bootstrap.Modal.getInstance(companyModalRef.current);
+modal.hide();
 };
 
 
@@ -162,8 +101,13 @@ const handleCompanyUpdate = async (e) => {
       body: JSON.stringify({
         companyName: newCompany.companyName,
         companyEmail: newCompany.companyEmail,
+           charges: companyCharges.filter(
+    c => c.label?.trim() && Number(c.amount) > 0
+  ), 
       }),
     });
+    setCompanyCharges([]);
+
 
     const data = await res.json();
     if (!res.ok) return alert("❌ " + data.message);
@@ -171,7 +115,8 @@ const handleCompanyUpdate = async (e) => {
     alert("✅ Company created");
     await fetchCompanies();
 
-    new bootstrap.Modal(companyModalRef.current).hide();
+const modal = bootstrap.Modal.getInstance(companyModalRef.current);
+modal.hide();
   };
 
 
@@ -274,7 +219,9 @@ const handleCompanyUpdate = async (e) => {
                 >
                   {c.companyName}
                 </li>
+                
               ))}
+              
             </ul>
           </div>
         </div>
@@ -282,17 +229,54 @@ const handleCompanyUpdate = async (e) => {
         {/* RIGHT */}
         <div className="col-lg-9">
           <div className="card p-4">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-  <h5 className="text-orange mb-0">
-    {selectedCompany?.companyName}
-  </h5>
+<div className="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h5 className="text-orange mb-1">{selectedCompany?.companyName}</h5>
+
+    {selectedCompany?.charges?.length > 0 && (
+      <div className="small text-muted">
+        Charges:{" "}
+        {selectedCompany.charges.map((c, i) => {
+          const tax = (Number(c.amount) * Number(c.taxPercent || 0)) / 100;
+          const total = Number(c.amount) + tax;
+
+          return (
+            <span key={i} className="me-3">
+              {c.label}: ₹{total.toFixed(0)}
+              {c.taxPercent > 0 && (
+                <span className="text-secondary">
+                  {" "}
+                  ({c.taxPercent}%)
+                </span>
+              )}
+            </span>
+          );
+        })}
+      </div>
+    )}
+  </div>
 
   <div className="d-flex gap-2">
     <button
       className="btn btn-sm btn-outline-orange"
       disabled={!selectedCompany?.id}
-      onClick={() => {
+      onClick={async () => {
         setEditingCompany(selectedCompany);
+
+        const res = await fetch(`/api/companies/${selectedCompany.id}/charges`);
+        if (res.ok) {
+          const data = await res.json();
+          setCompanyCharges(
+            (data.charges || []).map((c) => ({
+              label: c.label,
+              amount: Number(c.amount),
+              taxPercent: Number(c.taxPercent || 0),
+            }))
+          );
+        } else {
+          setCompanyCharges([]);
+        }
+
         new bootstrap.Modal(companyModalRef.current).show();
       }}
     >
@@ -305,10 +289,7 @@ const handleCompanyUpdate = async (e) => {
       onClick={async () => {
         if (!selectedCompany?.id) return;
 
-        const ok = confirm(
-          "⚠️ Are you sure? This will delete company & all branches."
-        );
-        if (!ok) return;
+        if (!confirm("⚠️ Delete company & branches?")) return;
 
         const res = await fetch(`/api/companies/${selectedCompany.id}`, {
           method: "DELETE",
@@ -325,6 +306,7 @@ const handleCompanyUpdate = async (e) => {
     </button>
   </div>
 </div>
+
 
 
             <div className="d-flex justify-content-between my-3">
@@ -422,6 +404,79 @@ const handleCompanyUpdate = async (e) => {
       : setNewCompany({ ...newCompany, companyEmail: e.target.value });
   }}
 />
+<hr className="my-3" />
+<h6>Company Charges</h6>
+
+{companyCharges.map((c, i) => (
+  <div key={i} className="row g-2 mb-2">
+    <div className="col-md-5">
+      <input
+        className="form-control"
+        placeholder="Charge label (e.g. Shipping)"
+        value={c.label}
+        onChange={(e) => {
+          const arr = [...companyCharges];
+          arr[i].label = e.target.value;
+          setCompanyCharges(arr);
+        }}
+      />
+    </div>
+
+    <div className="col-md-3">
+      <input
+        type="number"
+        className="form-control"
+        placeholder="Amount"
+        value={c.amount}
+        onChange={(e) => {
+          const arr = [...companyCharges];
+          arr[i].amount = +e.target.value;
+          setCompanyCharges(arr);
+        }}
+      />
+    </div>
+
+    <div className="col-md-3">
+      <input
+        type="number"
+        className="form-control"
+        placeholder="Tax %"
+        value={c.taxPercent}
+        onChange={(e) => {
+          const arr = [...companyCharges];
+          arr[i].taxPercent = +e.target.value;
+          setCompanyCharges(arr);
+        }}
+      />
+    </div>
+
+    <div className="col-md-1">
+      <button
+        type="button"
+        className="btn btn-danger btn-sm"
+        onClick={() =>
+          setCompanyCharges(companyCharges.filter((_, idx) => idx !== i))
+        }
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+))}
+
+<button
+  type="button"
+  className="btn btn-outline-secondary btn-sm"
+  onClick={() =>
+    setCompanyCharges([
+      ...companyCharges,
+      { label: "", amount: 0, taxPercent: 0 },
+    ])
+  }
+>
+  + Add Charge
+</button>
+
 
              <button className="btn btn-orange">
   {editingCompany?.id ? "Update" : "Create"}

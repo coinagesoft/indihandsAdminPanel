@@ -6,9 +6,6 @@ const Page = () => {
   const [galleryPreviews, setGalleryPreviews] = useState([]);
   const [products, setProducts] = useState([]);
   const [excelFile, setExcelFile] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [subcategories, setSubcategories] = useState([]);
   const [status, setStatus] = useState("Available");
   const [stockQty, setStockQty] = useState(0);
 
@@ -18,23 +15,9 @@ const Page = () => {
       setFeaturedPreview(URL.createObjectURL(file));
     }
   };
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const res = await fetch("/api/categories");
-      const data = await res.json();
-      setCategories(data.categories || []);
-    };
 
-    fetchCategories();
-  }, []);
 
-  const handleCategoryChange = (e) => {
-    const value = e.target.value;
-    setSelectedCategory(value);
 
-    const selected = categories.find(c => c.name === value);
-    setSubcategories(selected?.subcategories || []);
-  };
 
   const handleGalleryChange = (e) => {
     const files = Array.from(e.target.files);
@@ -134,10 +117,6 @@ const Page = () => {
       sku: form.sku.value.trim(),
       barcode: form.barcode.value.trim(),           
       description: form.description.value.trim(),   
-
-      category: form.category.value,
-      subCategory: form.subCategory.value,
-
       hsn: form.hsn.value.trim(),
       size: form.size.value.trim(),     
       weight: form.weight.value.trim(),                 
@@ -201,8 +180,6 @@ const Page = () => {
         productName: x["Product Name"]?.toString().trim() || "",
         sku: x["SKU"]?.toString().trim() || "",
         barcode: x["Barcode"]?.toString().trim() || "",
-        category: x["Category"]?.toString().trim() || "",
-        subCategory: x["Sub Category"]?.toString().trim() || "",
         hsn: x["HSN"]?.toString().trim() || "",
         size: x["Size"]?.toString().trim() || "",
         weight: x["Weight"]?.toString().trim() || "",
@@ -290,8 +267,6 @@ const Page = () => {
                   <tr>
                     <th>Product Name</th>
                     <th>SKU</th>
-                    <th>Category</th>
-                    <th>Subcategory</th>
                     <th>HSN</th>
                     <th>Size</th>
                     <th>Weight</th>
@@ -304,8 +279,6 @@ const Page = () => {
                     <tr key={idx}>
                       <td>{p.productName}</td>
                       <td>{p.sku}</td>
-                      <td>{p.category}</td>
-                      <td>{p.subCategory}</td>
                       <td>{p.hsn}</td>
                       <td>{p.size || "-"}</td>
                       <td>{p.weight || "-"}</td>
@@ -512,37 +485,9 @@ const Page = () => {
                 <h5 className="mb-0">Organize</h5>
               </div>
               <div className="card-body">
-                <div className="form-floating form-floating-outline mb-4">
-                  <select
-                    className="form-select"
-                    name="category"
-                    required
-                    value={selectedCategory}
-                    onChange={handleCategoryChange}
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map(c => (
-                      <option key={c.name} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+               
 
-                  <label>Category</label>
-                </div>
-
-                <div className="form-floating form-floating-outline mb-4">
-                  <select className="form-select" name="subCategory">
-                    <option value="">Select SubCategory</option>
-                    {subcategories.map(sc => (
-                      <option key={sc.name} value={sc.name}>
-                        {sc.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <label>Sub Category</label>
-                </div>
+             
                 <div className="form-floating form-floating-outline">
                   <select
                     className="form-select"

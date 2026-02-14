@@ -47,6 +47,288 @@ async function generateNextProposalNumber() {
 
 /* ---------------- POST (UPSERT) ---------------- */
 
+// export async function POST(req) {
+//   try {
+//     const body = await req.json();
+
+//     const {
+//       rfqId,
+//       companyId,
+//       branchId,
+//       proposal_date,
+//       billing_address,
+//       shipping_address,
+//       place, 
+//       items = [],
+//        charges = [],
+//     } = body;
+// const safeCharges = Array.isArray(charges) ? charges : [];
+
+//     // ✅ validations
+//     if (!rfqId || !companyId || !branchId) {
+//       return Response.json(
+//         { message: "rfqId, companyId, branchId are required" },
+//         { status: 400 }
+//       );
+//     }
+
+//     if (!proposal_date) {
+//       return Response.json({ message: "proposal_date is required" }, { status: 400 });
+//     }
+
+//    if (
+//   (!Array.isArray(items) || items.length === 0) &&
+//   safeCharges.length === 0
+// ) {
+//   return Response.json(
+//     { message: "At least one item or charge is required" },
+//     { status: 400 }
+//   );
+// }
+
+
+//     /* ✅ 1) Fetch Pricing Defaults */
+//     const [[pricingDefaults]] = await db.query(`
+//       SELECT sgst_rate, cgst_rate, igst_rate, delivery_charges, branding_charges
+//       FROM pricing_defaults
+//       ORDER BY id DESC
+//       LIMIT 1
+//     `);
+
+//     const defaults = pricingDefaults || {
+//       sgst_rate: 0,
+//       cgst_rate: 0,
+//       igst_rate: 0,
+//       delivery_charges: 0,
+//       branding_charges: 0,
+      
+//     };
+
+//     /* ✅ 2) Calculate totals */
+//     let subtotal = 0;
+//     let cgst_total = 0;
+//     let sgst_total = 0;
+//     let igst_total = 0;
+
+//     const computedItems = items.map((it) => {
+//       const qty = Number(it.quantity ?? it.qty ?? 1);
+//       const rate = Number(it.rate ?? 0);
+//       const discount = Number(it.discount ?? 0);
+
+//       const cgst_rate =
+//         it.cgst_rate != null || it.cgst != null
+//           ? Number(it.cgst_rate ?? it.cgst)
+//           : Number(defaults.cgst_rate);
+
+//       const sgst_rate =
+//         it.sgst_rate != null || it.sgst != null
+//           ? Number(it.sgst_rate ?? it.sgst)
+//           : Number(defaults.sgst_rate);
+
+//       const igst_rate =
+//         it.igst_rate != null || it.igst != null
+//           ? Number(it.igst_rate ?? it.igst)
+//           : Number(defaults.igst_rate);
+
+//       const amount = calcAmount(qty, rate, discount);
+
+//       const cgst = calcTax(amount, cgst_rate);
+//       const sgst = calcTax(amount, sgst_rate);
+//       const igst = calcTax(amount, igst_rate);
+
+//       const line_total = amount + cgst + sgst + igst;
+
+//       subtotal += amount;
+//       cgst_total += cgst;
+//       sgst_total += sgst;
+//       igst_total += igst;
+
+//       return {
+//         productId: Number(it.productId),
+//         quantity: qty,
+//         rate,
+//         discount,
+//         cgst_rate,
+//         sgst_rate,
+//         igst_rate,
+//         line_total,
+//       };
+//     });
+
+    
+//     const deliveryCharges = Number(defaults.delivery_charges || 0);
+//     const brandingCharges = Number(defaults.branding_charges || 0);
+
+// let extra_charges_amount = 0;
+// let extra_charges_tax = 0;
+
+// for (const ch of safeCharges) {
+//   const amount = Number(ch.amount || 0);
+//   const taxPercent = Number(ch.taxPercent || 0);
+
+//   const tax = (amount * taxPercent) / 100;
+
+//   extra_charges_amount += amount;
+//   extra_charges_tax += tax;
+// }
+
+
+
+//  const grand_total =
+//   subtotal +
+//   cgst_total +
+//   sgst_total +
+//   igst_total +
+//   deliveryCharges +
+//   brandingCharges +
+//   extra_charges_amount +
+//   extra_charges_tax;
+
+
+
+
+//     /* ✅ 3) Check existing proposal for same RFQ */
+//     const [[existingProposal]] = await db.query(
+//       `SELECT id, proposal_number FROM proposals WHERE rfq_id = ? LIMIT 1`,
+//       [rfqId]
+//     );
+
+//     let proposalId = null;
+//     let proposal_number = null;
+
+//     if (existingProposal) {
+//       // ✅ UPDATE (same proposal_number keep)
+//       proposalId = existingProposal.id;
+//       proposal_number = existingProposal.proposal_number;
+
+//       await db.query(
+//         `
+//         UPDATE proposals
+//         SET company_id=?, branch_id=?, proposal_date=?,
+//             billing_address=?, shipping_address=?,
+//             subtotal=?, cgst_total=?, sgst_total=?, igst_total=?, grand_total=?,
+//             status='Pending',
+//             place=?
+//         WHERE id=?
+//         `,
+//         [
+//           companyId,
+//           branchId,
+//           proposal_date,
+//           billing_address || null,
+//           shipping_address || null,
+//           subtotal,
+//           cgst_total,
+//           sgst_total,
+//           igst_total,
+//           grand_total,
+//           place || null,
+//           proposalId,
+//         ]
+//       );
+
+//       // ✅ Replace items (delete old then insert new)
+//       await db.query(`DELETE FROM proposal_items WHERE proposal_id = ?`, [proposalId]);
+//     } else {
+//       // ✅ INSERT new proposal
+//       proposal_number = await generateNextProposalNumber();
+
+//       const [result] = await db.query(
+//         `
+//         INSERT INTO proposals
+//         (rfq_id, company_id, branch_id, proposal_number, proposal_date,
+//          billing_address, shipping_address, subtotal, cgst_total, sgst_total, igst_total, grand_total,
+//          status, place)
+//         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)
+//         `,
+//         [
+//           rfqId,
+//           companyId,
+//           branchId,
+//           proposal_number,
+//           proposal_date,
+//           billing_address || null,
+//           shipping_address || null,
+//           subtotal,
+//           cgst_total,
+//           sgst_total,
+//           igst_total,
+//           grand_total,
+//           place || null,
+//         ]
+//       );
+
+//       proposalId = result.insertId;
+//     }
+
+//     /* ✅ 4) Insert proposal items */
+//     for (const it of computedItems) {
+//       if (!it.productId) continue;
+
+//       await db.query(
+//         `
+//         INSERT INTO proposal_items
+//         (proposal_id, product_id, quantity, rate, discount, cgst_rate, sgst_rate, igst_rate, line_total)
+//         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+//         `,
+//         [
+//           proposalId,
+//           it.productId,
+//           it.quantity,
+//           it.rate,
+//           it.discount,
+//           it.cgst_rate,
+//           it.sgst_rate,
+//           it.igst_rate,
+//           it.line_total,
+//         ]
+//       );
+//     }
+
+//     /* ✅ 4.5) Replace proposal charges */
+// await db.query(
+//   `DELETE FROM proposal_charges WHERE proposal_id = ?`,
+//   [proposalId]
+// );
+
+// for (const ch of safeCharges) {
+//   if (!ch.label || !ch.amount) continue;
+
+//   await db.query(
+//     `
+//     INSERT INTO proposal_charges
+//     (proposal_id, label, amount, tax_percent)
+//     VALUES (?, ?, ?, ?)
+//     `,
+//     [
+//       proposalId,
+//       ch.label,
+//       Number(ch.amount),
+//       Number(ch.taxPercent || 0),
+//     ]
+//   );
+// }
+
+
+//  return Response.json({
+//   message: existingProposal
+//     ? "✅ Proposal updated successfully"
+//     : "✅ Proposal created successfully",
+//   proposalId,
+//   proposal_number,
+//   charges_summary: {
+//     amount: extra_charges_amount,
+//     tax: extra_charges_tax,
+//   },
+// });
+
+//   } catch (err) {
+//     console.error("POST /api/proposals error:", err);
+//     return Response.json({ message: "Server error" }, { status: 500 });
+//   }
+// }
+
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -58,11 +340,9 @@ export async function POST(req) {
       proposal_date,
       billing_address,
       shipping_address,
-      place, 
+      place,
       items = [],
-       charges = [],
     } = body;
-const safeCharges = Array.isArray(charges) ? charges : [];
 
     // ✅ validations
     if (!rfqId || !companyId || !branchId) {
@@ -73,38 +353,39 @@ const safeCharges = Array.isArray(charges) ? charges : [];
     }
 
     if (!proposal_date) {
-      return Response.json({ message: "proposal_date is required" }, { status: 400 });
+      return Response.json(
+        { message: "proposal_date is required" },
+        { status: 400 }
+      );
     }
 
-   if (
-  (!Array.isArray(items) || items.length === 0) &&
-  safeCharges.length === 0
-) {
-  return Response.json(
-    { message: "At least one item or charge is required" },
-    { status: 400 }
-  );
-}
+    if (!Array.isArray(items) || items.length === 0) {
+      return Response.json(
+        { message: "At least one item is required" },
+        { status: 400 }
+      );
+    }
 
+    /* ✅ 1) Fetch company charges */
+    const [companyCharges] = await db.query(
+      `SELECT label, amount, tax_percent
+       FROM company_charges
+       WHERE company_id = ?`,
+      [companyId]
+    );
 
-    /* ✅ 1) Fetch Pricing Defaults */
-    const [[pricingDefaults]] = await db.query(`
-      SELECT sgst_rate, cgst_rate, igst_rate, delivery_charges, branding_charges
-      FROM pricing_defaults
-      ORDER BY id DESC
-      LIMIT 1
-    `);
+    let extra_charges_amount = 0;
+    let extra_charges_tax = 0;
 
-    const defaults = pricingDefaults || {
-      sgst_rate: 0,
-      cgst_rate: 0,
-      igst_rate: 0,
-      delivery_charges: 0,
-      branding_charges: 0,
-      
-    };
+    for (const ch of companyCharges) {
+      const amount = Number(ch.amount || 0);
+      const tax = (amount * Number(ch.tax_percent || 0)) / 100;
 
-    /* ✅ 2) Calculate totals */
+      extra_charges_amount += amount;
+      extra_charges_tax += tax;
+    }
+
+    /* ✅ 2) Calculate item totals */
     let subtotal = 0;
     let cgst_total = 0;
     let sgst_total = 0;
@@ -115,20 +396,9 @@ const safeCharges = Array.isArray(charges) ? charges : [];
       const rate = Number(it.rate ?? 0);
       const discount = Number(it.discount ?? 0);
 
-      const cgst_rate =
-        it.cgst_rate != null || it.cgst != null
-          ? Number(it.cgst_rate ?? it.cgst)
-          : Number(defaults.cgst_rate);
-
-      const sgst_rate =
-        it.sgst_rate != null || it.sgst != null
-          ? Number(it.sgst_rate ?? it.sgst)
-          : Number(defaults.sgst_rate);
-
-      const igst_rate =
-        it.igst_rate != null || it.igst != null
-          ? Number(it.igst_rate ?? it.igst)
-          : Number(defaults.igst_rate);
+      const cgst_rate = Number(it.cgst_rate ?? it.cgst ?? 0);
+      const sgst_rate = Number(it.sgst_rate ?? it.sgst ?? 0);
+      const igst_rate = Number(it.igst_rate ?? it.igst ?? 0);
 
       const amount = calcAmount(qty, rate, discount);
 
@@ -155,62 +425,36 @@ const safeCharges = Array.isArray(charges) ? charges : [];
       };
     });
 
-    
-    const deliveryCharges = Number(defaults.delivery_charges || 0);
-    const brandingCharges = Number(defaults.branding_charges || 0);
+    /* ✅ 3) Grand total (with company charges) */
+    const grand_total =
+      subtotal +
+      cgst_total +
+      sgst_total +
+      igst_total +
+      extra_charges_amount +
+      extra_charges_tax;
 
-let extra_charges_amount = 0;
-let extra_charges_tax = 0;
-
-for (const ch of safeCharges) {
-  const amount = Number(ch.amount || 0);
-  const taxPercent = Number(ch.taxPercent || 0);
-
-  const tax = (amount * taxPercent) / 100;
-
-  extra_charges_amount += amount;
-  extra_charges_tax += tax;
-}
-
-
-
- const grand_total =
-  subtotal +
-  cgst_total +
-  sgst_total +
-  igst_total +
-  deliveryCharges +
-  brandingCharges +
-  extra_charges_amount +
-  extra_charges_tax;
-
-
-
-
-    /* ✅ 3) Check existing proposal for same RFQ */
+    /* ✅ 4) Check existing proposal */
     const [[existingProposal]] = await db.query(
       `SELECT id, proposal_number FROM proposals WHERE rfq_id = ? LIMIT 1`,
       [rfqId]
     );
 
-    let proposalId = null;
-    let proposal_number = null;
+    let proposalId;
+    let proposal_number;
 
     if (existingProposal) {
-      // ✅ UPDATE (same proposal_number keep)
       proposalId = existingProposal.id;
       proposal_number = existingProposal.proposal_number;
 
       await db.query(
-        `
-        UPDATE proposals
-        SET company_id=?, branch_id=?, proposal_date=?,
-            billing_address=?, shipping_address=?,
-            subtotal=?, cgst_total=?, sgst_total=?, igst_total=?, grand_total=?,
-            status='Pending',
-            place=?
-        WHERE id=?
-        `,
+        `UPDATE proposals
+         SET company_id=?, branch_id=?, proposal_date=?,
+             billing_address=?, shipping_address=?,
+             subtotal=?, cgst_total=?, sgst_total=?, igst_total=?, grand_total=?,
+             status='Pending',
+             place=?
+         WHERE id=?`,
         [
           companyId,
           branchId,
@@ -227,20 +471,20 @@ for (const ch of safeCharges) {
         ]
       );
 
-      // ✅ Replace items (delete old then insert new)
-      await db.query(`DELETE FROM proposal_items WHERE proposal_id = ?`, [proposalId]);
+      await db.query(
+        `DELETE FROM proposal_items WHERE proposal_id = ?`,
+        [proposalId]
+      );
     } else {
-      // ✅ INSERT new proposal
       proposal_number = await generateNextProposalNumber();
 
       const [result] = await db.query(
-        `
-        INSERT INTO proposals
-        (rfq_id, company_id, branch_id, proposal_number, proposal_date,
-         billing_address, shipping_address, subtotal, cgst_total, sgst_total, igst_total, grand_total,
-         status, place)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)
-        `,
+        `INSERT INTO proposals
+         (rfq_id, company_id, branch_id, proposal_number, proposal_date,
+          billing_address, shipping_address,
+          subtotal, cgst_total, sgst_total, igst_total, grand_total,
+          status, place)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)`,
         [
           rfqId,
           companyId,
@@ -261,16 +505,15 @@ for (const ch of safeCharges) {
       proposalId = result.insertId;
     }
 
-    /* ✅ 4) Insert proposal items */
+    /* ✅ 5) Insert items */
     for (const it of computedItems) {
       if (!it.productId) continue;
 
       await db.query(
-        `
-        INSERT INTO proposal_items
-        (proposal_id, product_id, quantity, rate, discount, cgst_rate, sgst_rate, igst_rate, line_total)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
+        `INSERT INTO proposal_items
+         (proposal_id, product_id, quantity, rate, discount,
+          cgst_rate, sgst_rate, igst_rate, line_total)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           proposalId,
           it.productId,
@@ -285,43 +528,17 @@ for (const ch of safeCharges) {
       );
     }
 
-    /* ✅ 4.5) Replace proposal charges */
-await db.query(
-  `DELETE FROM proposal_charges WHERE proposal_id = ?`,
-  [proposalId]
-);
-
-for (const ch of safeCharges) {
-  if (!ch.label || !ch.amount) continue;
-
-  await db.query(
-    `
-    INSERT INTO proposal_charges
-    (proposal_id, label, amount, tax_percent)
-    VALUES (?, ?, ?, ?)
-    `,
-    [
+    return Response.json({
+      message: existingProposal
+        ? "✅ Proposal updated successfully"
+        : "✅ Proposal created successfully",
       proposalId,
-      ch.label,
-      Number(ch.amount),
-      Number(ch.taxPercent || 0),
-    ]
-  );
-}
-
-
- return Response.json({
-  message: existingProposal
-    ? "✅ Proposal updated successfully"
-    : "✅ Proposal created successfully",
-  proposalId,
-  proposal_number,
-  charges_summary: {
-    amount: extra_charges_amount,
-    tax: extra_charges_tax,
-  },
-});
-
+      proposal_number,
+      charges_summary: {
+        amount: extra_charges_amount,
+        tax: extra_charges_tax,
+      },
+    });
   } catch (err) {
     console.error("POST /api/proposals error:", err);
     return Response.json({ message: "Server error" }, { status: 500 });
