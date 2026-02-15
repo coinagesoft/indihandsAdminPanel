@@ -422,7 +422,7 @@ const Page = () => {
           </div>
           <div className="row g-3">
 
-            <div className="col-md-3">
+            <div className="col-md-5">
               <label className="form-label">Search</label>
               <input
                 className="form-control"
@@ -432,7 +432,7 @@ const Page = () => {
               />
             </div>
 
-            <div className="col-md-3">
+            <div className="col-md-4">
               <label className="form-label">Status</label>
               <select
                 className="form-select"
