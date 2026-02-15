@@ -216,7 +216,7 @@ useEffect(() => {
       </div>
 
       <div className="row mb-4 g-3 align-items-end">
-        <div className="col-md-3">
+        <div className="col-md-4">
 
           <label className="form-label">Organization</label>
           <select
@@ -233,7 +233,7 @@ useEffect(() => {
           </select>
         </div>
 
-        <div className="col-md-3">
+        <div className="col-md-4">
           <label className="form-label">Product</label>
           <select
             className="form-select"
@@ -250,7 +250,7 @@ useEffect(() => {
         </div>
 
 
-        <div className="col-md-1">
+        <div className="col-md-2">
           <label className="form-label">Min</label>
           <input
             type="number"
@@ -260,7 +260,7 @@ useEffect(() => {
           />
         </div>
 
-        <div className="col-md-1">
+        <div className="col-md-2">
           <label className="form-label">Max</label>
           <input
             type="number"

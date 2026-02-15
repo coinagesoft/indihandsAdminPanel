@@ -256,7 +256,7 @@ modal.hide();
     )}
   </div>
 
-  <div className="d-flex gap-2">
+  <div className="d-flex gap-2 ">
     <button
       className="btn btn-sm btn-outline-orange"
       disabled={!selectedCompany?.id}
@@ -466,11 +466,11 @@ modal.hide();
 
 <button
   type="button"
-  className="btn btn-outline-secondary btn-sm"
+  className="btn btn-outline-secondary btn-sm me-2"
   onClick={() =>
     setCompanyCharges([
       ...companyCharges,
-      { label: "", amount: 0, taxPercent: 0 },
+      { label: "", amount: "", taxPercent: "" },
     ])
   }
 >

@@ -191,7 +191,7 @@ const RFQPage = () => {
             <p className="text-muted">Submitted at: {rfq.submittedAt}</p>
   {/* ✅ CLIENT DETAILS */}
   <div className="mb-3 row">
-    <div className="col-4"><strong>Client:</strong> {rfq.clientName || "-"}</div>
+    <div className="col-4"><strong>Client Name:</strong> {rfq.clientName || "-"}</div>
     <div className="col-3"><strong>Phone:</strong> {rfq.clientPhone || "-"}</div>
     <div className="col-5"><strong>Email:</strong> {rfq.clientEmail || "-"}</div>
   </div>

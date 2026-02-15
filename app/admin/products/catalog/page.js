@@ -494,7 +494,7 @@ const paginatedCatalogProducts = catalogProducts.slice(
         <>
           <div className="modal-backdrop fade show"></div>
           <div className="modal d-block" tabIndex="-1">
-            <div className="modal-dialog modal-lg">
+            <div className="modal-dialog modal-xl">
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">Add Existing Products to "{selectedCatalog.name}"</h5>
