@@ -2,6 +2,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { db } from "../../../../db";
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
 
 /* ================= NUMBER TO WORDS ================= */
 function numberToWords(num) {
@@ -373,35 +375,21 @@ export async function GET(req, { params }) {
 
  
 
-   /* ── LAUNCH BROWSER (LOCAL + VERCEL READY) ── */
-let browser;
+/* ── LAUNCH BROWSER (VERCEL SAFE) ── */
+const browser = await puppeteer.launch({
+  args: [
+    ...chromium.args,
+    "--disable-dev-shm-usage",
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--single-process",
+    "--no-zygote"
+  ],
+  defaultViewport: chromium.defaultViewport,
+  executablePath: await chromium.executablePath(),
+  headless: chromium.headless,
+});
 
-if (process.env.VERCEL) {
-  // Vercel / serverless environment
-  const chromium = (await import("@sparticuz/chromium")).default;
-  const puppeteerCore = (await import("puppeteer-core")).default;
-
-  browser = await puppeteerCore.launch({
-    args: [
-      ...chromium.args,
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--font-render-hinting=none"
-    ],
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-  });
-
-} else {
-  // Local / Node server environment
-  const puppeteer = (await import("puppeteer")).default;
-
-  browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
-  });
-}
 
 
     const page = await browser.newPage();
