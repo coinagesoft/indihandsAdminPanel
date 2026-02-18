@@ -376,19 +376,17 @@ export async function GET(req, { params }) {
  
 
 /* ── LAUNCH BROWSER (VERCEL SAFE) ── */
+/* ── LAUNCH BROWSER (VERCEL SAFE) ── */
+const executablePath = await chromium.executablePath();
+
 const browser = await puppeteer.launch({
-  args: [
-    ...chromium.args,
-    "--disable-dev-shm-usage",
-    "--no-sandbox",
-    "--disable-setuid-sandbox",
-    "--single-process",
-    "--no-zygote"
-  ],
+  args: chromium.args,
+  executablePath,
   defaultViewport: chromium.defaultViewport,
-  executablePath: await chromium.executablePath(),
-  headless: chromium.headless,
+  headless: true,
 });
+
+
 
 
 
