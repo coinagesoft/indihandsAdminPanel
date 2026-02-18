@@ -2,8 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { db } from "../../../../db";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+
 
 /* ================= NUMBER TO WORDS ================= */
 function numberToWords(num) {
@@ -374,16 +373,28 @@ export async function GET(req, { params }) {
     });
 
  
+let browser;
 
-chromium.setGraphicsMode = false;
+if (process.env.VERCEL) {
+  // ===== VERCEL (LINUX) =====
+  const chromium = (await import("@sparticuz/chromium")).default;
+  const puppeteer = (await import("puppeteer-core")).default;
 
-const executablePath = await chromium.executablePath();
+  browser = await puppeteer.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  });
 
-const browser = await puppeteer.launch({
-  args: chromium.args,
-  executablePath,
-  headless: chromium.headless,
-});
+} else {
+  // ===== LOCAL WINDOWS =====
+  const puppeteer = (await import("puppeteer")).default;
+
+  browser = await puppeteer.launch({
+    headless: "new",
+  });
+}
+
 
 
 
