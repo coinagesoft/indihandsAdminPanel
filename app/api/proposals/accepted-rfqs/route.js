@@ -28,8 +28,8 @@ export async function GET() {
       customerName: x.customerName || x.company,
       company: x.company,
       gstin: x.gstin || "",
-      place: x.place || "",               // ✅ proposals table मधून
-      proposalNumber: x.proposalNumber || "", // ✅ already created proposal असल्यास
+      place: x.place || "",          
+      proposalNumber: x.proposalNumber || "", 
       branchName: x.branchName,
     }));
 
