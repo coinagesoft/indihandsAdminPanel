@@ -1,5 +1,6 @@
-const chromium = (await import("@sparticuz/chromium")).default;
-const puppeteer = (await import("puppeteer-core")).default;
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { db } from "../../../../db";
 
 /* ================= NUMBER TO WORDS ================= */
@@ -370,27 +371,38 @@ export async function GET(req, { params }) {
       totalTax, grandTotal, formattedDate
     });
 
-    /* ── LAUNCH PUPPETEER ── */
-    let browser;
+ 
 
-    try {
-      // Works on local dev / a standard Node server
-      const puppeteer = await import("puppeteer");
-      browser = await puppeteer.default.launch({
-        headless: "new",
-        args: ["--no-sandbox", "--disable-setuid-sandbox"]
-      });
-    } catch {
-      // Fallback for Vercel / other serverless (needs puppeteer-core + @sparticuz/chromium)
-      const chromium  = (await import("@sparticuz/chromium")).default;
-      const puppeteer = (await import("puppeteer-core")).default;
-      browser = await puppeteer.launch({
-        args:            chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath:  await chromium.executablePath(),
-        headless:        chromium.headless,
-      });
-    }
+   /* ── LAUNCH BROWSER (LOCAL + VERCEL READY) ── */
+let browser;
+
+if (process.env.VERCEL) {
+  // Vercel / serverless environment
+  const chromium = (await import("@sparticuz/chromium")).default;
+  const puppeteerCore = (await import("puppeteer-core")).default;
+
+  browser = await puppeteerCore.launch({
+    args: [
+      ...chromium.args,
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--font-render-hinting=none"
+    ],
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  });
+
+} else {
+  // Local / Node server environment
+  const puppeteer = (await import("puppeteer")).default;
+
+  browser = await puppeteer.launch({
+    headless: "new",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+  });
+}
+
 
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
@@ -402,6 +414,7 @@ export async function GET(req, { params }) {
     });
 
     await browser.close();
+console.log("VERCEL:", process.env.VERCEL);
 
     /* ── RETURN PDF ── */
     return new Response(pdfBuffer, {
