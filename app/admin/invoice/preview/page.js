@@ -6,6 +6,8 @@ import React, { useState, useEffect } from "react";
 const Page = () => {
   const [selectedRfq, setSelectedRfq] = useState("");
   const [acceptedRfqs, setAcceptedRfqs] = useState([]);
+const [sendingProposal, setSendingProposal] = useState(false);
+const [sendingInvoice, setSendingInvoice] = useState(false);
 
   const [header, setHeader] = useState({
     quotationNo: "",
@@ -85,6 +87,64 @@ const [charges, setCharges] = useState([]);
     if (!selectedRfq) return alert("❌ Select RFQ first");
     window.open(`/api/proposals/pdf/${selectedRfq}`, "_blank");
   };
+  
+const handleEmailProposal = async () => {
+  if (!selectedRfq) return alert("❌ Select RFQ first");
+  if (!header.clientEmail) return alert("❌ Client email missing");
+
+  try {
+    setSendingProposal(true);
+
+    const res = await fetch(`/api/proposals/email/${selectedRfq}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "proposal",
+        email: header.clientEmail,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Email failed");
+
+    alert("✅ Proposal emailed to client");
+  } catch (e) {
+    alert("❌ " + e.message);
+  } finally {
+    setSendingProposal(false);
+  }
+};
+
+
+const handleEmailInvoice = async () => {
+  if (!selectedRfq) return alert("❌ Select RFQ first");
+  if (!header.clientEmail) return alert("❌ Client email missing");
+
+  try {
+    setSendingInvoice(true);
+
+    const res = await fetch(`/api/invoices/email/${selectedRfq}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "invoice",
+        email: header.clientEmail,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Email failed");
+
+    alert("✅ Invoice emailed to client");
+  } catch (e) {
+    alert("❌ " + e.message);
+  } finally {
+    setSendingInvoice(false);
+  }
+};
+
+
+
 
 const handleRfqSelect = async (e) => {
   const rfqId = e.target.value;
@@ -454,34 +514,81 @@ const grandTotal =
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="col-lg-3 col-12 invoice-actions">
-          <div className="card">
-            <div className="card-body">
-              <button
-                className="btn btn-orange w-100 mb-4"
-                onClick={handleSaveProposal}
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Send Proposal"}
-              </button>
+     {/* Actions */}
+<div className="col-lg-3 col-12 invoice-actions">
+  <div className="card border-0 shadow-sm">
+    <div className="card-body p-3">
 
+      {/* SAVE */}
+      <button
+        className="btn w-100 mb-3"
+        style={{
+          background: "#ff6b35",
+          color: "#fff",
+          borderRadius: "8px",
+          fontWeight: 500
+        }}
+        onClick={handleSaveProposal}
+        disabled={saving}
+      >
+        {saving ? "Saving..." : "Send Proposal"}
+      </button>
 
-           <button
-  className="btn btn-outline-secondary w-100 mb-2"
-  onClick={handleDownloadPdf}
-  disabled={!selectedRfq}
+      {/* DOWNLOAD */}
+      <button
+        className="btn w-100 mb-3"
+        style={{
+          border: "1px solid #e0e0e0",
+          borderRadius: "8px",
+          color: "#444",
+          background: "#fff"
+        }}
+        onClick={handleDownloadPdf}
+        disabled={!selectedRfq}
+      >
+        Download PDF
+      </button>
+
+    {/* EMAIL PROPOSAL */}
+<button
+  className="btn w-100 mb-2"
+  style={{
+    border: "1px solid #ff6b35",
+    color: "#ff6b35",
+    borderRadius: "8px",
+    background: "#fff"
+  }}
+  onClick={handleEmailProposal}
+  disabled={!header.clientEmail || sendingProposal}
 >
-  Download PDF
+  {sendingProposal ? "Sending..." : "Email Proposal"}
 </button>
 
 
-              <button className="btn btn-outline-secondary w-100 mb-2">
-                Print
-              </button>
-            </div>
-          </div>
-        </div>
+{/* EMAIL INVOICE */}
+<button
+  className="btn w-100 mb-3"
+  style={{
+    border: "1px solid #2e7d32",
+    color: "#2e7d32",
+    borderRadius: "8px",
+    background: "#fff"
+  }}
+  onClick={handleEmailInvoice}
+  disabled={!header.clientEmail || sendingInvoice}
+>
+  {sendingInvoice ? "Sending..." : "Email Invoice"}
+</button>
+
+
+
+   
+
+    </div>
+  </div>
+</div>
+
+
       </div>
     </div>
   );

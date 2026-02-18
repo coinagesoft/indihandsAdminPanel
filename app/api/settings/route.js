@@ -11,12 +11,30 @@ export async function GET() {
     `);
 
     // ✅ company_info (only one row expected)
-    const [companyRows] = await db.query(`
-      SELECT id, company_name, gstin, email, logo_url, currency
-      FROM company_info
-      ORDER BY id DESC
-      LIMIT 1
-    `);
+  const [companyRows] = await db.query(`
+  SELECT 
+    id,
+    company_name,
+    gstin,
+    email,
+    logo_url,
+    currency,
+    address_line1,
+    address_line2,
+    city,
+    state,
+    pincode,
+    phone,
+    website,
+    bank_name,
+    bank_account,
+    bank_ifsc,
+    bank_branch
+  FROM company_info
+  ORDER BY id DESC
+  LIMIT 1
+`);
+
 
     // ✅ pricing_defaults (only one row expected)
     const [pricingRows] = await db.query(`
@@ -46,80 +64,142 @@ export async function POST(req) {
     const body = await req.json();
     const { companyInfo, pricingDefaults } = body;
 
-    // ✅ Save company_info (UPSERT single row)
+    /* ================= COMPANY INFO ================= */
     if (companyInfo) {
-      const { companyName, gstin, email, logoUrl, currency } = companyInfo;
 
-      // check if exists
       const [existingCompany] = await db.query(
         `SELECT id FROM company_info ORDER BY id DESC LIMIT 1`
       );
 
       if (existingCompany.length > 0) {
-        await db.query(
-          `UPDATE company_info
-           SET company_name=?, gstin=?, email=?, logo_url=?, currency=?
-           WHERE id=?`,
-          [
-            companyName || "",
-            gstin || null,
-            email || null,
-            logoUrl || null,
-            currency || "₹",
-            existingCompany[0].id,
-          ]
-        );
+
+        await db.query(`
+          UPDATE company_info SET
+            company_name=?,
+            gstin=?,
+            email=?,
+            logo_url=?,
+            currency=?,
+            address_line1=?,
+            address_line2=?,
+            city=?,
+            state=?,
+            pincode=?,
+            phone=?,
+            website=?,
+            bank_name=?,
+            bank_account=?,
+            bank_ifsc=?,
+            bank_branch=?
+          WHERE id=?
+        `,[
+          companyInfo.companyName,
+          companyInfo.gstin,
+          companyInfo.email,
+          companyInfo.logoUrl,
+          companyInfo.currency,
+          companyInfo.addressLine1,
+          companyInfo.addressLine2,
+          companyInfo.city,
+          companyInfo.state,
+          companyInfo.pincode,
+          companyInfo.phone,
+          companyInfo.website,
+          companyInfo.bankName,
+          companyInfo.bankAccount,
+          companyInfo.bankIfsc,
+          companyInfo.bankBranch,
+          existingCompany[0].id
+        ]);
+
       } else {
-        await db.query(
-          `INSERT INTO company_info (company_name, gstin, email, logo_url, currency)
-           VALUES (?, ?, ?, ?, ?)`,
-          [companyName || "", gstin || null, email || null, logoUrl || null, currency || "₹"]
-        );
+
+        await db.query(`
+          INSERT INTO company_info (
+            company_name,
+            gstin,
+            email,
+            logo_url,
+            currency,
+            address_line1,
+            address_line2,
+            city,
+            state,
+            pincode,
+            phone,
+            website,
+            bank_name,
+            bank_account,
+            bank_ifsc,
+            bank_branch
+          )
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        `,[
+          companyInfo.companyName,
+          companyInfo.gstin,
+          companyInfo.email,
+          companyInfo.logoUrl,
+          companyInfo.currency,
+          companyInfo.addressLine1,
+          companyInfo.addressLine2,
+          companyInfo.city,
+          companyInfo.state,
+          companyInfo.pincode,
+          companyInfo.phone,
+          companyInfo.website,
+          companyInfo.bankName,
+          companyInfo.bankAccount,
+          companyInfo.bankIfsc,
+          companyInfo.bankBranch
+        ]);
+
       }
     }
 
-    // ✅ Save pricing_defaults (UPSERT single row)
+    /* ================= PRICING ================= */
     if (pricingDefaults) {
-      const { sgstRate, cgstRate, igstRate, deliveryCharges, brandingCharges } =
-        pricingDefaults;
 
       const [existingPricing] = await db.query(
         `SELECT id FROM pricing_defaults ORDER BY id DESC LIMIT 1`
       );
 
       if (existingPricing.length > 0) {
-        await db.query(
-          `UPDATE pricing_defaults
-           SET sgst_rate=?, cgst_rate=?, igst_rate=?, delivery_charges=?, branding_charges=?
-           WHERE id=?`,
-          [
-            Number(sgstRate || 0),
-            Number(cgstRate || 0),
-            Number(igstRate || 0),
-            Number(deliveryCharges || 0),
-            Number(brandingCharges || 0),
-            existingPricing[0].id,
-          ]
-        );
+        await db.query(`
+          UPDATE pricing_defaults SET
+            sgst_rate=?,
+            cgst_rate=?,
+            igst_rate=?,
+            delivery_charges=?,
+            branding_charges=?
+          WHERE id=?
+        `,[
+          Number(pricingDefaults.sgstRate||0),
+          Number(pricingDefaults.cgstRate||0),
+          Number(pricingDefaults.igstRate||0),
+          Number(pricingDefaults.deliveryCharges||0),
+          Number(pricingDefaults.brandingCharges||0),
+          existingPricing[0].id
+        ]);
       } else {
-        await db.query(
-          `INSERT INTO pricing_defaults
-           (sgst_rate, cgst_rate, igst_rate, delivery_charges, branding_charges)
-           VALUES (?, ?, ?, ?, ?)`,
-          [
-            Number(sgstRate || 0),
-            Number(cgstRate || 0),
-            Number(igstRate || 0),
-            Number(deliveryCharges || 0),
-            Number(brandingCharges || 0),
-          ]
-        );
+        await db.query(`
+          INSERT INTO pricing_defaults
+          (sgst_rate,cgst_rate,igst_rate,delivery_charges,branding_charges)
+          VALUES (?,?,?,?,?)
+        `,[
+          Number(pricingDefaults.sgstRate||0),
+          Number(pricingDefaults.cgstRate||0),
+          Number(pricingDefaults.igstRate||0),
+          Number(pricingDefaults.deliveryCharges||0),
+          Number(pricingDefaults.brandingCharges||0)
+        ]);
       }
     }
 
-    return Response.json({ message: "Settings saved successfully" }, { status: 200 });
+    return Response.json({ message:"Settings saved successfully" });
+
   } catch (err) {
     console.error("POST /api/settings error:", err);
-    return Response.json({ message: "Server error" }, { status: 500 });
+    return Response.json({ message:"Server error" },{status:500});
   }
 }
+
