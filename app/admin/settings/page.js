@@ -7,7 +7,21 @@ const EMPTY_COMPANY = {
   email: "",
   logoUrl: "",
   currency: "₹",
+
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  pincode: "",
+  phone: "",
+  website: "",
+
+  bankName: "",
+  bankAccount: "",
+  bankIfsc: "",
+  bankBranch: "",
 };
+
 
 const EMPTY_PRICING = {
   sgstRate: 0,
@@ -43,14 +57,28 @@ const SettingsPage = () => {
       }
 
       setUsers(data.users || []);
+setCompanyInfo({
+  companyName: data.companyInfo?.company_name || "",
+  gstin: data.companyInfo?.gstin || "",
+  email: data.companyInfo?.email || "",
+  logoUrl: data.companyInfo?.logo_url || "",
+  currency: data.companyInfo?.currency || "₹",
 
-      setCompanyInfo({
-        companyName: data.companyInfo?.company_name || "",
-        gstin: data.companyInfo?.gstin || "",
-        email: data.companyInfo?.email || "",
-        logoUrl: data.companyInfo?.logo_url || "",
-        currency: data.companyInfo?.currency || "₹",
-      });
+  addressLine1: data.companyInfo?.address_line1 || "",
+  addressLine2: data.companyInfo?.address_line2 || "",
+  city: data.companyInfo?.city || "",
+  state: data.companyInfo?.state || "",
+  pincode: data.companyInfo?.pincode || "",
+  phone: data.companyInfo?.phone || "",
+  website: data.companyInfo?.website || "",
+
+  bankName: data.companyInfo?.bank_name || "",
+  bankAccount: data.companyInfo?.bank_account || "",
+  bankIfsc: data.companyInfo?.bank_ifsc || "",
+  bankBranch: data.companyInfo?.bank_branch || "",
+});
+
+
 
       setPricingDefaults({
         sgstRate: Number(data.pricingDefaults?.sgst_rate || 0),
@@ -205,56 +233,125 @@ const SettingsPage = () => {
 
       <div className="tab-content">
         {/* ✅ General */}
-        {activeTab === "general" && (
-          <div>
-            <h5>Company Info & Branding</h5>
-            <div className="row g-3">
-              <div className="col-12 col-md-6">
-                <label className="form-label">Company Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={companyInfo.companyName}
-                  onChange={(e) =>
-                    setCompanyInfo({ ...companyInfo, companyName: e.target.value })
-                  }
-                />
-              </div>
+       {activeTab === "general" && (
+  <div>
+    <h5>Company Info & Branding</h5>
 
-              <div className="col-12 col-md-6">
-                <label className="form-label">GSTIN</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={companyInfo.gstin}
-                  onChange={(e) => setCompanyInfo({ ...companyInfo, gstin: e.target.value })}
-                />
-              </div>
+    <div className="row g-3">
 
-              <div className="col-12 col-md-6">
-                <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  value={companyInfo.email}
-                  onChange={(e) => setCompanyInfo({ ...companyInfo, email: e.target.value })}
-                />
-              </div>
+      {/* BASIC */}
+      <div className="col-md-6">
+        <label className="form-label">Company Name</label>
+        <input className="form-control"
+          value={companyInfo.companyName}
+          onChange={e=>setCompanyInfo({...companyInfo,companyName:e.target.value})}/>
+      </div>
 
-              <div className="col-12 col-md-6">
-                <label className="form-label">Currency</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={companyInfo.currency}
-                  onChange={(e) =>
-                    setCompanyInfo({ ...companyInfo, currency: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        )}
+      <div className="col-md-6">
+        <label className="form-label">GSTIN</label>
+        <input className="form-control"
+          value={companyInfo.gstin}
+          onChange={e=>setCompanyInfo({...companyInfo,gstin:e.target.value})}/>
+      </div>
+
+      <div className="col-md-6">
+        <label className="form-label">Email</label>
+        <input className="form-control"
+          value={companyInfo.email}
+          onChange={e=>setCompanyInfo({...companyInfo,email:e.target.value})}/>
+      </div>
+
+      <div className="col-md-6">
+        <label className="form-label">Phone</label>
+        <input className="form-control"
+          value={companyInfo.phone}
+          onChange={e=>setCompanyInfo({...companyInfo,phone:e.target.value})}/>
+      </div>
+
+      {/* ADDRESS */}
+      <div className="col-md-6">
+        <label className="form-label">Address Line 1</label>
+        <input className="form-control"
+          value={companyInfo.addressLine1}
+          onChange={e=>setCompanyInfo({...companyInfo,addressLine1:e.target.value})}/>
+      </div>
+
+      <div className="col-md-6">
+        <label className="form-label">Address Line 2</label>
+        <input className="form-control"
+          value={companyInfo.addressLine2}
+          onChange={e=>setCompanyInfo({...companyInfo,addressLine2:e.target.value})}/>
+      </div>
+
+      <div className="col-md-4">
+        <label className="form-label">City</label>
+        <input className="form-control"
+          value={companyInfo.city}
+          onChange={e=>setCompanyInfo({...companyInfo,city:e.target.value})}/>
+      </div>
+
+      <div className="col-md-4">
+        <label className="form-label">State</label>
+        <input className="form-control"
+          value={companyInfo.state}
+          onChange={e=>setCompanyInfo({...companyInfo,state:e.target.value})}/>
+      </div>
+
+      <div className="col-md-4">
+        <label className="form-label">Pincode</label>
+        <input className="form-control"
+          value={companyInfo.pincode}
+          onChange={e=>setCompanyInfo({...companyInfo,pincode:e.target.value})}/>
+      </div>
+
+      {/* WEBSITE */}
+      <div className="col-md-6">
+        <label className="form-label">Website</label>
+        <input className="form-control"
+          value={companyInfo.website}
+          onChange={e=>setCompanyInfo({...companyInfo,website:e.target.value})}/>
+      </div>
+
+      <div className="col-md-6">
+        <label className="form-label">Currency</label>
+        <input className="form-control"
+          value={companyInfo.currency}
+          onChange={e=>setCompanyInfo({...companyInfo,currency:e.target.value})}/>
+      </div>
+
+      {/* BANK */}
+      <div className="col-md-6">
+        <label className="form-label">Bank Name</label>
+        <input className="form-control"
+          value={companyInfo.bankName}
+          onChange={e=>setCompanyInfo({...companyInfo,bankName:e.target.value})}/>
+      </div>
+
+      <div className="col-md-6">
+        <label className="form-label">Bank Account</label>
+        <input className="form-control"
+          value={companyInfo.bankAccount}
+          onChange={e=>setCompanyInfo({...companyInfo,bankAccount:e.target.value})}/>
+      </div>
+
+      <div className="col-md-6">
+        <label className="form-label">IFSC</label>
+        <input className="form-control"
+          value={companyInfo.bankIfsc}
+          onChange={e=>setCompanyInfo({...companyInfo,bankIfsc:e.target.value})}/>
+      </div>
+
+      <div className="col-md-6">
+        <label className="form-label">Bank Branch</label>
+        <input className="form-control"
+          value={companyInfo.bankBranch}
+          onChange={e=>setCompanyInfo({...companyInfo,bankBranch:e.target.value})}/>
+      </div>
+
+    </div>
+  </div>
+)}
+
 
         {/* ✅ Users */}
         {activeTab === "users" && (
