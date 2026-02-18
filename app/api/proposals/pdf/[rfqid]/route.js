@@ -3,426 +3,434 @@ import { db } from "../../../../db";
 import fs from "fs";
 import path from "path";
 
-export async function GET(req, { params }) {
-  try {
-    const { rfqid } = await params;
-    const rfqId = Number(rfqid);
+/* ================= NUMBER TO WORDS ================= */
+function numberToWords(num) {
+  if (!num) return "Zero Only";
 
-    if (!rfqid || isNaN(rfqId)) {
-      return Response.json({ message: "Invalid rfqId" }, { status: 400 });
-    }
+  const a = ["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+  const b = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
 
-    // Fetch proposal
-    const [[proposal]] = await db.query(
-      `SELECT 
-        p.id, p.rfq_id,  p.company_id,p.proposal_number, p.proposal_date,
-        p.billing_address, p.shipping_address, p.place,
-        c.company_name AS company,
-        cb.contact_person AS customerName,
-        cb.gstin,
-          r.client_name,
-  r.client_phone,
-  r.client_email
-      FROM proposals p
-      JOIN rfqs r ON r.id = p.rfq_id
-      JOIN companies c ON c.id = r.company_id
-      JOIN company_branches cb ON cb.id = r.branch_id
-      WHERE p.rfq_id = ?
-      LIMIT 1`,
-      [rfqId]
-    );
+  const inWords = (n)=>{
+    if(n<20) return a[n];
+    if(n<100) return b[Math.floor(n/10)]+" "+a[n%10];
+    if(n<1000) return a[Math.floor(n/100)]+" Hundred "+inWords(n%100);
+    if(n<100000) return inWords(Math.floor(n/1000))+" Thousand "+inWords(n%1000);
+    if(n<10000000) return inWords(Math.floor(n/100000))+" Lakh "+inWords(n%100000);
+    return inWords(Math.floor(n/10000000))+" Crore "+inWords(n%10000000);
+  };
 
-    if (!proposal) {
-      return Response.json({ message: "Proposal not found for this RFQ" }, { status: 404 });
-    }
+  return inWords(Math.round(num))+" Only";
+}
 
-    
-/* ✅ normalize client fields */
-proposal.clientName = proposal.client_name || "";
-proposal.clientPhone = proposal.client_phone || "";
-proposal.clientEmail = proposal.client_email || "";
-    // Fetch items
-    const [items] = await db.query(
-      `SELECT 
-        pi.quantity AS qty, pi.rate, pi.discount,
-        pi.cgst_rate AS cgst, pi.sgst_rate AS sgst, pi.igst_rate AS igst,
-        pr.product_name AS description, pr.hsn
-      FROM proposal_items pi
-      JOIN products pr ON pr.id = pi.product_id
-      WHERE pi.proposal_id = ?
-      ORDER BY pi.id ASC`,
-      [proposal.id]
-    );
+export async function GET(req,{params}){
+try{
 
-    // Fetch additional charges
-const [charges] = await db.query(
-  `SELECT label, amount, tax_percent AS taxPercent
-   FROM company_charges
-   WHERE company_id = ?`,
-  [proposal.company_id]
-);
+const {rfqid}=await params;
+const rfqId=Number(rfqid);
+if(!rfqid||isNaN(rfqId)) return Response.json({message:"Invalid rfqId"},{status:400});
 
+/* ================= FETCH ================= */
+const [[proposal]]=await db.query(`
+SELECT p.id,p.company_id,p.proposal_number,p.proposal_date,
+p.billing_address,c.company_name AS company,
+cb.gstin,r.client_name,r.client_phone
+FROM proposals p
+JOIN rfqs r ON r.id=p.rfq_id
+JOIN companies c ON c.id=r.company_id
+JOIN company_branches cb ON cb.id=r.branch_id
+WHERE p.rfq_id=? LIMIT 1`,[rfqId]);
 
+if(!proposal) return Response.json({message:"Not found"},{status:404});
 
+/* ================= ITEMS ================= */
+const [items]=await db.query(`
+SELECT pi.quantity qty,pi.rate,pi.discount,
+pi.cgst_rate cgst,pi.sgst_rate sgst,pi.igst_rate igst,
+pr.product_name description,pr.hsn
+FROM proposal_items pi
+JOIN products pr ON pr.id=pi.product_id
+WHERE pi.proposal_id=? ORDER BY pi.id`,[proposal.id]);
 
-    // Calculations
-    const calcAmount = (qty, rate, discount) => Number(qty) * Number(rate) - ((Number(qty) * Number(rate) * Number(discount || 0)) / 100);
-    const calcTax = (amount, percent) => (Number(amount) * Number(percent || 0)) / 100;
+/* ================= CHARGES ================= */
+const [charges]=await db.query(`
+SELECT label,amount,tax_percent taxPercent
+FROM company_charges WHERE company_id=?`,[proposal.company_id]);
 
-    let subtotal = 0, cgstTotal = 0, sgstTotal = 0, igstTotal = 0;
+/* ================= CALC ================= */
+let subtotal=0,cgstTotal=0,sgstTotal=0,igstTotal=0;
 
+const computedItems = items.map(i => {
 
+  const qty = Number(i.qty || 0);
+  const rate = Number(i.rate || 0);
+  const discount = Number(i.discount || 0);
+  const cgstRate = Number(i.cgst || 0);
+  const sgstRate = Number(i.sgst || 0);
+  const igstRate = Number(i.igst || 0);
 
-    const computedItems = items.map(it => {
-      const amount = calcAmount(it.qty, it.rate, it.discount);
-      const cgst = calcTax(amount, it.cgst);
-      const sgst = calcTax(amount, it.sgst);
-      const igst = calcTax(amount, it.igst);
-      const total = amount + cgst + sgst + igst;
+  const amt = qty * rate - (qty * rate * discount) / 100;
+  const cg = (amt * cgstRate) / 100;
+  const sg = (amt * sgstRate) / 100;
+  const ig = (amt * igstRate) / 100;
+  const tot = amt + cg + sg + ig;
 
-      subtotal += amount;
-      cgstTotal += cgst;
-      sgstTotal += sgst;
-      igstTotal += igst;
+  subtotal += amt;
+  cgstTotal += cg;
+  sgstTotal += sg;
+  igstTotal += ig;
 
-      return { ...it, amount, cgst, sgst, igst, total };
-    });
-let chargesAmount = 0;
-let chargesTax = 0;
-
-charges.forEach(c => {
-  const amt = Number(c.amount || 0);
-  const taxPct = Number(c.taxPercent || 0);
-  const tax = (amt * taxPct) / 100;
-
-  chargesAmount += amt;
-  chargesTax += tax;
+  return {
+    ...i,
+    qty,
+    rate,
+    discount,
+    cgst: cg,
+    sgst: sg,
+    igst: ig,
+    amount: amt,
+    total: tot
+  };
 });
 
 
+let chargesAmount=0,chargesTax=0;
+charges.forEach(c=>{
+chargesAmount+=Number(c.amount||0);
+chargesTax+=(Number(c.amount||0)*(c.taxPercent||0))/100;
+});
 
+const totalTax=cgstTotal+sgstTotal+igstTotal+chargesTax;
+const grandTotal=subtotal+totalTax+chargesAmount;
 
-const totalTax = cgstTotal + sgstTotal + igstTotal + chargesTax;
+const seller={
+name:proposal.company,
+gstin:proposal.gstin,
+bankName:"HDFC Bank",
+bankAcc:"50200012345678",
+bankIfsc:"HDFC0001234",
+bankBranch:"Pune",
+phone:"+91 98765 43210",
+email:"support@indihands.com"
+};
 
-const grandTotal =
-  subtotal +
-  cgstTotal +
-  sgstTotal +
-  igstTotal +
-  chargesAmount +
-  chargesTax;
+const formattedDate=new Date(proposal.proposal_date).toISOString().slice(0,10);
 
+/* ================= PDF ================= */
+const logoPath=path.join(process.cwd(),"public/materialize/assets/img/favicon/favicon.png");
+const openSansRegular=path.join(process.cwd(),"public/fonts/OpenSans_Condensed-Regular.ttf");
+const openSansBold=path.join(process.cwd(),"public/fonts/OpenSans_Condensed-Bold.ttf");
 
-   const formattedDate = proposal.proposal_date
-  ? new Date(proposal.proposal_date).toISOString().slice(0, 10)
-  : "";
+const doc=new PDFDocument({size:"A4",margin:40,font:openSansRegular});
+const buffers=[];doc.on("data",buffers.push.bind(buffers));
 
+doc.registerFont("regular",openSansRegular);
+doc.registerFont("bold",openSansBold);
 
-    // Logo and fonts
-    const logoPath = path.join(process.cwd(), "public/materialize/assets/img/favicon/favicon.png");
-    const logoExists = fs.existsSync(logoPath);
+/* ===== HEADER PPT PERFECT ===== */
 
-    const openSansRegular = path.join(process.cwd(), "public/fonts/OpenSans_Condensed-Regular.ttf");
-    const openSansBold = path.join(process.cwd(), "public/fonts/OpenSans_Condensed-Bold.ttf");
+const motifPath = path.join(process.cwd(), "public/ppt/motif.png");
+const logoPath1 = path.join(process.cwd(), "public/ppt/logo.png");
 
-    // PDFKit doc
-    const doc = new PDFDocument({ size: "A4", margin: 40,font: openSansRegular });
-    const chunks = [];
-    doc.on("data", chunk => chunks.push(chunk));
-
-    // HEADER
-const headerTop = 40;
-
-// Logo (top-left)
-if (logoExists) {
-  doc.image(logoPath, 40, headerTop, { width: 55 });
+/* LEFT MOTIF */
+if (fs.existsSync(motifPath)) {
+  doc.image(motifPath, 40, 30, { width: 150 });
 }
 
-// Company info
-doc.font(openSansBold)
-  .fontSize(12)
-  .text("Indihands – The Art Craft Nook", 110, headerTop);
+/* RIGHT LOGO */
+if (fs.existsSync(logoPath1)) {
+  doc.image(logoPath1, 380, 30, { width: 130 });
+}
 
-doc.font(openSansRegular)
-  .fontSize(10)
-  .text("Pune, Maharashtra, India", 110, headerTop + 16)
-  .text("+91 98765 43210", 110, headerTop + 30)
-  .text("support@indihands.com", 110, headerTop + 44);
+/* RIGHT ADDRESS */
+doc.font("regular").fontSize(9).fillColor("#333");
 
-// Quotation number (top-right)
-doc.font(openSansBold)
+let hy = 85;
+doc.text("Registered Office", 380, hy);
+hy += 12;
+doc.text("301, Meghna, Ranwara,", 380, hy);
+hy += 11;
+doc.text("Tal. Mulshi, Bavdhan, Haveli,", 380, hy);
+hy += 11;
+doc.text("Pune- 411021, Maharashtra", 380, hy);
+hy += 11;
+doc.text("www.mtds.co.in | manik@mtds.co.in", 380, hy);
+hy += 11;
+doc.text("+91.9822.513.937", 380, hy);
+
+/* BEIGE STRIP (ONLY ONE) */
+const stripY = 160;
+
+doc.rect(40, stripY, 515, 14).fill("#d8c5ad");
+
+doc.fillColor("black")
+  .font("bold")
   .fontSize(11)
-  .text(`#${proposal.proposal_number}`, 0, headerTop, {
-    align: "right",
-    width: 555
+  .text("Quotation", 40, stripY + 4, {
+    width: 515,
+    align: "center"
+  });
+const stripH = 12;
+
+doc.rect(40, stripY, 515, stripH).fill("#d8c5ad");
+
+doc.fillColor("black")
+  .font("bold")
+  .fontSize(11)
+  .text("Quotation", 40, stripY + (stripH/2) - 4, {   // PERFECT CENTER
+    width: 515,
+    align: "center"
   });
 
-   // QUOTATION INFO
-const leftX = 40;
-const leftWidth = 350;
+/* start content BELOW strip */
+let y = stripY + 26;
 
-let y = 110;
-
-// Title
-doc.font(openSansBold)
-   .fontSize(12)
-   .text("Quotation", leftX, y, { underline: true });
-
+/* ===== META BOX PERFECT ===== */
 y += 18;
 
-// Quotation No
-doc.font(openSansRegular)
-   .fontSize(10)
-   .text(`Quotation No: ${proposal.proposal_number}`, leftX, y, {
-     width: leftWidth
-   });
+doc.font("regular").fontSize(8.8);
 
-y += 14;
+const startX = 46;
+const maxWidth = 500;
+const lineGap = 2;
 
-doc.text(`To: ${proposal.clientName || ""}`, leftX, y, { width: leftWidth });
-y = doc.y;
-
-doc.text(`Phone: ${proposal.clientPhone || ""}`, leftX, y, { width: leftWidth });
-y = doc.y;
-
-doc.text(`Email: ${proposal.clientEmail || ""}`, leftX, y, { width: leftWidth });
-y = doc.y;
-
-
-// Company
-doc.text(`Company: ${proposal.company || ""}`, leftX, y, {
-  width: leftWidth
-});
-y = doc.y;
-
-// GSTIN
-doc.text(`GSTIN: ${proposal.gstin || ""}`, leftX, y, {
-  width: leftWidth
-});
-y = doc.y;
-
-// Place of Supply
-doc.text(`Place of Supply: ${proposal.place || ""}`, leftX, y, {
-  width: leftWidth,
-  ellipsis: true // prevents unwanted second line
-});
-y = doc.y + 6;
-
-// Billing Address
-doc.font(openSansBold).text("Billing Address:", leftX, y);
-y = doc.y;
-
-doc.font(openSansRegular)
-   .text(proposal.billing_address || "", leftX, y, {
-     width: leftWidth,
-     lineGap: 2
-   });
-
-y = doc.y + 6;
-
-// Shipping Address
-doc.font(openSansBold).text("Shipping Address:", leftX, y);
-y = doc.y;
-
-doc.font(openSansRegular)
-   .text(proposal.shipping_address || "", leftX, y, {
-     width: leftWidth,
-     lineGap: 2
-   });
-
-    doc.text(`Date: ${formattedDate}`, 400, y, { align: "right" });
-
-    // TABLE
-    y = doc.y + 20;
-    const tableTop = y;
-const colX = [
-  40,  // Sr No
-  70,  // Description      (40 + 30)
-  240, // HSN              (70 + 170)
-  280, // Qty              (240 + 40)
-  315, // Rate             (280 + 35)
-  355, // Discount         (315 + 40)
-  395, // Amount           (355 + 40)
-  435, // CGST             (395 + 40)
-  465, // SGST             (435 + 30)
-  495, // IGST             (465 + 30)
-  525  // Total            (495 + 30)
+let lines = [
+  `Quotation No: ${proposal.proposal_number}`,
+  `Quotation Date: ${formattedDate}`,
+  `Quotation Validity: One month from quotation date`,
+  `GSTIN: ${proposal.gstin}`,
+  `State: Maharashtra | State code 27`,
+  `Contact Person: ${proposal.client_name}`,
+  `Contact Details: ${proposal.client_phone}`,
+  `Company name: ${proposal.company}`,
+  `Address: ${proposal.billing_address}`
 ];
 
+/* --- calculate total height --- */
+let contentHeight = 0;
 
-const colWidth = [
-  30,  // Sr No
-  170, // Description
-  40,  // HSN
-  35,  // Qty
-  40,  // Rate
-  40,  // Discount
-  40,  // Amount
-  30,  // CGST
-  30,  // SGST
-  30,  // IGST
-  40   // Total
+lines.forEach(t => {
+  contentHeight += doc.heightOfString(t, { width: maxWidth }) + lineGap;
+});
+
+/* padding top+bottom */
+const padding = 6;
+const boxHeight = contentHeight + padding * 2;
+
+/* draw box */
+doc.rect(40, y, 515, boxHeight).stroke("#cfcfcf");
+
+/* print text */
+let cy = y + padding;
+
+lines.forEach((t, i) => {
+  doc.text(t, startX, cy, { width: maxWidth });
+  cy += doc.heightOfString(t, { width: maxWidth }) + lineGap;
+});
+
+/* move cursor below box */
+y += boxHeight + 12;
+
+
+/* ===== TABLE ===== */
+const colX=[40,60,230,270,300,335,370,410,445,480,515];
+const colW=[20,170,40,30,35,35,40,35,35,35,40];
+
+doc.font("bold").fontSize(8.6);
+const headers=["S.","Product Description","HSN/SAC","Qty","Cost","Disc","Amt.","SGST","CGST","IGST","Total"];
+headers.forEach((h,i)=>{
+doc.rect(colX[i],y,colW[i],18).stroke("#cfcfcf");
+doc.text(h,colX[i]+2,y+4,{width:colW[i]-4,align:"center"});
+});
+y+=18;
+
+doc.font("regular").fontSize(8.5);
+
+computedItems.forEach((x,i)=>{
+colX.forEach((cx,idx)=>doc.rect(cx,y,colW[idx],20).stroke("#e0e0e0"));
+
+doc.text(i+1,colX[0]+2,y+5,{width:colW[0]-4,align:"center"});
+doc.text(x.description,colX[1]+2,y+5,{width:colW[1]-4});
+doc.text(x.hsn,colX[2]+2,y+5,{width:colW[2]-4,align:"center"});
+doc.text(x.qty.toFixed(0),colX[3]+2,y+5,{width:colW[3]-4,align:"right"});
+doc.text(x.rate.toFixed(0),colX[4]+2,y+5,{width:colW[4]-4,align:"right"});
+doc.text(x.discount.toFixed(0),colX[5]+2,y+5,{width:colW[5]-4,align:"right"});
+doc.text(x.amount.toFixed(0),colX[6]+2,y+5,{width:colW[6]-4,align:"right"});
+doc.text("",colX[7]+2,y+5,{width:colW[7]-4});
+doc.text("",colX[8]+2,y+5,{width:colW[8]-4});
+doc.text(x.igst.toFixed(0),colX[9]+2,y+5,{width:colW[9]-4,align:"right"});
+doc.text(x.total.toFixed(0),colX[10]+2,y+5,{width:colW[10]-4,align:"right"});
+
+y+=20;
+});
+
+/* ===== TOTAL ROW ===== */
+doc.font("bold");
+colX.forEach((cx,idx)=>doc.rect(cx,y,colW[idx],18).stroke("#cfcfcf"));
+doc.text("Total",colX[1]+2,y+4);
+doc.text(grandTotal.toFixed(0),colX[10]+2,y+4,{width:colW[10]-4,align:"right"});
+y+=24;
+
+/* ===== AMOUNT WORDS ===== */
+doc.font("regular").fontSize(9)
+.text("Total quotation amount in words",40,y,{width:515,align:"center"});
+y+=12;
+doc.font("bold").text(numberToWords(grandTotal),40,y,{width:515,align:"center"});
+
+/* ===== RIGHT TOTAL GRID (PPT PERFECT, NO OVERLAP) ===== */
+
+/* start BELOW amount words */
+let tx = 350;
+let ty = y + 10;   // always below previous content
+
+const labelW = 140;
+const valueW = 65;
+const rowH = 18;
+
+doc.font("regular").fontSize(8.6);
+
+const totals = [
+  ["Total Amount before Tax", subtotal],
+  ["Add: CGST", cgstTotal],
+  ["Add: SGST", sgstTotal],
+  ["Add: IGST", igstTotal],
+  ["Total Tax Amount", totalTax],
+  ["Total Amount after Tax", grandTotal],
+  ["GST on Reverse", 0],
+  ["Charge", 0]
 ];
 
+totals.forEach(([label, val]) => {
+  doc.rect(tx, ty, labelW, rowH).stroke("#cfcfcf");
+  doc.rect(tx + labelW, ty, valueW, rowH).stroke("#cfcfcf");
 
-    // Header
-    doc.font(openSansBold).fontSize(9);
-    const headers = ["Sr No", "Description", "HSN/SAC", "Qty", "Rate", "Discount", "Amount", "CGST", "SGST", "IGST", "Total"];
-    headers.forEach((h, i) => {
-      doc.rect(colX[i], y, colWidth[i], 20).stroke();
-      doc.text(h, colX[i] + 2, y + 5, { width: colWidth[i] - 4, align: "center" });
-    });
-    y += 20;
-    doc.font(openSansRegular);
+  doc.text(label, tx + 4, ty + 4, { width: labelW - 8 });
+  doc.text(Number(val).toFixed(0), tx + labelW + 4, ty + 4, {
+    width: valueW - 8,
+    align: "right"
+  });
 
-    // Rows
-    if (computedItems.length === 0) {
-  doc.text("No line items. Charges applied.", colX[1], y + 8);
-  y += 30;
-} else {
-    computedItems.forEach((x, i) => {
-const rowHeight = Math.max(
-  doc.heightOfString(x.description, {
-    width: colWidth[1] - 6,
-    lineGap: 2
-  }) + 8,
-  24
-);
+  ty += rowH;
+});
 
-      // Draw cell borders
-      colX.forEach((xPos, idx) => {
-        doc.rect(xPos, y, colWidth[idx], rowHeight).stroke();
-      });
+/* move main cursor BELOW totals block */
+y = Math.max(y, ty) + 12;
 
-      // Fill data
-      doc.text(i + 1, colX[0] + 2, y + 5, { width: colWidth[0] - 4, align: "center" });
-      doc.text(x.description, colX[1] + 2, y + 5, { width: colWidth[1] - 4 });
-      doc.text(x.hsn || "", colX[2] + 2, y + 5, { width: colWidth[2] - 4, align: "center" });
-      doc.text(Number(x.qty).toFixed(2), colX[3] + 2, y + 5, { width: colWidth[3] - 4, align: "right" });
-      doc.text(Number(x.rate).toFixed(2), colX[4] + 2, y + 5, { width: colWidth[4] - 4, align: "right" });
-      doc.text(Number(x.discount || 0).toFixed(2), colX[5] + 2, y + 5, { width: colWidth[5] - 4, align: "right" });
-      doc.text(Number(x.amount).toFixed(2), colX[6] + 2, y + 5, { width: colWidth[6] - 4, align: "right" });
-      doc.text(Number(x.cgst).toFixed(2), colX[7] + 2, y + 5, { width: colWidth[7] - 4, align: "right" });
-      doc.text(Number(x.sgst).toFixed(2), colX[8] + 2, y + 5, { width: colWidth[8] - 4, align: "right" });
-      doc.text(Number(x.igst).toFixed(2), colX[9] + 2, y + 5, { width: colWidth[9] - 4, align: "right" });
-      doc.text(Number(x.total).toFixed(2), colX[10] + 2, y + 5, { width: colWidth[10] - 4, align: "right" });
 
-      y += rowHeight;
-    });
-  }
+/* ===== BANK ===== */
+y+=5;
+doc.font("bold").text("Bank Details",40,y);
+doc.font("regular");
+y+=12;
+doc.text(`Bank A/C: ${seller.bankAcc}`,40,y);
+doc.text(`Bank: ${seller.bankName}`,300,y);
+y+=12;
+doc.text(`Bank IFSC: ${seller.bankIfsc}`,40,y);
+doc.text(`Branch: ${seller.bankBranch}`,300,y);
+y+=12;
+doc.text(`Interest @ 24% Per Annum will be charged on overdue bills`,40,y);
 
-// ================= TOTALS TABLE =================
+/* ===== TERMS BOX ===== */
+/* ===== TERMS BOX FIXED ===== */
+
 y += 20;
 
-// Table position & sizing
-const totalsTableX = 340;
-const labelColWidth = 135;
-const valueColWidth = 80;
-const rowHeight = 24;
+doc.font("regular").fontSize(8.2);
 
-
-
-const totalsData = [
-  ["Total Before Tax", subtotal.toFixed(2)],
-  ["CGST Total", cgstTotal.toFixed(2)],
-  ["SGST Total", sgstTotal.toFixed(2)],
-  ["IGST Total", igstTotal.toFixed(2)],
-  ["Total Tax", totalTax.toFixed(2)],
-  ...(chargesAmount > 0
-    ? [
-        ["Additional Charges", chargesAmount.toFixed(2)],
-        ["Charges Tax", chargesTax.toFixed(2)],
-      ]
-    : []),
-  ["GRAND TOTAL", grandTotal.toFixed(2), true]
+const leftTerms = [
+"1. Product Description: As per the approved production sample and/or product specification sheet. Although stringent quality guidelines are maintained, most of our products are handmade; therefore, very minor variations may occur in the final product.",
+"2. Price: The price is inclusive of packaging as approved in the product specification sheet.",
+"3. Delivery Charges: At actuals.",
+"4. Taxes: GST applicable as per government norms.",
+"5. Payment: Being a MSME vendor, payment within 45 days."
 ];
 
+const rightTerms = [
+"6. Production Time Frame: As per agreement.",
+"7. Order Confirmation: On receipt of a formal Purchase Order on the company letterhead.",
+"8. Changes in Product Specifications: No changes will be accepted once the Purchase Order is signed and sealed.",
+"9. Force Majeure: This quotation is subject to standard Force Majeure terms and conditions.",
+"10. Jurisdiction: All dealings under this quotation are subject to the jurisdiction of Pune courts.",
+"11. Warranty: No warranty or guarantee is provided on this product."
+];
 
+const colWidth = 255;
+const startY = y + 22;
 
-totalsData.forEach(([label, value, isBold]) => {
-  // Left cell (label)
-  doc
-    .rect(totalsTableX, y, labelColWidth, rowHeight)
-    .stroke();
+/* measure heights */
+let ly = startY;
+leftTerms.forEach(t=>{
+  doc.text(t, 46, ly, { width: colWidth });
+  ly = doc.y + 4;
+});
+const leftEnd = ly;
 
-  doc
-    .font(isBold ? openSansBold : openSansRegular)
-    .fontSize(10)
-    .text(label, totalsTableX + 6, y + 7, {
-      width: labelColWidth - 12,
-      align: "left"
-    });
+doc.y = startY;
 
-  // Right cell (value)
-  doc
-    .rect(totalsTableX + labelColWidth, y, valueColWidth, rowHeight)
-    .stroke();
+let ry = startY;
+rightTerms.forEach(t=>{
+  doc.text(t, 300, ry, { width: colWidth });
+  ry = doc.y + 4;
+});
+const rightEnd = ry;
 
-  doc
-    .font(isBold ? openSansBold : openSansRegular)
-    .text(`₹ ${value}`, totalsTableX + labelColWidth + 4, y + 7, {
-      width: valueColWidth - 12,
-      align: "right"
-    });
+/* box height */
+const boxH = Math.max(leftEnd, rightEnd) - y + 10;
 
-  y += rowHeight;
+/* draw box aligned */
+doc.rect(40, y, 515, boxH)
+   .fillAndStroke("#f3f3f3", "#cfcfcf");
+
+/* title */
+doc.fillColor("black");
+doc.font("bold").fontSize(9)
+  .text("Terms & Conditions", 40, y + 6, {
+    width: 515,
+    align: "center"
+  });
+
+doc.font("regular").fontSize(8.2);
+
+/* left render */
+ly = startY;
+leftTerms.forEach(t=>{
+  doc.text(t, 46, ly, { width: colWidth });
+  ly = doc.y + 4;
 });
 
-if (charges.length > 0) {
-  y += 30;
-  doc.font(openSansBold).text("Additional Charges:", 40, y);
-  y += 12;
-
-  doc.font(openSansRegular);
-charges.forEach((c, i) => {
-  const tax = (Number(c.amount) * Number(c.taxPercent || 0)) / 100;
-
-  doc.text(
-    `${i + 1}. ${c.label}: ₹ ${Number(c.amount).toFixed(2)}`
-      + (c.taxPercent ? ` (+${c.taxPercent}% = ₹ ${tax.toFixed(2)})` : ""),
-    60,
-    y
-  );
-  y += 12;
+/* right render */
+ry = startY;
+rightTerms.forEach(t=>{
+  doc.text(t, 300, ry, { width: colWidth });
+  ry = doc.y + 4;
 });
 
+y += boxH + 12;
+
+/* ===== SIGN ===== */
+y+=80;
+doc.text("Customer Sign & Stamp",40,y);
+doc.text("Authorised signatory & Stamp",380,y);
+
+/* ===== FOOTER ===== */
+doc.rect(40,790,515,20).fill("#8aa64f");
+doc.fillColor("black").fontSize(9)
+.text("CIN: U47735PN2025PTC244212",46,795);
+doc.text("Wonders by Hands",420,795);
+
+doc.end();
+
+const pdfBuffer=await new Promise(r=>doc.on("end",()=>r(Buffer.concat(buffers))));
+
+return new Response(pdfBuffer,{
+status:200,
+headers:{
+"Content-Type":"application/pdf",
+"Content-Disposition":`attachment; filename="${proposal.proposal_number}.pdf"`
 }
+});
 
-
-    // Terms
-    y += 30;
-    const terms = [
-      "Payment within 15 days from invoice date.",
-      "Delivery within 7 working days from order confirmation.",
-      "Warranty as per manufacturer terms.",
-      "Goods once sold will not be taken back.",
-      "All disputes subject to Pune jurisdiction.",
-    ];
-    doc.font(openSansBold).text("Terms & Conditions:", 40, y);
-    doc.font(openSansRegular);
-    terms.forEach((t, i) => {
-      y += 12;
-      doc.text(`${i + 1}. ${t}`, 60, y);
-    });
-
-    doc.end();
-
-    const pdfBuffer = await new Promise(resolve => {
-      const buffers = [];
-      doc.on("data", buffers.push.bind(buffers));
-      doc.on("end", () => resolve(Buffer.concat(buffers)));
-    });
-
-    return new Response(pdfBuffer, {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${proposal.proposal_number}.pdf"`,
-      },
-    });
-
-  } catch (err) {
-    console.error("GET /api/proposals/pdf/[rfqid] error:", err);
-    return Response.json({ message: "Server error" }, { status: 500 });
-  }
+}catch(err){
+console.error(err);
+return Response.json({message:"Server error"},{status:500});
+}
 }
