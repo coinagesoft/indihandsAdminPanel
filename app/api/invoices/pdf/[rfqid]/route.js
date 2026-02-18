@@ -381,17 +381,12 @@ if (process.env.VERCEL) {
   const chromium = (await import("@sparticuz/chromium")).default;
   const puppeteerCore = (await import("puppeteer-core")).default;
 
-  browser = await puppeteerCore.launch({
-    args: [
-      ...chromium.args,
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--font-render-hinting=none"
-    ],
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-  });
+ const browser = await puppeteer.launch({
+  args: chromium.args,
+  executablePath: await chromium.executablePath(),
+  headless: chromium.headless,
+});
+
 
 } else {
   // Local / Node server environment
