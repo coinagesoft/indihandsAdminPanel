@@ -376,7 +376,6 @@ export async function GET(req, { params }) {
  
 
 /* ── LAUNCH BROWSER (VERCEL SAFE) ── */
-/* ── LAUNCH BROWSER (VERCEL SAFE) ── */
 const executablePath = await chromium.executablePath();
 
 const browser = await puppeteer.launch({
@@ -385,6 +384,7 @@ const browser = await puppeteer.launch({
   defaultViewport: chromium.defaultViewport,
   headless: true,
 });
+
 
 
 
