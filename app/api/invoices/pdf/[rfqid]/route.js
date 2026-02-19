@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { db } from "../../../../db";
 
+
 /* ================= NUMBER TO WORDS ================= */
 function numberToWords(num) {
   if (!num) return "Zero Only";
@@ -251,14 +252,14 @@ th{background:#f0efee;font-weight:700;font-size:8px;}
     <div class="bank-right">
       <div class="sig-top">For Manik Trifaley Design Studio Pvt Ltd</div>
       <div class="sig-stamp"></div>
-      <div class="sig-bottom">Authorised Signatory &amp; Stamp</div>
+      <div class="sig-bottom">Authorised Signatory & Stamp</div>
     </div>
   </div>
 
 </div><!-- /box -->
 
 <div class="terms">
-  <h3>Terms &amp; Conditions</h3>
+  <h3>Terms & Conditions</h3>
   <div class="terms-cols">
     <div>
       1. <b>Product Description:</b> As per the approved production sample and/or product specification sheet. Although stringent quality guidelines are maintained, most of our products are handmade; therefore, very minor variations may occur in the final product.<br><br>
@@ -371,34 +372,32 @@ export async function GET(req, { params }) {
       totalTax, grandTotal, formattedDate
     });
 
- 
+    /* ── LAUNCH BROWSER ── */
+    let browser;
+    const isVercel = !!process.env.VERCEL || process.env.NODE_ENV === "production";
 
-   /* ── LAUNCH BROWSER (LOCAL + VERCEL READY) ── */
-let browser;
+    if (isVercel) {
+      // ===== VERCEL (LINUX SERVERLESS) =====
+      const chromium = (await import("@sparticuz/chromium")).default;
+      const puppeteer = (await import("puppeteer-core")).default;
 
-if (process.env.VERCEL) {
-  // Vercel / serverless environment
-  const chromium = (await import("@sparticuz/chromium")).default;
-  const puppeteerCore = (await import("puppeteer-core")).default;
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: true,
+        defaultViewport: chromium.defaultViewport,
+      });
 
- const browser = await puppeteer.launch({
-  args: chromium.args,
-  executablePath: await chromium.executablePath(),
-  headless: chromium.headless,
-});
+    } else {
+      // ===== LOCAL WINDOWS DEV =====
+      const puppeteer = (await import("puppeteer")).default;
 
+      browser = await puppeteer.launch({
+        headless: "new",
+      });
+    }
 
-} else {
-  // Local / Node server environment
-  const puppeteer = (await import("puppeteer")).default;
-
-  browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
-  });
-}
-
-
+    /* ── GENERATE PDF ── */
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
 
@@ -409,7 +408,9 @@ if (process.env.VERCEL) {
     });
 
     await browser.close();
-console.log("VERCEL:", process.env.VERCEL);
+
+    console.log("VERCEL env:", process.env.VERCEL);
+    console.log("PDF generated successfully for proposal:", proposal.proposal_number);
 
     /* ── RETURN PDF ── */
     return new Response(pdfBuffer, {
@@ -421,7 +422,7 @@ console.log("VERCEL:", process.env.VERCEL);
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("PDF generation error:", err);
     return Response.json({ message: "Server error" }, { status: 500 });
   }
 }
