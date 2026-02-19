@@ -466,7 +466,7 @@ setCompanyInfo({
                 />
               </div>
 
-              <div className="col-12 col-md-6">
+              {/* <div className="col-12 col-md-6">
                 <label className="form-label">Delivery Charges</label>
                 <input
                   type="number"
@@ -494,7 +494,7 @@ setCompanyInfo({
                     })
                   }
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         )}

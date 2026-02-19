@@ -1,20 +1,20 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
-
-
 const Page = () => {
-  const [selectedRfq, setSelectedRfq] = useState("");
-  const [acceptedRfqs, setAcceptedRfqs] = useState([]);
+
+const [selectedRfq, setSelectedRfq] = useState("");
+const [acceptedRfqs, setAcceptedRfqs] = useState([]);
 const [sendingProposal, setSendingProposal] = useState(false);
 const [sendingInvoice, setSendingInvoice] = useState(false);
+
 
   const [header, setHeader] = useState({
     quotationNo: "",
     date: "",
-      clientName: "",
-  clientPhone: "",   // ✅ ADD
-  clientEmail: "",  
+    clientName: "",
+    clientPhone: "",   
+    clientEmail: "",  
     company: "",
     gstin: "",
     place: "",
@@ -23,9 +23,11 @@ const [sendingInvoice, setSendingInvoice] = useState(false);
     companyId: null,   
     branchId: null,
   });
+
+
   const [items, setItems] = useState([]);
   const [saving, setSaving] = useState(false);
-const [charges, setCharges] = useState([]);
+  const [charges, setCharges] = useState([]);
 
   /* ================= HANDLERS ================= */
   const handleSaveProposal = async () => {
@@ -145,34 +147,58 @@ const handleEmailInvoice = async () => {
 
 
 
-
 const handleRfqSelect = async (e) => {
-  const rfqId = e.target.value;
+  const rfqId = Number(e.target.value);
   setSelectedRfq(rfqId);
 
   if (!rfqId) return;
 
+  /* 1️⃣ RFQ details */
   const res = await fetch(`/api/rfqs/${rfqId}/details`);
   const data = await res.json();
   if (!res.ok) return alert("❌ " + data.message);
 
   const companyId = data.header.companyId;
 
-  // charges
-  const chargesRes = await fetch(`/api/companies/${companyId}/charges`);
-  if (chargesRes.ok) {
-    const chargesData = await chargesRes.json();
-    setCharges(
-      (chargesData.charges || []).map((c) => ({
-        label: c.label,
-        amount: Number(c.amount),
-        taxPercent: Number(c.taxPercent || 0),
-      }))
+  /* 2️⃣ Charges → proposal override OR company default */
+  let loadedCharges = [];
+
+  try {
+    const proposalChargesRes = await fetch(
+      `/api/proposals/${rfqId}/charges`
     );
-  } else {
-    setCharges([]);
+    const proposalChargesData = await proposalChargesRes.json();
+
+    if (
+      proposalChargesData.success &&
+      proposalChargesData.charges?.length
+    ) {
+      loadedCharges = proposalChargesData.charges;
+    } else {
+      const companyRes = await fetch(
+        `/api/companies/${companyId}/charges`
+      );
+      const companyData = await companyRes.json();
+      loadedCharges = companyData.charges || [];
+    }
+  } catch {
+    // fallback if proposal API fails
+    const companyRes = await fetch(
+      `/api/companies/${companyId}/charges`
+    );
+    const companyData = await companyRes.json();
+    loadedCharges = companyData.charges || [];
   }
 
+  setCharges(
+    loadedCharges.map((c) => ({
+      label: c.label,
+      amount: Number(c.amount),
+      taxPercent: Number(c.taxPercent || 0),
+    }))
+  );
+
+  /* 3️⃣ Header + items */
   const selected = acceptedRfqs.find((x) => x.rfq_id == rfqId);
 
   setHeader((prev) => ({
@@ -195,8 +221,6 @@ const handleRfqSelect = async (e) => {
 
   setItems(data.items || []);
 };
-
-
 
 
   const calcAmount = (item) => {
