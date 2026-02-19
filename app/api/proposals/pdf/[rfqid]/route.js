@@ -70,194 +70,174 @@ return `<!DOCTYPE html>
 <meta charset="UTF-8"/>
 <style>
 
-@page{
-  size:A4;
-  margin:12mm;
-}
+@page{ size:A4; margin:10mm }
 
 body{
-  font-family:Segoe UI, Arial, sans-serif;
-  font-size:11px;
-  color:#000;
-  margin:0;
+font-family:Segoe UI,Arial,sans-serif;
+font-size:11px;
+color:#000;
 }
 
-.page{
-  width:100%;
-}
+.page{ width:100% }
 
-/* ================= HEADER ================= */
+/* HEADER */
 .hdr{
   display:flex;
-  justify-content:flex-end;
-  margin-bottom:18px;
+  justify-content:flex-end; /* right align block */
+  margin-bottom:14px;
 }
 
 .hdr-right{
-  width:210px;              /* PPT right column width */
-  text-align:right;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end; /* logo + text right */
+  max-width:220px; /* control width */
 }
 
 .hdr-right img{
-  width:125px;              /* PPT logo size */
+  width:180px;
   height:auto;
-  display:block;
-  margin-left:auto;
-  margin-bottom:6px;
+  margin-end:20px;
+  margin-bottom:6px; /* gap logo→text */
 }
 
 .hdr-text{
   font-size:10px;
   line-height:15px;
-  text-align:left;
-}
-
-/* ================= MAIN BOX ================= */
-.box{
-  border:1px solid #8f8f8f;
-}
-
-/* Quotation strip */
-.strip{
-  background:#d8c7ad;
-  font-weight:700;
-  font-size:12px;
-  padding:6px 0;
-  border-bottom:1px solid #8f8f8f;
-  letter-spacing:.3px;
-  text-align:center;
-}
-
-/* Sections */
-.sec{
-  padding:8px 10px;
-  font-size:10px;
-  line-height:16px;
-  border-bottom:1px dotted #9a9a9a;
-}
-
-/* ================= TABLE ================= */
-table{
+  text-align:left; /* text normal */
   width:100%;
-  border-collapse:collapse;
-  font-size:8.5px;
+}
+
+
+
+
+/* MAIN BOX */
+.box{
+border:1px solid #999;
+}
+
+.strip{
+background:#d9c9b0;
+text-align:center;
+font-weight:700;
+font-size:12px;
+padding:4px 0;
+border-bottom:1px solid #999;
+letter-spacing:.5px;
+}
+
+.sec{
+padding:6px 8px;
+font-size:10px;
+line-height:15px;
+border-bottom:1px dotted #aaa;
+}
+
+/* TABLE */
+table{
+width:100%;
+border-collapse:collapse;
+font-size:8.5px;
+}
+
+th,td{
+border:1px dotted #aaa;
+padding:3px 3px;
+text-align:center;
+vertical-align:middle;
 }
 
 th{
-  background:#efefef;
-  border:1px dotted #8c8c8c;
-  font-size:8px;
-  font-weight:700;
-  padding:4px 3px;
-  text-align:center;
-  vertical-align:middle;
+background:#f0efee;
+font-weight:700;
+font-size:8px;
 }
 
-td{
-  border:1px dotted #9a9a9a;
-  padding:3px;
-  text-align:center;
-  vertical-align:middle;
-}
+.tdl{ text-align:left; padding-left:4px }
+.tbold{ font-weight:700 }
 
-.tdl{
-  text-align:left;
-  padding-left:4px;
-}
-
-.tbold td{
-  font-weight:700;
-  border-top:1px solid #8f8f8f;
-}
-
-/* ================= AMOUNT BLOCK ================= */
+/* AMOUNT ROW */
 .amt-row{
-  display:flex;
-  border-top:1px dotted #8c8c8c;
+display:flex;
+border-top:1px dotted #aaa;
 }
 
 .amt-words{
-  flex:0 0 48%;
-  padding:12px 8px;
-  font-size:10px;
-  text-align:center;
-  border-right:1px dotted #8c8c8c;
+flex:0 0 48%;
+padding:8px;
+font-size:9.5px;
+text-align:center;
+border-right:1px dotted #aaa;
 }
 
 .tax-table{
-  flex:1;
+flex:1;
 }
 
-.tax-table table{
-  width:100%;
-}
-
-.tax-table td{
-  border:none;
-  border-bottom:1px dotted #8c8c8c;
-  padding:4px 6px;
-  font-size:9.5px;
-  text-align:right;
+.tax-table table td{
+border:none;
+border-bottom:1px dotted #aaa;
+padding:3px 6px;
+font-size:9.5px;
+text-align:right;
 }
 
 .tax-table td:first-child{
-  text-align:left;
+text-align:left;
 }
 
-/* ================= BANK ================= */
+/* BANK */
 .bank-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  border-top:1px dotted #8c8c8c;
+display:grid;
+grid-template-columns:1fr 1fr;
+border-top:1px dotted #aaa;
 }
 
 .bank-left{
-  padding:8px;
-  font-size:9.5px;
-  line-height:15px;
-  border-right:1px dotted #8c8c8c;
+padding:8px;
+font-size:9.5px;
+line-height:15px;
+border-right:1px dotted #aaa;
 }
 
 .bank-right{
-  padding:8px;
-  font-size:9.5px;
-  text-align:center;
-  line-height:15px;
+padding:8px;
+font-size:9.5px;
+text-align:center;
+line-height:15px;
 }
 
-/* ================= TERMS ================= */
+/* TERMS */
 .terms{
-  background:#ececec;       /* PPT grey */
-  padding:12px 12px;
-  margin-top:14px;
+background:#f4f4f4;
+padding:10px;
+margin-top:12px;
 }
 
 .terms h3{
-  text-align:center;
-  font-size:10.5px;
-  margin-bottom:8px;
-  font-weight:700;
+text-align:center;
+font-size:10.5px;
+margin-bottom:6px;
+font-weight:700;
 }
 
 .terms-cols{
-  display:flex;
-  gap:12px;
-  font-size:9px;
-  line-height:14px;
+display:flex;
+gap:12px;
+font-size:9px;
+line-height:14px;
 }
 
-.terms-cols > div{
-  flex:1;
-}
+.terms-cols>div{ flex:1 }
 
-/* ================= FOOTER ================= */
+/* FOOTER */
 .footer{
-  background:#86a83f;       /* PPT green */
-  display:flex;
-  justify-content:space-between;
-  padding:7px 12px;
-  margin-top:10px;
-  font-size:10px;
+background:#8aaa4a;
+display:flex;
+justify-content:space-between;
+padding:6px 12px;
+margin-top:10px;
+font-size:10px;
 }
 
 </style>
