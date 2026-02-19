@@ -59,13 +59,10 @@ const Page = () => {
       rfqId: Number(selectedRfq),
       companyId: header.companyId,
       branchId: header.branchId,
-
-      // ❌ proposal_number NEVER send from frontend
       proposal_date: header.date,
       place: header.place,
       billing_address: header.billingAddress,
       shipping_address: header.shippingAddress,
-
       items: items.map(x => ({
         productId: x.productId,
         quantity: x.qty,
@@ -74,7 +71,8 @@ const Page = () => {
         cgst_rate: x.cgst,
         sgst_rate: x.sgst,
         igst_rate: x.igst,
-      }))
+      })),
+        charges: charges  
 
    
     };
@@ -158,16 +156,32 @@ const handleRfqSelect = async (e) => {
   const companyId = data.header.companyId;
 
   // company charges
-  const chargesRes = await fetch(`/api/companies/${companyId}/charges`);
-  const chargesData = await chargesRes.json();
+let loadedCharges = [];
 
-  setCharges(
-    (chargesData.charges || []).map(c => ({
-      label: c.label,
-      amount: Number(c.amount),
-      taxPercent: Number(c.taxPercent || 0),
-    }))
+const proposalChargesRes = await fetch(
+  `/api/proposals/${rfqId}/charges`
+);
+const proposalChargesData = await proposalChargesRes.json();
+
+if (proposalChargesData.success && proposalChargesData.charges?.length) {
+  loadedCharges = proposalChargesData.charges;
+} else {
+  // 2️⃣ fallback → company default
+  const companyRes = await fetch(
+    `/api/companies/${companyId}/charges`
   );
+  const companyData = await companyRes.json();
+  loadedCharges = companyData.charges || [];
+}
+
+setCharges(
+  loadedCharges.map(c => ({
+    label: c.label,
+    amount: Number(c.amount),
+    taxPercent: Number(c.taxPercent || 0),
+  }))
+);
+
 
   const selected = acceptedRfqs.find(x => x.rfq_id == rfqId);
 
@@ -194,6 +208,12 @@ const handleRfqSelect = async (e) => {
 
 
 
+const addCharge = () => {
+  setCharges([
+    ...charges,
+    { label: "New Charge", amount: 0, taxPercent: 0 }
+  ]);
+};
 
 
 
@@ -362,7 +382,7 @@ const grandTotal =
                             <input
                               className="form-control"
                               style={{ width: "100%", minWidth: "100px" }}
-                              value={item.hsn ?? ""}   // ✅ FIX
+                              value={item.hsn ?? ""}   
                               onChange={(e) => handleItemChange(i, "hsn", e.target.value)}
                             />
 
@@ -415,25 +435,87 @@ const grandTotal =
 
 
 <h6 className="mt-4">Additional Charges</h6>
-
+<button
+  className="btn btn-sm btn-outline-primary mb-2"
+  onClick={addCharge}
+>
+  + Add Charge
+</button>
 {charges.length === 0 ? (
   <div className="text-muted">No additional charges</div>
 ) : (
-  charges.map((c, i) => {
-    const tax = (Number(c.amount || 0) * Number(c.taxPercent || 0)) / 100;
-    return (
-      <div key={i} className="d-flex justify-content-between">
-        <span>
-          {c.label}
-          {c.taxPercent ? ` (${c.taxPercent}%)` : ""}
-        </span>
-        <span>
-          ₹ {(Number(c.amount) + tax).toFixed(2)}
-        </span>
-      </div>
-    );
-  })
+  <div className="table-responsive">
+    <table className="table table-sm align-middle">
+      <thead>
+        <tr>
+          <th>Charge</th>
+          <th style={{width:120}}>Amount</th>
+          <th style={{width:100}}>Tax %</th>
+          <th style={{width:120}}>Total</th>
+          <th style={{width:60}}></th>
+        </tr>
+      </thead>
+      <tbody>
+        {charges.map((c, i) => {
+          const amt = Number(c.amount || 0);
+          const tax = (amt * Number(c.taxPercent || 0)) / 100;
+          const total = amt + tax;
+
+          return (
+            <tr key={i}>
+            <td>
+  <input
+    className="form-control form-control-sm"
+    value={c.label}
+    onChange={(e) =>
+      updateCharge(i, "label", e.target.value)
+    }
+  />
+</td>
+
+
+              <td>
+                <input
+                  type="number"
+                  className="form-control form-control-sm"
+                  value={c.amount}
+                  onChange={(e) =>
+                    updateCharge(i, "amount", Number(e.target.value))
+                  }
+                />
+              </td>
+
+              <td>
+                <input
+                  type="number"
+                  className="form-control form-control-sm"
+                  value={c.taxPercent}
+                  onChange={(e) =>
+                    updateCharge(i, "taxPercent", Number(e.target.value))
+                  }
+                />
+              </td>
+
+              <td className="fw-semibold">
+                ₹ {total.toFixed(2)}
+              </td>
+
+              <td className="text-center">
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={() => removeCharge(i)}
+                >
+                  ✕
+                </button>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
 )}
+
 
 
 

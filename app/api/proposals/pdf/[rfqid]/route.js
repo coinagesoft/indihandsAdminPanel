@@ -81,11 +81,26 @@ color:#000;
 .page{ width:100% }
 
 /* HEADER */
+/* HEADER */
 .hdr{
+  position:relative;
   display:flex;
-  justify-content:flex-end; /* right align block */
+  justify-content:flex-end;
   margin-bottom:14px;
+  min-height:140px;
+  width:100%;
 }
+
+/* LEFT MOTIF */
+.hdr-motif{
+  position:absolute;
+  left:-10mm;   /* escape page margin */
+  top:-6mm;
+  width:140px;
+  height:auto;
+}
+
+
 
 .hdr-right{
   display:flex;
@@ -110,134 +125,162 @@ color:#000;
 
 
 
-
 /* MAIN BOX */
 .box{
-border:1px solid #999;
+  border:1px solid #999;
 }
 
 .strip{
-background:#d9c9b0;
-text-align:center;
-font-weight:700;
-font-size:12px;
-padding:4px 0;
-border-bottom:1px solid #999;
-letter-spacing:.5px;
+  background:#d9c9b0;
+  text-align:center;
+  font-weight:700;
+  font-size:12px;
+  padding:4px 0;
+  border-bottom:1px solid #999;
+  letter-spacing:.5px;
 }
 
 .sec{
-padding:6px 8px;
-font-size:10px;
-line-height:15px;
-border-bottom:1px dotted #aaa;
+  padding:6px 8px;
+  font-size:10px;
+  line-height:15px;
+  border-bottom:1px dotted #b5b5b5;
 }
 
-/* TABLE */
+/* ================= TABLE ================= */
+
+:root{
+  --grid:#b7b7b7;
+}
+
 table{
-width:100%;
-border-collapse:collapse;
-font-size:8.5px;
+  width:100%;
+  border-collapse:collapse;   /* 🔴 IMPORTANT: prevents double */
+  font-size:8.5px;
 }
 
-th,td{
-border:1px dotted #aaa;
-padding:3px 3px;
-text-align:center;
-vertical-align:middle;
+/* HEADER + CELL */
+th, td{
+  padding:3px 3px;
+  border-right:1px dotted var(--grid);
+  border-bottom:1px dotted var(--grid);
 }
 
+/* REMOVE OUTER DOUBLE */
+th:last-child,
+td:last-child{
+  border-right:none;
+}
+
+tr:last-child td{
+  border-bottom:none;
+}
+
+/* HEADER STYLE */
 th{
-background:#f0efee;
-font-weight:700;
-font-size:8px;
+  background:#efefef;
+  font-size:8px;
+  font-weight:700;
 }
 
-.tdl{ text-align:left; padding-left:4px }
-.tbold{ font-weight:700 }
+/* TOTAL ROW */
+.tbold td{
+  font-weight:700;
+  border-top:1px dotted var(--grid);
+}
 
-/* AMOUNT ROW */
+/* LEFT ALIGN */
+.tdl{
+  text-align:left;
+  padding-left:4px;
+}
+
+/* ================= AMOUNT ================= */
+
 .amt-row{
-display:flex;
-border-top:1px dotted #aaa;
+  display:flex;
+  border-top:1px dotted #b5b5b5;
 }
 
 .amt-words{
-flex:0 0 48%;
-padding:8px;
-font-size:9.5px;
-text-align:center;
-border-right:1px dotted #aaa;
+  flex:0 0 48%;
+  padding:8px;
+  font-size:9.5px;
+  text-align:center;
+  border-right:1px dotted #b5b5b5;
 }
 
 .tax-table{
-flex:1;
+  flex:1;
 }
 
-.tax-table table td{
-border:none;
-border-bottom:1px dotted #aaa;
-padding:3px 6px;
-font-size:9.5px;
-text-align:right;
+.tax-table table{
+  border-collapse:collapse;
+}
+
+.tax-table td{
+  border:none;
+  border-bottom:1px dotted #b5b5b5;
+  padding:3px 6px;
+  font-size:9.5px;
+  text-align:right;
 }
 
 .tax-table td:first-child{
-text-align:left;
+  text-align:left;
 }
 
-/* BANK */
+/* ================= BANK ================= */
+
 .bank-row{
-display:grid;
-grid-template-columns:1fr 1fr;
-border-top:1px dotted #aaa;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  border-top:1px dotted #b5b5b5;
 }
 
 .bank-left{
-padding:8px;
-font-size:9.5px;
-line-height:15px;
-border-right:1px dotted #aaa;
+  padding:8px;
+  border-right:1px dotted #b5b5b5;
+  font-size:9.5px;
+  line-height:15px;
 }
 
 .bank-right{
-padding:8px;
-font-size:9.5px;
-text-align:center;
-line-height:15px;
+  padding:8px;
+  font-size:9.5px;
+  text-align:center;
+  line-height:15px;
 }
 
 /* TERMS */
 .terms{
-background:#f4f4f4;
-padding:10px;
-margin-top:12px;
+  background:#f2f2f2;
+  padding:12px 14px;
+  margin-top:12px;
 }
 
 .terms h3{
-text-align:center;
-font-size:10.5px;
-margin-bottom:6px;
-font-weight:700;
+  text-align:center;
+  font-size:10.5px;
+  margin-bottom:6px;
+  font-weight:700;
 }
 
 .terms-cols{
-display:flex;
-gap:12px;
-font-size:9px;
-line-height:14px;
+  display:flex;
+  gap:18px;
+  font-size:9px;
+  line-height:14px;
 }
-
-.terms-cols>div{ flex:1 }
 
 /* FOOTER */
 .footer{
-background:#8aaa4a;
-display:flex;
-justify-content:space-between;
-padding:6px 12px;
-margin-top:10px;
-font-size:10px;
+  background:#8aa63f;
+  display:flex;
+  justify-content:space-between;
+  padding:6px 12px;
+  margin-top:10px;
+  font-size:10px;
 }
 
 </style>
@@ -249,8 +292,19 @@ font-size:10px;
 <!-- HEADER -->
 <div class="hdr">
 
+  <!-- LEFT MOTIF -->
+<img 
+  class="hdr-motif"
+  width="140"
+  src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771496761/motif_300x400_hahbf7.png"
+>
+
+
+  <!-- RIGHT BLOCK -->
   <div class="hdr-right">
-    <img src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771481107/design-studio_jm1fm9.png">
+    <img 
+      src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771481107/design-studio_jm1fm9.png"
+    >
 
     <div class="hdr-text">
       <b>Registered Office</b><br>
@@ -263,6 +317,7 @@ font-size:10px;
   </div>
 
 </div>
+
 
 
 

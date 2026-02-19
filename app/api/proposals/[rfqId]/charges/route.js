@@ -2,7 +2,7 @@ import { db } from "../../../../db";
 
 export async function GET(req, { params }) {
   try {
-    const {rfqId} = await params;; 
+   const {rfqId} = await params;
 
     if (!rfqId || Number.isNaN(rfqId)) {
       return Response.json(
@@ -15,49 +15,43 @@ export async function GET(req, { params }) {
       );
     }
 
-    // 1️⃣ Find proposal by RFQ
+    /* 1️⃣ Find proposal by RFQ */
     const [[proposal]] = await db.query(
       `SELECT id FROM proposals WHERE rfq_id = ? LIMIT 1`,
       [rfqId]
     );
 
     if (!proposal) {
-      return Response.json(
-        {
-          success: true,
-          charges: [],
-          message: "No proposal found for this RFQ",
-        },
-        { status: 200 }
-      );
+      return Response.json({
+        success: true,
+        charges: [],
+        source: "none",
+        message: "No proposal found for this RFQ",
+      });
     }
 
-    // 2️⃣ Fetch charges (NO tax_percent)
+    /* 2️⃣ Fetch proposal override charges */
     const [charges] = await db.query(
-      `
-      SELECT
-        id,
-        label,
-        amount,
+      `SELECT
+         id,
+         label,
+         amount,
          tax_percent AS taxPercent
-      FROM proposal_charges
-      WHERE proposal_id = ?
-      ORDER BY id ASC
-      `,
+       FROM proposal_charges
+       WHERE proposal_id = ?
+       ORDER BY id ASC`,
       [proposal.id]
     );
 
-    return Response.json(
-      {
-        success: true,
-        proposalId: proposal.id,
-        charges,
-      },
-      { status: 200 }
-    );
+    return Response.json({
+      success: true,
+      proposalId: proposal.id,
+      charges,
+      source: "proposal",
+    });
 
   } catch (err) {
-    console.error("❌ GET /api/proposals/[id]/charges error:", err);
+    console.error("GET /api/proposals/[rfqId]/charges error:", err);
 
     return Response.json(
       {
