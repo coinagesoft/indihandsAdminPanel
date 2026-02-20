@@ -138,12 +138,15 @@ function buildHTML(data) {
 <meta charset="UTF-8"/>
 <style>
 
-@page{ size:A4; margin:10mm }
+@page{
+  size:A4;
+  margin:0;   /* ⭐ KEY */
+}
 
 body{
-font-family:Segoe UI,Arial,sans-serif;
-font-size:11px;
-color:#000;
+  margin:0;
+  padding:10mm;  /* content margin */
+  font-family:Segoe UI,Arial,sans-serif;
 }
 
 .page{ width:100% }
@@ -159,13 +162,16 @@ color:#000;
   width:100%;
 }
 
+
+
 /* LEFT MOTIF */
 .hdr-motif{
-  position:absolute;
-  left:-10mm;   /* escape page margin */
-  top:-6mm;
-  width:140px;
+  position:fixed;
+  left:0;
+  top:0;
+  width:150px;
   height:auto;
+  z-index:9999;
 }
 
 
@@ -204,7 +210,7 @@ color:#000;
   font-weight:700;
   font-size:12px;
   padding:4px 0;
-  border-bottom:1px solid #999;
+  border-bottom:1px solid #F4E0D0;
   letter-spacing:.5px;
 }
 
@@ -335,7 +341,8 @@ th{
 }
 
 .terms-cols{
-  display:flex;
+  display:grid;
+  grid-template-columns:1fr 1fr; /* equal */
   gap:18px;
   font-size:9px;
   line-height:14px;
@@ -343,7 +350,7 @@ th{
 
 /* FOOTER */
 .footer{
-  background:#8aa63f;
+  background:#cfd84e;
   display:flex;
   justify-content:space-between;
   padding:6px 12px;
@@ -406,6 +413,7 @@ Contact Person: ${proposal.client_name}<br>
 Contact Details: ${proposal.client_phone}<br>
 Company name: ${proposal.company}<br>
 Address: ${proposal.billing_address}<br>
+<b>GSTIN: ${proposal.gstin || ""}</b><br>
 State: ${clientStateName} | State Code: ${clientStateCode}</div>
 
 <table>

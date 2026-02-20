@@ -329,108 +329,85 @@ const grandTotal =
               </div>
 
               {/* ITEMS TABLE */}
-              <div className="table-responsive">
-                <table className="table table-bordered align-middle" style={{ tableLayout: "fixed" }}>
-                  <colgroup>
-                    <col style={{ width: "50px" }} />
-                    <col style={{ width: "300px" }} />
-                    <col style={{ width: "120px" }} />
-                    <col style={{ width: "80px" }} />
-                    <col style={{ width: "120px" }} />
-                    <col style={{ width: "100px" }} />
-                    <col style={{ width: "140px" }} />
-                    <col style={{ width: "140px" }} />
-                    <col style={{ width: "160px" }} />
-                    <col style={{ width: "60px" }} />
-                  </colgroup>
+           <div className="table-responsive proposal-table">
+  <table className="table table-bordered align-middle mb-0">
+    <colgroup>
+ <col style={{ minWidth: "50px" }} />
+                    <col style={{ minWidth: "250px" }} />
+                    <col style={{ minWidth: "100px" }} />
+                    <col style={{ minWidth: "60px" }} />
+                    <col style={{ minWidth: "120px" }} />
+                    <col style={{ minWidth: "100px" }} />
+                    <col style={{ minWidth: "120px" }} />
+                    <col style={{ minWidth: "120px" }} />
+                    <col style={{ minWidth: "120px" }} />
+                
+    </colgroup>
 
-                  <thead className="table-primary text-nowrap">
-                    <tr>
-                      <th>#</th>
-                      <th>Description</th>
-                      <th>HSN</th>
-                      <th>Qty</th>
-                      <th>Rate</th>
-                      <th>Disc %</th>
-                      <th>Amount</th>
-                      <th>Tax</th>
-                      <th>Total</th>
-                      <th></th>
-                    </tr>
-                  </thead>
+    <thead className="table-primary">
+      <tr>
+        <th className="text-center">#</th>
+        <th>Description</th>
+        <th className="text-center">HSN</th>
+        <th className="text-center">Qty</th>
+        <th className="text-end">Rate</th>
+        <th className="text-end">Disc %</th>
+        <th className="text-end">Amount</th>
+        <th className="text-end">Tax</th>
+        <th className="text-end">Total</th>
+      </tr>
+    </thead>
 
-                  <tbody>
-                    {items.map((item, i) => {
-                      const amount = calcAmount(item);
-                      const tax =
-                        calcTax(amount, item.cgst) +
-                        calcTax(amount, item.sgst) +
-                        calcTax(amount, item.igst);
+    <tbody>
+      {items.map((item, i) => {
+        const amount = calcAmount(item);
+        const tax =
+          calcTax(amount, item.cgst) +
+          calcTax(amount, item.sgst) +
+          calcTax(amount, item.igst);
+        const total = amount + tax;
 
-                      return (
-                        <tr key={i}>
-                          <td className="text-center">{i + 1}</td>
-                          <td>
-                            <input
-                              className="form-control"
-                              style={{ width: "100%", minWidth: "250px" }}
-                              value={item.description}
-                              onChange={(e) => handleItemChange(i, "description", e.target.value)}
-                            />
-                          </td>
-                          <td>
-                            <input
-                              className="form-control"
-                              style={{ width: "100%", minWidth: "100px" }}
-                              value={item.hsn ?? ""}   
-                              onChange={(e) => handleItemChange(i, "hsn", e.target.value)}
-                            />
+        return (
+          <tr key={i}>
+            <td className="text-center">{i + 1}</td>
 
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              className="form-control"
-                              style={{ width: "100%", minWidth: "60px" }}
-                              value={item.qty ?? ""}
-                              onChange={(e) => handleItemChange(i, "qty", +e.target.value)}
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              className="form-control"
-                              style={{ width: "100%", minWidth: "100px" }}
-                              value={item.rate ?? ""}
-                              onChange={(e) => handleItemChange(i, "rate", +e.target.value)}
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              className="form-control"
-                              style={{ width: "100%", minWidth: "80px" }}
-                              value={item.discount ?? ""}
-                              onChange={(e) => handleItemChange(i, "discount", +e.target.value)}
-                            />
-                          </td>
-                          <td className="text-end">₹ {amount.toFixed(2)}</td>
-                          <td className="text-end">₹ {tax.toFixed(2)}</td>
-                          <td className="text-end fw-semibold">₹ {(amount + tax).toFixed(2)}</td>
-                          <td className="text-center">
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() => removeItem(i)}
-                            >
-                              ✕
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+            <td className="text-wrap">
+              {item.description || "-"}
+            </td>
+
+            <td className="text-center">
+              {item.hsn || "-"}
+            </td>
+
+            <td className="text-center">
+              {item.qty ?? 0}
+            </td>
+
+            <td className="text-end">
+              ₹ {Number(item.rate || 0).toFixed(2)}
+            </td>
+
+            <td className="text-end">
+              {Number(item.discount || 0).toFixed(2)}%
+            </td>
+
+            <td className="text-end">
+              ₹ {amount.toFixed(2)}
+            </td>
+
+            <td className="text-end">
+              ₹ {tax.toFixed(2)}
+            </td>
+
+            <td className="text-end fw-semibold">
+              ₹ {total.toFixed(2)}
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</div>
 
 
 

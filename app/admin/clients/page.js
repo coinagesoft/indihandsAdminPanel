@@ -28,24 +28,24 @@ const Page = () => {
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [filter, setFilter] = useState("");
-const [companyCharges, setCompanyCharges] = useState([]);
+  const [companyCharges, setCompanyCharges] = useState([]);
 
   const [newCompany, setNewCompany] = useState(EMPTY_COMPANY);
   const [newBranch, setNewBranch] = useState(EMPTY_BRANCH);
   const [editingBranch, setEditingBranch] = useState(EMPTY_BRANCH);
-const [editingCompany, setEditingCompany] = useState(EMPTY_COMPANY);
+  const [editingCompany, setEditingCompany] = useState(EMPTY_COMPANY);
 
   const companyModalRef = useRef(null);
   const branchCreateModalRef = useRef(null);
   const branchEditModalRef = useRef(null);
 
   /* ===================== MODALS ===================== */
-const openCompanyModal = () => {
-  setEditingCompany(EMPTY_COMPANY);
-  setNewCompany({ ...EMPTY_COMPANY });
-  setCompanyCharges([]);   // ✅ reset
-  new bootstrap.Modal(companyModalRef.current).show();
-};
+  const openCompanyModal = () => {
+    setEditingCompany(EMPTY_COMPANY);
+    setNewCompany({ ...EMPTY_COMPANY });
+    setCompanyCharges([]);   // ✅ reset
+    new bootstrap.Modal(companyModalRef.current).show();
+  };
 
 
 
@@ -65,30 +65,30 @@ const openCompanyModal = () => {
     new bootstrap.Modal(branchEditModalRef.current).show();
   };
 
-const handleCompanyUpdate = async (e) => {
-  e.preventDefault();
+  const handleCompanyUpdate = async (e) => {
+    e.preventDefault();
 
-  const res = await fetch(`/api/companies/${editingCompany.id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      companyName: editingCompany.companyName,
-      companyEmail: editingCompany.companyEmail || null,
-         charges: companyCharges.filter(
-    c => c.label?.trim() && Number(c.amount) > 0
-  ),
-    }),
-  });
+    const res = await fetch(`/api/companies/${editingCompany.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        companyName: editingCompany.companyName,
+        companyEmail: editingCompany.companyEmail || null,
+        charges: companyCharges.filter(
+          c => c.label?.trim() && Number(c.amount) > 0
+        ),
+      }),
+    });
 
-  const data = await res.json();
-  if (!res.ok) return alert("❌ " + data.message);
+    const data = await res.json();
+    if (!res.ok) return alert("❌ " + data.message);
 
-  alert("✅ Company updated");
-  await fetchCompanies();
-  setEditingCompany(EMPTY_COMPANY);
-const modal = bootstrap.Modal.getInstance(companyModalRef.current);
-modal.hide();
-};
+    alert("✅ Company updated");
+    await fetchCompanies();
+    setEditingCompany(EMPTY_COMPANY);
+    const modal = bootstrap.Modal.getInstance(companyModalRef.current);
+    modal.hide();
+  };
 
 
   /* ===================== HANDLERS ===================== */
@@ -101,9 +101,9 @@ modal.hide();
       body: JSON.stringify({
         companyName: newCompany.companyName,
         companyEmail: newCompany.companyEmail || null,
-           charges: companyCharges.filter(
-    c => c.label?.trim() && Number(c.amount) > 0
-  ), 
+        charges: companyCharges.filter(
+          c => c.label?.trim() && Number(c.amount) > 0
+        ),
       }),
     });
     setCompanyCharges([]);
@@ -115,8 +115,8 @@ modal.hide();
     alert("✅ Company created");
     await fetchCompanies();
 
-const modal = bootstrap.Modal.getInstance(companyModalRef.current);
-modal.hide();
+    const modal = bootstrap.Modal.getInstance(companyModalRef.current);
+    modal.hide();
   };
 
 
@@ -219,9 +219,9 @@ modal.hide();
                 >
                   {c.companyName}
                 </li>
-                
+
               ))}
-              
+
             </ul>
           </div>
         </div>
@@ -229,83 +229,83 @@ modal.hide();
         {/* RIGHT */}
         <div className="col-lg-9">
           <div className="card p-4">
-<div className="d-flex justify-content-between align-items-start mb-3">
-  <div>
-    <h5 className="text-orange mb-1">{selectedCompany?.companyName}</h5>
+            <div className="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h5 className="text-orange mb-1">{selectedCompany?.companyName}</h5>
 
-    {selectedCompany?.charges?.length > 0 && (
-      <div className="small text-muted">
-        Charges:{" "}
-        {selectedCompany.charges.map((c, i) => {
-          const tax = (Number(c.amount) * Number(c.taxPercent || 0)) / 100;
-          const total = Number(c.amount) + tax;
+                {selectedCompany?.charges?.length > 0 && (
+                  <div className="small text-muted">
+                    Charges:{" "}
+                    {selectedCompany.charges.map((c, i) => {
+                      const tax = (Number(c.amount) * Number(c.taxPercent || 0)) / 100;
+                      const total = Number(c.amount) + tax;
 
-          return (
-            <span key={i} className="me-3">
-              {c.label}: ₹{total.toFixed(0)}
-              {c.taxPercent > 0 && (
-                <span className="text-secondary">
-                  {" "}
-                  ({c.taxPercent}%)
-                </span>
-              )}
-            </span>
-          );
-        })}
-      </div>
-    )}
-  </div>
+                      return (
+                        <span key={i} className="me-3">
+                          {c.label}: ₹{total.toFixed(0)}
+                          {c.taxPercent > 0 && (
+                            <span className="text-secondary">
+                              {" "}
+                              ({c.taxPercent}%)
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
-  <div className="d-flex gap-2 ">
-    <button
-      className="btn btn-sm btn-outline-orange"
-      disabled={!selectedCompany?.id}
-      onClick={async () => {
-        setEditingCompany(selectedCompany);
+              <div className="d-flex gap-2 ">
+                <button
+                  className="btn btn-sm btn-outline-orange"
+                  disabled={!selectedCompany?.id}
+                  onClick={async () => {
+                    setEditingCompany(selectedCompany);
 
-        const res = await fetch(`/api/companies/${selectedCompany.id}/charges`);
-        if (res.ok) {
-          const data = await res.json();
-          setCompanyCharges(
-            (data.charges || []).map((c) => ({
-              label: c.label,
-              amount: Number(c.amount),
-              taxPercent: Number(c.taxPercent || 0),
-            }))
-          );
-        } else {
-          setCompanyCharges([]);
-        }
+                    const res = await fetch(`/api/companies/${selectedCompany.id}/charges`);
+                    if (res.ok) {
+                      const data = await res.json();
+                      setCompanyCharges(
+                        (data.charges || []).map((c) => ({
+                          label: c.label,
+                          amount: Number(c.amount),
+                          taxPercent: Number(c.taxPercent || 0),
+                        }))
+                      );
+                    } else {
+                      setCompanyCharges([]);
+                    }
 
-        new bootstrap.Modal(companyModalRef.current).show();
-      }}
-    >
-      Edit Company
-    </button>
+                    new bootstrap.Modal(companyModalRef.current).show();
+                  }}
+                >
+                  Edit Company
+                </button>
 
-    <button
-      className="btn btn-sm btn-outline-danger"
-      disabled={!selectedCompany?.id}
-      onClick={async () => {
-        if (!selectedCompany?.id) return;
+                <button
+                  className="btn btn-sm btn-outline-danger"
+                  disabled={!selectedCompany?.id}
+                  onClick={async () => {
+                    if (!selectedCompany?.id) return;
 
-        if (!confirm("⚠️ Delete company & branches?")) return;
+                    if (!confirm("⚠️ Delete company & branches?")) return;
 
-        const res = await fetch(`/api/companies/${selectedCompany.id}`, {
-          method: "DELETE",
-        });
+                    const res = await fetch(`/api/companies/${selectedCompany.id}`, {
+                      method: "DELETE",
+                    });
 
-        const data = await res.json();
-        if (!res.ok) return alert("❌ " + data.message);
+                    const data = await res.json();
+                    if (!res.ok) return alert("❌ " + data.message);
 
-        alert("✅ Company deleted");
-        await fetchCompanies();
-      }}
-    >
-      Delete Company
-    </button>
-  </div>
-</div>
+                    alert("✅ Company deleted");
+                    await fetchCompanies();
+                  }}
+                >
+                  Delete Company
+                </button>
+              </div>
+            </div>
 
 
 
@@ -337,7 +337,7 @@ modal.hide();
                   <div className="col-6"><b>Shipping:</b> {b.shippingAddress}</div>
                   <div className="col-6"><b>Billing:</b> {b.billingAddress}</div>
                   <div className="col-md-6"><b>Login:</b> {b.loginEmail}</div>
-                   {/* <div className="col-md-6"><b>Password:</b> {b.password_hash}</div> */}
+                  {/* <div className="col-md-6"><b>Password:</b> {b.password_hash}</div> */}
                 </div>
 
                 <div className="d-flex gap-2 mt-2">
@@ -382,111 +382,111 @@ modal.hide();
           <div className="modal-content p-4">
             <h5>{editingCompany?.id ? "Edit Company" : "Create Company"}</h5>
 
-<form onSubmit={editingCompany?.id ? handleCompanyUpdate : handleCompanyCreate}>
-             <input
-  className="form-control mb-2"
-  placeholder="Company Name"
-  value={editingCompany?.id ? editingCompany.companyName : newCompany.companyName}
-  onChange={(e) => {
-    editingCompany?.id
-      ? setEditingCompany({ ...editingCompany, companyName: e.target.value })
-      : setNewCompany({ ...newCompany, companyName: e.target.value });
-  }}
-/>
+            <form onSubmit={editingCompany?.id ? handleCompanyUpdate : handleCompanyCreate}>
+              <input
+                className="form-control mb-2"
+                placeholder="Company Name"
+                value={editingCompany?.id ? editingCompany.companyName : newCompany.companyName}
+                onChange={(e) => {
+                  editingCompany?.id
+                    ? setEditingCompany({ ...editingCompany, companyName: e.target.value })
+                    : setNewCompany({ ...newCompany, companyName: e.target.value });
+                }}
+              />
 
-<input
-  className="form-control mb-2"
-  placeholder="Company Email"
-  value={
-    editingCompany?.id
-      ? editingCompany.companyEmail || ""
-      : newCompany.companyEmail || ""
-  }
-  onChange={(e) => {
-    const val = e.target.value || null;   // 👈 key fix
+              <input
+                className="form-control mb-2"
+                placeholder="Company Email"
+                value={
+                  editingCompany?.id
+                    ? editingCompany.companyEmail || ""
+                    : newCompany.companyEmail || ""
+                }
+                onChange={(e) => {
+                  const val = e.target.value || null;   // 👈 key fix
 
-    editingCompany?.id
-      ? setEditingCompany({ ...editingCompany, companyEmail: val })
-      : setNewCompany({ ...newCompany, companyEmail: val });
-  }}
-/>
-<hr className="my-3" />
-<h6>Company Charges</h6>
+                  editingCompany?.id
+                    ? setEditingCompany({ ...editingCompany, companyEmail: val })
+                    : setNewCompany({ ...newCompany, companyEmail: val });
+                }}
+              />
+              <hr className="my-3" />
+              <h6>Company Charges</h6>
 
-{companyCharges.map((c, i) => (
-  <div key={i} className="row g-2 mb-2">
-    <div className="col-md-5">
-      <input
-        className="form-control"
-        placeholder="Charge label (e.g. Shipping)"
-        value={c.label}
-        onChange={(e) => {
-          const arr = [...companyCharges];
-          arr[i].label = e.target.value;
-          setCompanyCharges(arr);
-        }}
-      />
-    </div>
+              {companyCharges.map((c, i) => (
+                <div key={i} className="row g-2 mb-2">
+                  <div className="col-md-5">
+                    <input
+                      className="form-control"
+                      placeholder="Charge label (e.g. Shipping)"
+                      value={c.label}
+                      onChange={(e) => {
+                        const arr = [...companyCharges];
+                        arr[i].label = e.target.value;
+                        setCompanyCharges(arr);
+                      }}
+                    />
+                  </div>
 
-    <div className="col-md-3">
-      <input
-        type="number"
-        className="form-control"
-        placeholder="Amount"
-        value={c.amount}
-        onChange={(e) => {
-          const arr = [...companyCharges];
-          arr[i].amount = +e.target.value;
-          setCompanyCharges(arr);
-        }}
-      />
-    </div>
+                  <div className="col-md-3">
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Amount"
+                      value={c.amount}
+                      onChange={(e) => {
+                        const arr = [...companyCharges];
+                        arr[i].amount = +e.target.value;
+                        setCompanyCharges(arr);
+                      }}
+                    />
+                  </div>
 
-    <div className="col-md-3">
-      <input
-        type="number"
-        className="form-control"
-        placeholder="Tax %"
-        value={c.taxPercent}
-        onChange={(e) => {
-          const arr = [...companyCharges];
-          arr[i].taxPercent = +e.target.value;
-          setCompanyCharges(arr);
-        }}
-      />
-    </div>
+                  <div className="col-md-3">
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Tax %"
+                      value={c.taxPercent}
+                      onChange={(e) => {
+                        const arr = [...companyCharges];
+                        arr[i].taxPercent = +e.target.value;
+                        setCompanyCharges(arr);
+                      }}
+                    />
+                  </div>
 
-    <div className="col-md-1">
-      <button
-        type="button"
-        className="btn btn-danger btn-sm"
-        onClick={() =>
-          setCompanyCharges(companyCharges.filter((_, idx) => idx !== i))
-        }
-      >
-        ✕
-      </button>
-    </div>
-  </div>
-))}
+                  <div className="col-md-1">
+                    <button
+                      type="button"
+                      className="btn btn-danger btn-sm"
+                      onClick={() =>
+                        setCompanyCharges(companyCharges.filter((_, idx) => idx !== i))
+                      }
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
 
-<button
-  type="button"
-  className="btn btn-outline-secondary btn-sm me-2"
-  onClick={() =>
-    setCompanyCharges([
-      ...companyCharges,
-      { label: "", amount: "", taxPercent: "" },
-    ])
-  }
->
-  + Add Charge
-</button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm me-2"
+                onClick={() =>
+                  setCompanyCharges([
+                    ...companyCharges,
+                    { label: "", amount: "", taxPercent: "" },
+                  ])
+                }
+              >
+                + Add Charge
+              </button>
 
 
-             <button className="btn btn-orange">
-  {editingCompany?.id ? "Update" : "Create"}
-</button>
+              <button className="btn btn-orange">
+                {editingCompany?.id ? "Update" : "Create"}
+              </button>
 
             </form>
           </div>
@@ -506,52 +506,37 @@ modal.hide();
             <div className="modal-body pt-3">
               <form onSubmit={handleBranchCreate} className="row g-2">
 
-                {/* Branch + GSTIN */}
-                <div className="col-md-6">
-                  <label className="form-label mb-1">Branch Name</label>
-                  <input
-                    className="form-control"
-                    placeholder="e.g. Pune Branch"
-                    value={newBranch.branchName || ""}
-                    onChange={(e) => setNewBranch({ ...newBranch, branchName: e.target.value })}
-                    required
-                  />
-                </div>
+                {/* Basic Fields */}
+                {[
+                  { label: "Branch Name", key: "branchName", type: "text", required: true },
+                  { label: "GSTIN", key: "gstin", type: "text", required: true },
+                  { label: "Contact Person", key: "contactPerson", type: "text" },
+                  { label: "Login Email", key: "loginEmail", type: "email", required: true },
+                ].map(({ label, key, type, required }) => (
+                  <div key={key} className="col-md-6">
+                    <label className="form-label mb-1">{label}</label>
+                    <input
+                      type={type}
+                      className="form-control"
+                      value={newBranch[key] || ""}
+                      onChange={(e) =>
+                        setNewBranch({ ...newBranch, [key]: e.target.value })
+                      }
+                      required={required}
+                    />
+                  </div>
+                ))}
 
-                <div className="col-md-6">
-                  <label className="form-label mb-1">GSTIN</label>
-                  <input
-                    className="form-control"
-                    placeholder="27ABCDE1234F1Z5"
-                    value={newBranch.gstin || ""}
-                    onChange={(e) => setNewBranch({ ...newBranch, gstin: e.target.value })}
-                    required
-                  />
-                </div>
-
-                {/* Contact + Login Email */}
-                <div className="col-md-6">
-                  <label className="form-label mb-1">Contact Person</label>
-                  <input
-                    className="form-control"
-                    placeholder="e.g. Ravi Kumar"
-                    value={newBranch.contactPerson || ""}
-                    onChange={(e) => setNewBranch({ ...newBranch, contactPerson: e.target.value })}
-                  />
-                </div>
-
-
-
-
-                {/* Shipping + Billing */}
+                {/* Addresses */}
                 <div className="col-md-6">
                   <label className="form-label mb-1">Shipping Address</label>
                   <textarea
                     className="form-control"
                     rows={2}
-                    placeholder="Shipping address"
                     value={newBranch.shippingAddress || ""}
-                    onChange={(e) => setNewBranch({ ...newBranch, shippingAddress: e.target.value })}
+                    onChange={(e) =>
+                      setNewBranch({ ...newBranch, shippingAddress: e.target.value })
+                    }
                   />
                 </div>
 
@@ -560,9 +545,25 @@ modal.hide();
                   <textarea
                     className="form-control"
                     rows={2}
-                    placeholder="Billing address"
                     value={newBranch.billingAddress || ""}
-                    onChange={(e) => setNewBranch({ ...newBranch, billingAddress: e.target.value })}
+                    onChange={(e) =>
+                      setNewBranch({ ...newBranch, billingAddress: e.target.value })
+                    }
+                  />
+                </div>
+
+                {/* Password */}
+                <div className="col-md-6">
+                  <label className="form-label mb-1">Password</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Minimum 6 characters"
+                    value={newBranch.password || ""}
+                    onChange={(e) =>
+                      setNewBranch({ ...newBranch, password: e.target.value })
+                    }
+                    required
                   />
                 </div>
 
@@ -574,16 +575,15 @@ modal.hide();
                       type="button"
                       className="btn btn-sm btn-outline-primary"
                       onClick={() =>
-                        setNewBranch({ ...newBranch, phones: [...(newBranch.phones || []), ""] })
+                        setNewBranch({
+                          ...newBranch,
+                          phones: [...(newBranch.phones || []), ""],
+                        })
                       }
                     >
                       + Add
                     </button>
                   </div>
-
-                  {(newBranch.phones || []).length === 0 && (
-                    <small className="text-muted">No phone added</small>
-                  )}
 
                   {(newBranch.phones || []).map((p, idx) => (
                     <div key={idx} className="d-flex gap-2 mb-1">
@@ -621,16 +621,15 @@ modal.hide();
                       type="button"
                       className="btn btn-sm btn-outline-primary"
                       onClick={() =>
-                        setNewBranch({ ...newBranch, emails: [...(newBranch.emails || []), ""] })
+                        setNewBranch({
+                          ...newBranch,
+                          emails: [...(newBranch.emails || []), ""],
+                        })
                       }
                     >
                       + Add
                     </button>
                   </div>
-
-                  {(newBranch.emails || []).length === 0 && (
-                    <small className="text-muted">No email added</small>
-                  )}
 
                   {(newBranch.emails || []).map((em, idx) => (
                     <div key={idx} className="d-flex gap-2 mb-1">
@@ -659,54 +658,9 @@ modal.hide();
                     </div>
                   ))}
                 </div>
-                <div className="col-md-6">
-                  <label className="form-label mb-1">Password</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    placeholder="Minimum 6 characters"
-                    value={newBranch.password || ""}
-                    onChange={(e) =>
-                      setNewBranch({ ...newBranch, password: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label mb-1">Login Email</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    placeholder="client@email.com"
-                    value={newBranch.loginEmail || ""}
-                    onChange={(e) => setNewBranch({ ...newBranch, loginEmail: e.target.value })}
-                    required
-                  />
 
-                </div>
-
-                {/* Footer Buttons */}
+                {/* Footer */}
                 <div className="col-12 mt-3 d-flex justify-content-between flex-wrap gap-2">
-                  {/* <button
-              type="button"
-              className="btn btn-outline-warning"
-              disabled={!newBranch.loginEmail?.trim()}
-              onClick={async () => {
-                const res = await fetch("/api/auth/request-reset", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email: newBranch.loginEmail }),
-                });
-
-                const data = await res.json();
-                if (!res.ok) return alert("❌ " + data.message);
-
-                alert("✅ Set Password link sent to client email");
-              }}
-            >
-              Send Set Password Link
-            </button> */}
-
                   <button type="submit" className="btn btn-orange px-4">
                     Save Branch
                   </button>
