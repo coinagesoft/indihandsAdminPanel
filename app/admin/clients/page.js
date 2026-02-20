@@ -397,11 +397,17 @@ modal.hide();
 <input
   className="form-control mb-2"
   placeholder="Company Email"
-  value={editingCompany?.id ? editingCompany.companyEmail : newCompany.companyEmail}
-  onChange={(e) => {
+  value={
     editingCompany?.id
-      ? setEditingCompany({ ...editingCompany, companyEmail: e.target.value })
-      : setNewCompany({ ...newCompany, companyEmail: e.target.value });
+      ? editingCompany.companyEmail || ""
+      : newCompany.companyEmail || ""
+  }
+  onChange={(e) => {
+    const val = e.target.value || null;   // 👈 key fix
+
+    editingCompany?.id
+      ? setEditingCompany({ ...editingCompany, companyEmail: val })
+      : setNewCompany({ ...newCompany, companyEmail: val });
   }}
 />
 <hr className="my-3" />
