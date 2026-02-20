@@ -189,14 +189,19 @@ useEffect(() => {
 
       <div className="d-flex justify-content-between align-center">
         {/* Filters */}
-        <button
-          className="btn btn-success btn-sm mb-5"
-          onClick={() =>
-            (window.location.href = "/api/org-pricing/export")
-          }
-        >
-          Export Pricing Excel
-        </button>
+      <button
+  className="btn btn-success btn-sm mb-5"
+  onClick={() => {
+    const url =
+      selectedOrg === "all"
+        ? "/api/org-pricing/export"
+        : `/api/org-pricing/export?companyId=${selectedOrg}`;
+
+    window.location.href = url;
+  }}
+>
+  Export Pricing Excel
+</button>
 
         <div className="mb-3">
           <label htmlFor="importPricing" className="btn btn-sm btn-primary me-2">

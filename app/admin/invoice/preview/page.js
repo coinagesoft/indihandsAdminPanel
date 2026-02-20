@@ -67,11 +67,17 @@ const [proposalId, setProposalId] = useState(null);
       });
 
       const data = await res.json();
+  console.log("proposal",data)
+    if (res.status === 409) {
+  setHeader(prev => ({
+    ...prev,
+    quotationNo: data.proposal_number
+  }));
 
-      if (res.status === 409) {
-        setHeader((prev) => ({ ...prev, quotationNo: data.proposal_number }));
-        return alert("⚠️ Proposal already exists: " + data.proposal_number);
-      }
+  setProposalId(data.proposalId); // ⭐ add
+
+  return alert("⚠️ Proposal already exists: " + data.proposal_number);
+}
 
    
 
@@ -80,19 +86,24 @@ const [proposalId, setProposalId] = useState(null);
         setHeader((prev) => ({ ...prev, quotationNo: data.proposal_number }));
       }
 
-if (data.proposal_id) {
-  setProposalId(data.proposal_id);
-}
-
-      alert("✅ Proposal sent ");
-    } finally {
-      setSaving(false);
+  if (data.proposalId) {
+      setProposalId(data.proposalId);
     }
+
+    setTimeout(() => {
+      alert("✅ Proposal sent");
+    }, 50);
+
+  } finally {
+    setSaving(false);
+  }
   };
-  const handleDownloadPdf = () => {
-    if (!selectedRfq) return alert("❌ Select RFQ first");
-    window.open(`/api/proposals/pdf/${proposalId}`, "_blank");
-  };
+ const handleDownloadPdf = () => {
+  if (!selectedRfq) return alert("❌ Select RFQ first");
+  if (!proposalId) return alert("❌ Please send proposal first");
+
+  window.open(`/api/proposals/pdf/${proposalId}`, "_blank");
+};
   
 const handleEmailProposal = async () => {
   if (!selectedRfq) return alert("❌ Select RFQ first");
@@ -122,31 +133,11 @@ const handleEmailProposal = async () => {
 };
 
 
-const handleEmailInvoice = async () => {
+const handleDownloadInvoice = () => {
   if (!selectedRfq) return alert("❌ Select RFQ first");
-  if (!header.clientEmail) return alert("❌ Client email missing");
+  if (!proposalId) return alert("❌ Please send proposal first");
 
-  try {
-    setSendingInvoice(true);
-
-    const res = await fetch(`/api/invoices/email/${selectedRfq}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "invoice",
-        email: header.clientEmail,
-      }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Email failed");
-
-    alert("✅ Invoice emailed to client");
-  } catch (e) {
-    alert("❌ " + e.message);
-  } finally {
-    setSendingInvoice(false);
-  }
+  window.open(`/api/invoices/pdf/${proposalId}`, "_blank");
 };
 
 
@@ -564,7 +555,7 @@ const grandTotal =
         {saving ? "Saving..." : "Send Proposal"}
       </button>
 
-      {/* DOWNLOAD */}
+      {/* DOWNLOAD PROPOSAL PDF */}
       <button
         className="btn w-100 mb-3"
         style={{
@@ -574,45 +565,40 @@ const grandTotal =
           background: "#fff"
         }}
         onClick={handleDownloadPdf}
-        disabled={!selectedRfq}
+        disabled={!proposalId}
       >
         Download PDF
       </button>
 
-    {/* EMAIL PROPOSAL */}
-<button
-  className="btn w-100 mb-2"
-  style={{
-    border: "1px solid #ff6b35",
-    color: "#ff6b35",
-    borderRadius: "8px",
-    background: "#fff"
-  }}
-  onClick={handleEmailProposal}
-  disabled={!header.clientEmail || sendingProposal}
->
-  {sendingProposal ? "Sending..." : "Email Proposal"}
-</button>
+      {/* EMAIL PROPOSAL */}
+      <button
+        className="btn w-100 mb-2"
+        style={{
+          border: "1px solid #ff6b35",
+          color: "#ff6b35",
+          borderRadius: "8px",
+          background: "#fff"
+        }}
+        onClick={handleEmailProposal}
+        disabled={!proposalId || !header.clientEmail || sendingProposal}
+      >
+        {sendingProposal ? "Sending..." : "Email Proposal"}
+      </button>
 
-
-{/* EMAIL INVOICE */}
-<button
-  className="btn w-100 mb-3"
-  style={{
-    border: "1px solid #2e7d32",
-    color: "#2e7d32",
-    borderRadius: "8px",
-    background: "#fff"
-  }}
-  onClick={handleEmailInvoice}
-  disabled={!header.clientEmail || sendingInvoice}
->
-  {sendingInvoice ? "Sending..." : "Email Invoice"}
-</button>
-
-
-
-   
+      {/* DOWNLOAD INVOICE */}
+      <button
+        className="btn w-100 mb-3"
+        style={{
+          border: "1px solid #2e7d32",
+          color: "#2e7d32",
+          borderRadius: "8px",
+          background: "#fff"
+        }}
+        onClick={handleDownloadInvoice}
+        disabled={!proposalId}
+      >
+        Download Invoice
+      </button>
 
     </div>
   </div>
