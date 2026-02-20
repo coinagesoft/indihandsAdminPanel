@@ -333,29 +333,31 @@ const paginatedCatalogProducts = catalogProducts.slice(
 >
   {/* Image */}
 <div
+ 
   style={{
     width: "100%",
-    aspectRatio: "1 / 1",
+    height: "180px",   // ✅ fixed equal height
     position: "relative",
     overflow: "hidden",
     borderTopLeftRadius: "12px",
     borderTopRightRadius: "12px",
-    backgroundColor: "#f0f0f0",
+    background: "#f6f6f6",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
   }}
+
 >
   {c.image ? (
-    <img
-      src={c.image}
-      alt={c.name}
-      style={{
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        objectFit: "contain",   // ✅ full image visible (no crop)
-        backgroundColor: "#f0f0f0",
-      }}
-    />
+   <img
+  src={c.image}
+  alt={c.name}
+  style={{
+    maxWidth: "100%",
+    maxHeight: "100%",
+    objectFit: "contain"
+  }}
+/>
   ) : (
     <div
       className="bg-light d-flex justify-content-center align-items-center text-muted"
