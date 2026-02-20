@@ -26,10 +26,66 @@ function numberToWords(num) {
 function buildHTML(data) {
 
   const {
-    proposal, sender, computedItems, charges: allCharges,
+    proposal, sender, computedItems, charges: computedCharges,
     subtotal, cgstTotal, sgstTotal, igstTotal,
     totalTax, grandTotal, formattedDate
   } = data;
+
+
+/* ================= STATE LOGIC ================= */
+
+  const stateMap = {
+    "01":"Jammu and Kashmir",
+    "02":"Himachal Pradesh",
+    "03":"Punjab",
+    "04":"Chandigarh",
+    "05":"Uttarakhand",
+    "06":"Haryana",
+    "07":"Delhi",
+    "08":"Rajasthan",
+    "09":"Uttar Pradesh",
+    "10":"Bihar",
+    "11":"Sikkim",
+    "12":"Arunachal Pradesh",
+    "13":"Nagaland",
+    "14":"Manipur",
+    "15":"Mizoram",
+    "16":"Tripura",
+    "17":"Meghalaya",
+    "18":"Assam",
+    "19":"West Bengal",
+    "20":"Jharkhand",
+    "21":"Odisha",
+    "22":"Chhattisgarh",
+    "23":"Madhya Pradesh",
+    "24":"Gujarat",
+    "25":"Daman and Diu",
+    "26":"Dadra and Nagar Haveli",
+    "27":"Maharashtra",
+    "28":"Andhra Pradesh",
+    "29":"Karnataka",
+    "30":"Goa",
+    "31":"Lakshadweep",
+    "32":"Kerala",
+    "33":"Tamil Nadu",
+    "34":"Puducherry",
+    "35":"Andaman and Nicobar Islands",
+    "36":"Telangana",
+    "37":"Andhra Pradesh (New)",
+    "38":"Ladakh"
+  };
+
+  const clientStateCode = proposal.gstin
+    ? proposal.gstin.substring(0, 2)
+    : "";
+
+  const senderStateCode = sender.gstin
+    ? sender.gstin.substring(0, 2)
+    : "";
+
+  const clientStateName = stateMap[clientStateCode] || "";
+  const senderStateName = stateMap[senderStateCode] || "";
+
 
   const itemRows = computedItems.map((x, i) => `
 <tr>
@@ -51,18 +107,30 @@ function buildHTML(data) {
 <td>${x.total.toFixed(2)}</td>
 </tr>`).join("");
 
-  const chargeRows = allCharges.map(c => `
+ const chargeRows = computedCharges.map(c => `
 <tr>
 <td></td>
 <td class="tdl">${c.label}</td>
-<td></td><td></td><td></td><td></td><td></td>
-<td>${Number(c.amount).toFixed(2)}</td>
-<td>${Number(c.amount).toFixed(2)}</td>
-<td></td><td></td><td></td><td></td>
-<td>${c.taxPercent || 0}%</td>
-<td>${((c.amount * (c.taxPercent || 0)) / 100).toFixed(2)}</td>
-<td>${(Number(c.amount) + (c.amount * (c.taxPercent || 0)) / 100).toFixed(2)}</td>
-</tr>`).join("");
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>${c.amount.toFixed(2)}</td>
+<td>${c.amount.toFixed(2)}</td>
+
+<td></td>
+<td>${c.sgst ? c.sgst.toFixed(2) : ""}</td>
+
+<td></td>
+<td>${c.cgst ? c.cgst.toFixed(2) : ""}</td>
+
+<td></td>
+<td>${c.igst ? c.igst.toFixed(2) : ""}</td>
+
+<td>${c.total.toFixed(2)}</td>
+</tr>
+`).join("");
 
   return `<!DOCTYPE html>
 <html>
@@ -330,7 +398,7 @@ Quotation No: ${proposal.proposal_number}<br>
 Quotation Date: ${formattedDate}<br>
 Quotation Validity: One month from quotation date<br>
 <b>GSTIN: ${sender.gstin || ""}</b><br>
-State: ${sender.state || ""} | State code 27
+State: ${senderStateName} | State Code: ${senderStateCode}
 </div>
 
 <div class="sec">
@@ -338,8 +406,7 @@ Contact Person: ${proposal.client_name}<br>
 Contact Details: ${proposal.client_phone}<br>
 Company name: ${proposal.company}<br>
 Address: ${proposal.billing_address}<br>
-<b>GSTIN: ${proposal.gstin || ""}</b>
-</div>
+State: ${clientStateName} | State Code: ${clientStateCode}</div>
 
 <table>
 <thead>
@@ -413,8 +480,22 @@ Contact: ${sender.phone || ""} | ${sender.email || ""}
 
 
 <div class="bank-right">
-<b>For Manik Trifaley Design Studio Pvt Ltd</b><br><br><br>
-Authorised Signatory & Stamp
+
+  <div style="text-align:center; font-weight:600; margin-bottom:15px;">
+    For Manik Trifaley Design Studio Pvt Ltd
+  </div>
+
+  <div style="text-align:center;">
+    <img 
+      src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771567348/stamp_wcltx2.jpg"
+      style="width:120px; display:block; margin:0 auto 8px auto;"
+    />
+  </div>
+
+  <div style="text-align:center;">
+    Authorised Signatory & Stamp
+  </div>
+
 </div>
 
 </div>
@@ -463,6 +544,18 @@ Authorised Signatory & Stamp
 </html>`;
 }
 
+// function getStateCode(gstin) {
+//   if (!gstin || gstin.length < 2) return null;
+//   return gstin.substring(0, 2);
+// }
+
+// const clientStateCode = getStateCode(proposal.gstin);
+// const senderStateCode = getStateCode(sender.gstin);
+
+// const isInterState =
+//   clientStateCode && senderStateCode
+//     ? clientStateCode !== senderStateCode
+//     : false;
 /* ================= API ================= */
 export async function GET(req, { params }) {
   try {
@@ -508,6 +601,10 @@ WHERE p.id = ?
     if (!proposal) {
       return Response.json({ message: "Proposal not found" }, { status: 404 });
     }
+    const clientStateCode = proposal.gstin?.substring(0, 2) || "";
+const senderStateCode = sender.gstin?.substring(0, 2) || "";
+
+const isInterState = clientStateCode !== senderStateCode;
 
     const [items] = await db.query(`
 SELECT 
@@ -536,39 +633,107 @@ FROM proposal_charges
 WHERE proposal_id = ?
 `, [proposal.id]);
 
-    const subtotal = Number(proposal.subtotal || 0);
-    const cgstTotal = Number(proposal.cgst_total || 0);
-    const sgstTotal = Number(proposal.sgst_total || 0);
-    const igstTotal = Number(proposal.igst_total || 0);
+// Determine correct charge source
+let allCharges = proposalCharges.length > 0
+  ? proposalCharges
+  : charges;
 
-    const totalTax = cgstTotal + sgstTotal + igstTotal;
-    const grandTotal = Number(proposal.grand_total || 0);
+// ================= ITEMS CALCULATION =================
 
-    const computedItems = items.map(i => {
-      const qty = +i.qty || 0, rate = +i.rate || 0, disc = +i.discount || 0;
-      const amt = qty * rate - (qty * rate * disc) / 100;
-      const cg = amt * (+i.cgst_rate || 0) / 100;
-      const sg = amt * (+i.sgst_rate || 0) / 100;
-      const ig = amt * (+i.igst_rate || 0) / 100;
-      return { ...i, qty, rate, discount: disc, cgst: cg, sgst: sg, igst: ig, amount: amt, total: amt + cg + sg + ig };
-    });
+const computedItems = items.map(i => {
+  const qty = +i.qty || 0;
+  const rate = +i.rate || 0;
+  const disc = +i.discount || 0;
 
-    let allCharges = [];
+  const taxable = qty * rate - (qty * rate * disc) / 100;
 
-    if (proposalCharges.length > 0) {
-      allCharges = proposalCharges;
-    } else {
-      allCharges = charges;
-    }
-    let chargesAmount = 0;
-    let chargesTax = 0;
+  let cg = 0, sg = 0, ig = 0;
 
-    allCharges.forEach(c => {
-      const amt = +c.amount || 0;
-      const tax = (amt * (+c.taxPercent || 0)) / 100;
-      chargesAmount += amt;
-      chargesTax += tax;
-    });
+  if (isInterState) {
+    ig = taxable * (+i.igst_rate || 0) / 100;
+  } else {
+    cg = taxable * (+i.cgst_rate || 0) / 100;
+    sg = taxable * (+i.sgst_rate || 0) / 100;
+  }
+
+  return {
+    ...i,
+    qty,
+    rate,
+    discount: disc,
+    amount: taxable,
+    cgst: cg,
+    sgst: sg,
+    igst: ig,
+    total: taxable + cg + sg + ig
+  };
+});
+
+// ================= TOTAL CALCULATION =================
+
+let subtotal = 0;
+let cgstTotal = 0;
+let sgstTotal = 0;
+let igstTotal = 0;
+
+// Add item totals
+computedItems.forEach(i => {
+  subtotal += i.amount;
+  cgstTotal += i.cgst;
+  sgstTotal += i.sgst;
+  igstTotal += i.igst;
+});
+
+const computedCharges = allCharges.map(c => {
+  const amt = +c.amount || 0;
+  const taxRate = +c.taxPercent || 0;
+
+  let cg = 0, sg = 0, ig = 0;
+
+  if (isInterState) {
+    ig = amt * taxRate / 100;
+  } else {
+    cg = amt * (taxRate / 2) / 100;
+    sg = amt * (taxRate / 2) / 100;
+  }
+
+  subtotal += amt;
+  cgstTotal += cg;
+  sgstTotal += sg;
+  igstTotal += ig;
+
+  return {
+    label: c.label,
+    amount: amt,
+    taxPercent: taxRate,
+    cgst: cg,
+    sgst: sg,
+    igst: ig,
+    total: amt + cg + sg + ig
+  };
+});
+
+const totalTax = cgstTotal + sgstTotal + igstTotal;
+const grandTotal = subtotal + totalTax;
+
+
+
+    // let allCharges = [];
+
+    // if (proposalCharges.length > 0) {
+    //   allCharges = proposalCharges;
+    // } else {
+    //   allCharges = charges;
+    // }
+    // let chargesAmount = 0;
+    // let chargesTax = 0;
+
+    // allCharges.forEach(c => {
+    //   const amt = +c.amount || 0;
+    //   const tax = (amt * (+c.taxPercent || 0)) / 100;
+    //   chargesAmount += amt;
+    //   chargesTax += tax;
+    // });
 
 
 
@@ -579,7 +744,7 @@ WHERE proposal_id = ?
       proposal,
       sender,
       computedItems,
-      charges: allCharges,
+      charges: computedCharges,
       subtotal,
       cgstTotal,
       sgstTotal,
