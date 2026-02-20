@@ -2,7 +2,7 @@ import { db } from "../../../db";
 
 export async function PATCH(req, { params }) {
   try {
-       const { id } = await params;   // ✅ unwrap params
+    const { id } = params;
     const companyId = Number(id);
 
     if (!companyId) {
@@ -12,16 +12,31 @@ export async function PATCH(req, { params }) {
     const body = await req.json();
     const { companyName, companyEmail, charges } = body;
 
+    // ✅ company name REQUIRED
+    const name = companyName?.trim();
+    if (!name) {
+      return Response.json(
+        { message: "Company name required" },
+        { status: 400 }
+      );
+    }
+
+    // ✅ email nullable
+    const email = companyEmail?.trim() || null;
+
     // ✅ update company
     await db.query(
       `UPDATE companies 
        SET company_name = ?, company_email = ?
        WHERE id = ?`,
-      [companyName?.trim() || "", companyEmail?.trim() || "", companyId]
+      [name, email, companyId]
     );
 
     // ✅ replace charges
-    await db.query(`DELETE FROM company_charges WHERE company_id = ?`, [companyId]);
+    await db.query(
+      `DELETE FROM company_charges WHERE company_id = ?`,
+      [companyId]
+    );
 
     if (Array.isArray(charges) && charges.length > 0) {
       const values = charges.map((c) => [
@@ -49,7 +64,8 @@ export async function PATCH(req, { params }) {
 /* ✅ delete company (will delete branches due to cascade) */
 export async function DELETE(req, { params }) {
   try {
-    const companyId = Number(params.id);
+       const { id } = await params;
+    const companyId = Number(id);
 
     if (!companyId) {
       return Response.json({ message: "Invalid companyId" }, { status: 400 });

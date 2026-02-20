@@ -73,7 +73,7 @@ const handleCompanyUpdate = async (e) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       companyName: editingCompany.companyName,
-      companyEmail: editingCompany.companyEmail,
+      companyEmail: editingCompany.companyEmail || null,
          charges: companyCharges.filter(
     c => c.label?.trim() && Number(c.amount) > 0
   ),
@@ -100,7 +100,7 @@ modal.hide();
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         companyName: newCompany.companyName,
-        companyEmail: newCompany.companyEmail,
+        companyEmail: newCompany.companyEmail || null,
            charges: companyCharges.filter(
     c => c.label?.trim() && Number(c.amount) > 0
   ), 
