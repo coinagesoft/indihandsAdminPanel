@@ -4,54 +4,54 @@ export const dynamic = "force-dynamic";
 import { db } from "../../../../db";
 
 /* ================= NUMBER TO WORDS ================= */
-function numberToWords(num){
-  if(!num) return "Zero Only";
-  const a=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine",
-  "Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen",
-  "Seventeen","Eighteen","Nineteen"];
-  const b=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+function numberToWords(num) {
+  if (!num) return "Zero Only";
+  const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+    "Seventeen", "Eighteen", "Nineteen"];
+  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
 
-  const inWords=n=>{
-    if(n<20) return a[n];
-    if(n<100) return b[Math.floor(n/10)]+" "+a[n%10];
-    if(n<1000) return a[Math.floor(n/100)]+" Hundred "+inWords(n%100);
-    if(n<100000) return inWords(Math.floor(n/1000))+" Thousand "+inWords(n%1000);
-    if(n<10000000) return inWords(Math.floor(n/100000))+" Lakh "+inWords(n%100000);
-    return inWords(Math.floor(n/10000000))+" Crore "+inWords(n%10000000);
+  const inWords = n => {
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n / 10)] + " " + a[n % 10];
+    if (n < 1000) return a[Math.floor(n / 100)] + " Hundred " + inWords(n % 100);
+    if (n < 100000) return inWords(Math.floor(n / 1000)) + " Thousand " + inWords(n % 1000);
+    if (n < 10000000) return inWords(Math.floor(n / 100000)) + " Lakh " + inWords(n % 100000);
+    return inWords(Math.floor(n / 10000000)) + " Crore " + inWords(n % 10000000);
   };
-  return inWords(Math.round(num))+" Only";
+  return inWords(Math.round(num)) + " Only";
 }
 
 /* ================= HTML TEMPLATE ================= */
-function buildHTML(data){
+function buildHTML(data) {
 
-const {
-  proposal, computedItems, charges,
-  subtotal, cgstTotal, sgstTotal, igstTotal,
-  totalTax, grandTotal, formattedDate
-}=data;
+  const {
+    proposal, sender, computedItems, charges: allCharges,
+    subtotal, cgstTotal, sgstTotal, igstTotal,
+    totalTax, grandTotal, formattedDate
+  } = data;
 
-const itemRows = computedItems.map((x,i)=>`
+  const itemRows = computedItems.map((x, i) => `
 <tr>
-<td>${i+1}</td>
+<td>${i + 1}</td>
 <td class="tdl">${x.description}</td>
 <td>${x.hsn}</td>
 <td>${x.qty}</td>
 <td>${x.rate.toFixed(2)}</td>
 <td>${x.discount.toFixed(2)}%</td>
-<td>${(x.rate*x.qty*x.discount/100).toFixed(2)}</td>
+<td>${(x.rate * x.qty * x.discount / 100).toFixed(2)}</td>
 <td>${x.amount.toFixed(2)}</td>
 <td>${x.amount.toFixed(2)}</td>
-<td>${x.sgst_rate||""}</td>
-<td>${x.sgst?.toFixed(2)||""}</td>
-<td>${x.cgst_rate||""}</td>
-<td>${x.cgst?.toFixed(2)||""}</td>
-<td>${x.igst_rate||""}</td>
-<td>${x.igst?.toFixed(2)||""}</td>
+<td>${x.sgst_rate || ""}</td>
+<td>${x.sgst?.toFixed(2) || ""}</td>
+<td>${x.cgst_rate || ""}</td>
+<td>${x.cgst?.toFixed(2) || ""}</td>
+<td>${x.igst_rate || ""}</td>
+<td>${x.igst?.toFixed(2) || ""}</td>
 <td>${x.total.toFixed(2)}</td>
 </tr>`).join("");
 
-const chargeRows = charges.map(c=>`
+  const chargeRows = allCharges.map(c => `
 <tr>
 <td></td>
 <td class="tdl">${c.label}</td>
@@ -59,12 +59,12 @@ const chargeRows = charges.map(c=>`
 <td>${Number(c.amount).toFixed(2)}</td>
 <td>${Number(c.amount).toFixed(2)}</td>
 <td></td><td></td><td></td><td></td>
-<td>${c.taxPercent||0}%</td>
-<td>${((c.amount*(c.taxPercent||0))/100).toFixed(2)}</td>
-<td>${(Number(c.amount)+(c.amount*(c.taxPercent||0))/100).toFixed(2)}</td>
+<td>${c.taxPercent || 0}%</td>
+<td>${((c.amount * (c.taxPercent || 0)) / 100).toFixed(2)}</td>
+<td>${(Number(c.amount) + (c.amount * (c.taxPercent || 0)) / 100).toFixed(2)}</td>
 </tr>`).join("");
 
-return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8"/>
@@ -155,7 +155,7 @@ color:#000;
 
 table{
   width:100%;
-  border-collapse:collapse;   /* 🔴 IMPORTANT: prevents double */
+  border-collapse:collapse;   
   font-size:8.5px;
 }
 
@@ -306,14 +306,13 @@ th{
       src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771481107/design-studio_jm1fm9.png"
     >
 
-    <div class="hdr-text">
-      <b>Registered Office</b><br>
-      301, Meghna, Ranwara,<br>
-      Tal. Mulshi, Bavdhan, Haveli,<br>
-      Pune-411021 Maharashtra<br>
-      www.mtds.co.in | manik@mtds.co.in<br>
-      +91.9822513937
-    </div>
+  <div class="hdr-text">
+<b>${sender.company_name}</b><br>
+${sender.address_line1 || ""}<br>
+${sender.city || ""}, ${sender.state || ""} - ${sender.pincode || ""}<br>
+${sender.email || ""} | ${sender.phone || ""}<br>
+${sender.website || ""}
+</div>
   </div>
 
 </div>
@@ -330,15 +329,16 @@ th{
 Quotation No: ${proposal.proposal_number}<br>
 Quotation Date: ${formattedDate}<br>
 Quotation Validity: One month from quotation date<br>
-<b>GSTIN: ${proposal.gstin}</b><br>
-State: Maharashtra | State code 27
+<b>GSTIN: ${sender.gstin || ""}</b><br>
+State: ${sender.state || ""} | State code 27
 </div>
 
 <div class="sec">
 Contact Person: ${proposal.client_name}<br>
 Contact Details: ${proposal.client_phone}<br>
 Company name: ${proposal.company}<br>
-Address: ${proposal.billing_address}
+Address: ${proposal.billing_address}<br>
+<b>GSTIN: ${proposal.gstin || ""}</b>
 </div>
 
 <table>
@@ -402,13 +402,15 @@ Total quotation amount in words<br><br>
 
 <div class="bank-left">
 <b>Bank Details</b><br>
-Bank A/C: 0653102000020013<br>
-Bank IFSC: IBKL0000653<br>
-Bank: IDBI Bank<br>
-Branch: Gujrat Colony<br>
+Bank Name: ${sender.bank_name || "-"}<br>
+A/C No: ${sender.bank_account || "-"}<br>
+IFSC: ${sender.bank_ifsc || "-"}<br>
+Branch: ${sender.bank_branch || "-"}<br>
+<br>
 Interest @24% Per Annum will be charged on overdue bills<br>
-MTDS contact: Ms. Manik Trifaley | 9822513937 | manik@mtds.co.in
+Contact: ${sender.phone || ""} | ${sender.email || ""}
 </div>
+
 
 <div class="bank-right">
 <b>For Manik Trifaley Design Studio Pvt Ltd</b><br><br><br>
@@ -462,89 +464,156 @@ Authorised Signatory & Stamp
 }
 
 /* ================= API ================= */
-export async function GET(req,{params}){
-try{
+export async function GET(req, { params }) {
+  try {
 
     const { rfqid } = await params;
     const rfqId = Number(rfqid);
 
-const [[proposal]] = await db.query(`
-SELECT p.id,p.company_id,p.proposal_number,p.proposal_date,
-p.billing_address,c.company_name AS company,
-cb.gstin,r.client_name,r.client_phone
+    const [[proposal]] = await db.query(`
+SELECT 
+  p.id,
+  p.company_id,
+  p.proposal_number,
+  p.proposal_date,
+  p.billing_address,
+  p.subtotal,
+  p.cgst_total,
+  p.sgst_total,
+  p.igst_total,
+  p.grand_total,
+  c.company_name AS company,
+  cb.gstin,
+  r.client_name,
+  r.client_phone
 FROM proposals p
-JOIN rfqs r ON r.id=p.rfq_id
-JOIN companies c ON c.id=r.company_id
-JOIN company_branches cb ON cb.id=r.branch_id
-WHERE p.rfq_id=? LIMIT 1`,[rfqId]);
+JOIN rfqs r ON r.id = p.rfq_id
+JOIN companies c ON c.id = r.company_id
+JOIN company_branches cb ON cb.id = r.branch_id
+WHERE p.id = ?
+`, [rfqId]);
 
-const [items] = await db.query(`
-SELECT pi.quantity qty,pi.rate,pi.discount,
-pi.cgst_rate,pi.sgst_rate,pi.igst_rate,
-pr.product_name description,pr.hsn
+    const [[sender]] = await db.query(`
+  SELECT *
+  FROM company_info
+  LIMIT 1
+`);
+    if (!sender) {
+      return Response.json(
+        { message: "Sender company not configured" },
+        { status: 500 }
+      );
+    }
+
+    if (!proposal) {
+      return Response.json({ message: "Proposal not found" }, { status: 404 });
+    }
+
+    const [items] = await db.query(`
+SELECT 
+  pi.quantity qty,
+  pi.rate,
+  pi.discount,
+  pi.cgst_rate,
+  pi.sgst_rate,
+  pi.igst_rate,
+  pi.line_total,
+  pr.product_name description,
+  pr.hsn
 FROM proposal_items pi
-JOIN products pr ON pr.id=pi.product_id
-WHERE pi.proposal_id=? ORDER BY pi.id`,[proposal.id]);
+JOIN products pr ON pr.id = pi.product_id
+WHERE pi.proposal_id = ?
+ORDER BY pi.id
+`, [proposal.id]);
 
-const [charges] = await db.query(`
+    const [charges] = await db.query(`
 SELECT label,amount,tax_percent taxPercent
-FROM company_charges WHERE company_id=?`,[proposal.company_id]);
+FROM company_charges WHERE company_id=?`, [proposal.company_id]);
 
-let subtotal=0,cgstTotal=0,sgstTotal=0,igstTotal=0;
+    const [proposalCharges] = await db.query(`
+SELECT label, amount, tax_percent taxPercent
+FROM proposal_charges
+WHERE proposal_id = ?
+`, [proposal.id]);
 
-const computedItems = items.map(i=>{
-const qty=+i.qty||0,rate=+i.rate||0,disc=+i.discount||0;
-const amt=qty*rate-(qty*rate*disc)/100;
-const cg=amt*(+i.cgst_rate||0)/100;
-const sg=amt*(+i.sgst_rate||0)/100;
-const ig=amt*(+i.igst_rate||0)/100;
-subtotal+=amt;cgstTotal+=cg;sgstTotal+=sg;igstTotal+=ig;
-return {...i,qty,rate,discount:disc,cgst:cg,sgst:sg,igst:ig,amount:amt,total:amt+cg+sg+ig};
-});
+    const subtotal = Number(proposal.subtotal || 0);
+    const cgstTotal = Number(proposal.cgst_total || 0);
+    const sgstTotal = Number(proposal.sgst_total || 0);
+    const igstTotal = Number(proposal.igst_total || 0);
 
-let chargesAmount=0,chargesTax=0;
-charges.forEach(c=>{
-chargesAmount+=+c.amount||0;
-chargesTax+=(+c.amount||0)*(c.taxPercent||0)/100;
-});
+    const totalTax = cgstTotal + sgstTotal + igstTotal;
+    const grandTotal = Number(proposal.grand_total || 0);
 
-const totalTax=cgstTotal+sgstTotal+igstTotal+chargesTax;
-const grandTotal=subtotal+totalTax+chargesAmount;
+    const computedItems = items.map(i => {
+      const qty = +i.qty || 0, rate = +i.rate || 0, disc = +i.discount || 0;
+      const amt = qty * rate - (qty * rate * disc) / 100;
+      const cg = amt * (+i.cgst_rate || 0) / 100;
+      const sg = amt * (+i.sgst_rate || 0) / 100;
+      const ig = amt * (+i.igst_rate || 0) / 100;
+      return { ...i, qty, rate, discount: disc, cgst: cg, sgst: sg, igst: ig, amount: amt, total: amt + cg + sg + ig };
+    });
 
-const formattedDate=new Date(proposal.proposal_date)
-.toLocaleDateString("en-IN",{day:"2-digit",month:"2-digit",year:"numeric"});
+    let allCharges = [];
 
-const html = buildHTML({
-proposal,computedItems,charges,
-subtotal,cgstTotal,sgstTotal,igstTotal,
-totalTax,grandTotal,formattedDate
-});
+    if (proposalCharges.length > 0) {
+      allCharges = proposalCharges;
+    } else {
+      allCharges = charges;
+    }
+    let chargesAmount = 0;
+    let chargesTax = 0;
 
-/* PDFSHIFT */
-const pdfRes = await fetch("https://api.pdfshift.io/v3/convert/pdf",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-Authorization:"Basic "+Buffer.from("api:"+process.env.PDFSHIFT_API_KEY).toString("base64")
-},
-body:JSON.stringify({
-source:html,
-format:"A4",
-use_print:true
-})
-});
+    allCharges.forEach(c => {
+      const amt = +c.amount || 0;
+      const tax = (amt * (+c.taxPercent || 0)) / 100;
+      chargesAmount += amt;
+      chargesTax += tax;
+    });
 
-const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
 
-return new Response(pdfBuffer,{
-headers:{
-"Content-Type":"application/pdf",
-"Content-Disposition":`attachment; filename="${proposal.proposal_number}.pdf"`
-}
-});
 
-}catch(e){
-console.error(e);
-return Response.json({message:"PDF error"},{status:500});
-}
+    const formattedDate = new Date(proposal.proposal_date)
+      .toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+    const html = buildHTML({
+      proposal,
+      sender,
+      computedItems,
+      charges: allCharges,
+      subtotal,
+      cgstTotal,
+      sgstTotal,
+      igstTotal,
+      totalTax,
+      grandTotal,
+      formattedDate
+    });
+
+    /* PDFSHIFT */
+    const pdfRes = await fetch("https://api.pdfshift.io/v3/convert/pdf", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Basic " + Buffer.from("api:" + process.env.PDFSHIFT_API_KEY).toString("base64")
+      },
+      body: JSON.stringify({
+        source: html,
+        format: "A4",
+        use_print: true
+      })
+    });
+
+    const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
+
+    return new Response(pdfBuffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${proposal.proposal_number}.pdf"`
+      }
+    });
+
+  } catch (e) {
+    console.error(e);
+    return Response.json({ message: "PDF error" }, { status: 500 });
+  }
 }
