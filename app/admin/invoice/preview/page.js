@@ -567,7 +567,7 @@ const grandTotal =
         onClick={handleDownloadPdf}
         disabled={!proposalId}
       >
-        Download PDF
+        Download Proposal
       </button>
 
       {/* EMAIL PROPOSAL */}
