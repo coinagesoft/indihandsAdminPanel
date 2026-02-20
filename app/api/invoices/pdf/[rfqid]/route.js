@@ -152,8 +152,7 @@ body{
 
 .page{
   position: relative;
-  min-height: 100vh;
-     /* space for footer */
+  padding-bottom: 26px;   /* footer space */
   box-sizing: border-box;
 }
 
@@ -352,7 +351,7 @@ body{
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 100%;
+  right: 0;   /* better than width:100% */
   background:#cfd84e;
   display:flex;
   justify-content:space-between;
