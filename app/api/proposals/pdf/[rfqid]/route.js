@@ -382,8 +382,8 @@ th{
     >
 
   <div class="hdr-text">
-<b>${sender.company_name}</b><br>
-${sender.address_line1 || ""}<br>
+  <b>Registered Office</b><br>
+  ${sender.address_line1 || ""}<br>
 ${sender.city || ""}, ${sender.state || ""} - ${sender.pincode || ""}<br>
 ${sender.email || ""} | ${sender.phone || ""}<br>
 ${sender.website || ""}

@@ -270,18 +270,18 @@ setCompanyInfo({
 
       {/* ADDRESS */}
       <div className="col-md-6">
-        <label className="form-label">Address Line 1</label>
+        <label className="form-label">Address</label>
         <input className="form-control"
           value={companyInfo.addressLine1}
           onChange={e=>setCompanyInfo({...companyInfo,addressLine1:e.target.value})}/>
       </div>
 
-      <div className="col-md-6">
+      {/* <div className="col-md-6">
         <label className="form-label">Address Line 2</label>
         <input className="form-control"
           value={companyInfo.addressLine2}
           onChange={e=>setCompanyInfo({...companyInfo,addressLine2:e.target.value})}/>
-      </div>
+      </div> */}
 
       <div className="col-md-4">
         <label className="form-label">City</label>
