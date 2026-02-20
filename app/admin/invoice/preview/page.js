@@ -7,7 +7,7 @@ const [selectedRfq, setSelectedRfq] = useState("");
 const [acceptedRfqs, setAcceptedRfqs] = useState([]);
 const [sendingProposal, setSendingProposal] = useState(false);
 const [sendingInvoice, setSendingInvoice] = useState(false);
-
+const [proposalId, setProposalId] = useState(null);
 
   const [header, setHeader] = useState({
     quotationNo: "",
@@ -80,6 +80,10 @@ const [sendingInvoice, setSendingInvoice] = useState(false);
         setHeader((prev) => ({ ...prev, quotationNo: data.proposal_number }));
       }
 
+if (data.proposal_id) {
+  setProposalId(data.proposal_id);
+}
+
       alert("✅ Proposal sent ");
     } finally {
       setSaving(false);
@@ -87,7 +91,7 @@ const [sendingInvoice, setSendingInvoice] = useState(false);
   };
   const handleDownloadPdf = () => {
     if (!selectedRfq) return alert("❌ Select RFQ first");
-    window.open(`/api/proposals/pdf/${selectedRfq}`, "_blank");
+    window.open(`/api/proposals/pdf/${proposalId}`, "_blank");
   };
   
 const handleEmailProposal = async () => {
@@ -97,7 +101,7 @@ const handleEmailProposal = async () => {
   try {
     setSendingProposal(true);
 
-    const res = await fetch(`/api/proposals/email/${selectedRfq}`, {
+    const res = await fetch(`/api/proposals/email/${proposalId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -149,6 +153,7 @@ const handleEmailInvoice = async () => {
 
 const handleRfqSelect = async (e) => {
   const rfqId = Number(e.target.value);
+  
   setSelectedRfq(rfqId);
 
   if (!rfqId) return;
@@ -199,11 +204,10 @@ const handleRfqSelect = async (e) => {
   );
 
   /* 3️⃣ Header + items */
-  const selected = acceptedRfqs.find((x) => x.rfq_id == rfqId);
-
+const selected = acceptedRfqs.find((x) => x.id == rfqId);
   setHeader((prev) => ({
     ...prev,
-    quotationNo: selected?.proposal_number || "",
+     quotationNo: selected?.proposalNumber || "",
     date: new Date().toISOString().slice(0, 10),
 
     clientName: data.header.clientName,
@@ -219,6 +223,7 @@ const handleRfqSelect = async (e) => {
     branchId: data.header.branchId,
   }));
 
+setProposalId(selected?.proposalId || null);
   setItems(data.items || []);
 };
 
@@ -271,6 +276,7 @@ const grandTotal =
   const fetchAcceptedRfqs = async () => {
     const res = await fetch("/api/proposals/accepted-rfqs");
     const data = await res.json();
+    console.log("data",data)
     if (!res.ok) return alert("❌ " + data.message);
     setAcceptedRfqs(data.rfqs || []);
   };

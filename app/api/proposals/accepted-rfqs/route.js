@@ -12,6 +12,7 @@ export async function GET() {
         cb.branch_name AS branchName,
         cb.contact_person AS customerName,
         p.place AS place,
+        p.id AS proposalId,          -- ⭐ ADD
         p.proposal_number AS proposalNumber
       FROM rfqs r
       JOIN companies c ON c.id = r.company_id
@@ -28,8 +29,9 @@ export async function GET() {
       customerName: x.customerName || x.company,
       company: x.company,
       gstin: x.gstin || "",
-      place: x.place || "",          
-      proposalNumber: x.proposalNumber || "", 
+      place: x.place || "",
+      proposalId: x.proposalId || null,   // ⭐ ADD
+      proposalNumber: x.proposalNumber || "",
       branchName: x.branchName,
     }));
 
