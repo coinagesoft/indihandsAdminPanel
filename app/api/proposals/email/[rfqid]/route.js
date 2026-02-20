@@ -6,7 +6,7 @@ export async function POST(req, { params }) {
     const { rfqid } =await params;
     const { email } = await req.json();
 
-    const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/proposals/pdf/${rfqid}`;
+    const pdfUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/proposals/pdf/${rfqid}`;
     const pdfRes = await fetch(pdfUrl);
 
     if (!pdfRes.ok) {

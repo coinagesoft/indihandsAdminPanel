@@ -25,44 +25,112 @@ function numberToWords(num){
 /* ================= HTML TEMPLATE ================= */
 function buildHTML(data){
 
-const {
-  proposal, computedItems, charges,
-  subtotal, cgstTotal, sgstTotal, igstTotal,
-  totalTax, grandTotal, formattedDate
-}=data;
+ const {
+    proposal, sender, computedItems, charges: computedCharges,
+    subtotal, cgstTotal, sgstTotal, igstTotal,
+    totalTax, grandTotal, formattedDate
+  } = data;
 
-const itemRows = computedItems.map((x,i)=>`
+
+/* ================= STATE LOGIC ================= */
+
+  const stateMap = {
+    "01":"Jammu and Kashmir",
+    "02":"Himachal Pradesh",
+    "03":"Punjab",
+    "04":"Chandigarh",
+    "05":"Uttarakhand",
+    "06":"Haryana",
+    "07":"Delhi",
+    "08":"Rajasthan",
+    "09":"Uttar Pradesh",
+    "10":"Bihar",
+    "11":"Sikkim",
+    "12":"Arunachal Pradesh",
+    "13":"Nagaland",
+    "14":"Manipur",
+    "15":"Mizoram",
+    "16":"Tripura",
+    "17":"Meghalaya",
+    "18":"Assam",
+    "19":"West Bengal",
+    "20":"Jharkhand",
+    "21":"Odisha",
+    "22":"Chhattisgarh",
+    "23":"Madhya Pradesh",
+    "24":"Gujarat",
+    "25":"Daman and Diu",
+    "26":"Dadra and Nagar Haveli",
+    "27":"Maharashtra",
+    "28":"Andhra Pradesh",
+    "29":"Karnataka",
+    "30":"Goa",
+    "31":"Lakshadweep",
+    "32":"Kerala",
+    "33":"Tamil Nadu",
+    "34":"Puducherry",
+    "35":"Andaman and Nicobar Islands",
+    "36":"Telangana",
+    "37":"Andhra Pradesh (New)",
+    "38":"Ladakh"
+  };
+
+  const clientStateCode = proposal.gstin
+    ? proposal.gstin.substring(0, 2)
+    : "";
+
+  const senderStateCode = sender.gstin
+    ? sender.gstin.substring(0, 2)
+    : "";
+
+  const clientStateName = stateMap[clientStateCode] || "";
+  const senderStateName = stateMap[senderStateCode] || "";
+
+
+  const itemRows = computedItems.map((x, i) => `
 <tr>
-<td>${i+1}</td>
+<td>${i + 1}</td>
 <td class="tdl">${x.description}</td>
 <td>${x.hsn}</td>
 <td>${x.qty}</td>
 <td>${x.rate.toFixed(2)}</td>
 <td>${x.discount.toFixed(2)}%</td>
-<td>${(x.rate*x.qty*x.discount/100).toFixed(2)}</td>
+<td>${(x.rate * x.qty * x.discount / 100).toFixed(2)}</td>
 <td>${x.amount.toFixed(2)}</td>
 <td>${x.amount.toFixed(2)}</td>
-<td>${x.sgst_rate||""}</td>
-<td>${x.sgst?.toFixed(2)||""}</td>
-<td>${x.cgst_rate||""}</td>
-<td>${x.cgst?.toFixed(2)||""}</td>
-<td>${x.igst_rate||""}</td>
-<td>${x.igst?.toFixed(2)||""}</td>
+<td>${x.sgst_rate || ""}</td>
+<td>${x.sgst?.toFixed(2) || ""}</td>
+<td>${x.cgst_rate || ""}</td>
+<td>${x.cgst?.toFixed(2) || ""}</td>
+<td>${x.igst_rate || ""}</td>
+<td>${x.igst?.toFixed(2) || ""}</td>
 <td>${x.total.toFixed(2)}</td>
 </tr>`).join("");
 
-const chargeRows = charges.map(c=>`
+ const chargeRows = computedCharges.map(c => `
 <tr>
 <td></td>
 <td class="tdl">${c.label}</td>
-<td></td><td></td><td></td><td></td><td></td>
-<td>${Number(c.amount).toFixed(2)}</td>
-<td>${Number(c.amount).toFixed(2)}</td>
-<td></td><td></td><td></td><td></td>
-<td>${c.taxPercent||0}%</td>
-<td>${((c.amount*(c.taxPercent||0))/100).toFixed(2)}</td>
-<td>${(Number(c.amount)+(c.amount*(c.taxPercent||0))/100).toFixed(2)}</td>
-</tr>`).join("");
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>${c.amount.toFixed(2)}</td>
+<td>${c.amount.toFixed(2)}</td>
+
+<td></td>
+<td>${c.sgst ? c.sgst.toFixed(2) : ""}</td>
+
+<td></td>
+<td>${c.cgst ? c.cgst.toFixed(2) : ""}</td>
+
+<td></td>
+<td>${c.igst ? c.igst.toFixed(2) : ""}</td>
+
+<td>${c.total.toFixed(2)}</td>
+</tr>
+`).join("");
 
 return `
 <!DOCTYPE html>
@@ -71,16 +139,20 @@ return `
 <meta charset="UTF-8"/>
 
 <style>
-@page{ size:A4; margin:10mm }
+@page{
+  size:A4;
+  margin:0;   /* ⭐ KEY */
+}
 
 body{
+  margin:0;
+  padding:10mm;  /* content margin */
   font-family:Segoe UI,Arial,sans-serif;
-  font-size:10.5px;
-  color:#000;
 }
 
 .page{ width:100% }
 
+/* HEADER */
 /* HEADER */
 .hdr{
   position:relative;
@@ -91,15 +163,17 @@ body{
   width:100%;
 }
 
+
+
 /* LEFT MOTIF */
 .hdr-motif{
-  position:absolute;
-  left:-10mm;   /* escape page margin */
-  top:-6mm;
-  width:140px;
+  position:fixed;
+  left:0;
+  top:0;
+  width:150px;
   height:auto;
+  z-index:9999;
 }
-
 
 
 .hdr-right{
@@ -281,20 +355,27 @@ body{
 <!-- HEADER -->
 <div class="hdr">
 
-  <img class="hdr-motif"
-  src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771496761/motif_300x400_hahbf7.png">
+  <!-- LEFT MOTIF -->
+<img 
+  class="hdr-motif"
+  width="140"
+  src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771496761/motif_300x400_hahbf7.png"
+>
 
+
+  <!-- RIGHT BLOCK -->
   <div class="hdr-right">
-    <img src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771481107/design-studio_jm1fm9.png">
+    <img 
+      src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771481107/design-studio_jm1fm9.png"
+    >
 
-    <div class="hdr-text">
-      <b>Registered Office</b><br>
-      301, Meghna, Ranwara,<br>
-      Tal. Mulshi, Bavdhan, Haveli,<br>
-      Pune-411021 Maharashtra<br>
-      www.mtds.co.in | manik@mtds.co.in<br>
-      +91.9822513937
-    </div>
+  <div class="hdr-text">
+  <b>Registered Office</b><br>
+  ${sender.address_line1 || ""}<br>
+${sender.city || ""}, ${sender.state || ""} - ${sender.pincode || ""}<br>
+${sender.email || ""} | ${sender.phone || ""}<br>
+${sender.website || ""}
+</div>
   </div>
 
 </div>
@@ -410,18 +491,32 @@ Total invoice amount in words<br><br>
 
 <div class="bank-left">
 <b>Bank Details</b><br>
-Bank A/C: 0653102000020013<br>
-Bank IFSC: IBKL0000653<br>
-Bank: IDBI Bank<br>
-Branch: Gujrat Colony<br>
+Bank Name: ${sender.bank_name || "-"}<br>
+A/C No: ${sender.bank_account || "-"}<br>
+IFSC: ${sender.bank_ifsc || "-"}<br>
+Branch: ${sender.bank_branch || "-"}<br>
+<br>
 Interest @24% Per Annum will be charged on overdue bills<br>
-MTDS contact: Ms. Manik Trifaley<br>
-9822513937 | manik@mtds.co.in
+Contact: ${sender.phone || ""} | ${sender.email || ""}
 </div>
 
 <div class="bank-right">
-<b>For Manik Trifaley Design Studio Pvt Ltd</b><br><br><br>
-Authorised Signatory & Stamp
+
+  <div style="text-align:center; font-weight:600; margin-bottom:15px;">
+    For Manik Trifaley Design Studio Pvt Ltd
+  </div>
+
+  <div style="text-align:center;">
+    <img 
+      src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771567348/stamp_wcltx2.jpg"
+      style="width:120px; display:block; margin:0 auto 8px auto;"
+    />
+  </div>
+
+  <div style="text-align:center;">
+    Authorised Signatory & Stamp
+  </div>
+
 </div>
 
 </div>
@@ -439,110 +534,110 @@ Thank you for your valued business.
 }
 
 /* ================= API ================= */
-export async function GET(req,{params}){
-try{
+// export async function GET(req,{params}){
+// try{
 
-  const { rfqid } =await params;
-  const rfqId = Number(rfqid);
+//   const { rfqid } =await params;
+//   const rfqId = Number(rfqid);
 
-  if(!rfqId){
-    return Response.json({message:"Invalid rfqId"},{status:400});
-  }
+//   if(!rfqId){
+//     return Response.json({message:"Invalid rfqId"},{status:400});
+//   }
 
-  /* PROPOSAL */
-  const [[proposal]] = await db.query(`
-    SELECT p.id,p.company_id,p.proposal_number,p.proposal_date,
-    p.billing_address,c.company_name AS company,
-    cb.gstin,r.client_name,r.client_phone
-    FROM proposals p
-    JOIN rfqs r ON r.id=p.rfq_id
-    JOIN companies c ON c.id=r.company_id
-    JOIN company_branches cb ON cb.id=r.branch_id
-    WHERE p.rfq_id=? LIMIT 1`,[rfqId]);
+//   /* PROPOSAL */
+//   const [[proposal]] = await db.query(`
+//     SELECT p.id,p.company_id,p.proposal_number,p.proposal_date,
+//     p.billing_address,c.company_name AS company,
+//     cb.gstin,r.client_name,r.client_phone
+//     FROM proposals p
+//     JOIN rfqs r ON r.id=p.rfq_id
+//     JOIN companies c ON c.id=r.company_id
+//     JOIN company_branches cb ON cb.id=r.branch_id
+//     WHERE p.rfq_id=? LIMIT 1`,[rfqId]);
 
-  if(!proposal){
-    return Response.json({message:"Proposal not found"},{status:404});
-  }
+//   if(!proposal){
+//     return Response.json({message:"Proposal not found"},{status:404});
+//   }
 
-  /* ITEMS */
-  const [items] = await db.query(`
-    SELECT pi.quantity qty,pi.rate,pi.discount,
-    pi.cgst_rate,pi.sgst_rate,pi.igst_rate,
-    pr.product_name description,pr.hsn
-    FROM proposal_items pi
-    JOIN products pr ON pr.id=pi.product_id
-    WHERE pi.proposal_id=? ORDER BY pi.id`,[proposal.id]);
+//   /* ITEMS */
+//   const [items] = await db.query(`
+//     SELECT pi.quantity qty,pi.rate,pi.discount,
+//     pi.cgst_rate,pi.sgst_rate,pi.igst_rate,
+//     pr.product_name description,pr.hsn
+//     FROM proposal_items pi
+//     JOIN products pr ON pr.id=pi.product_id
+//     WHERE pi.proposal_id=? ORDER BY pi.id`,[proposal.id]);
 
-  /* CHARGES */
-  const [charges] = await db.query(`
-    SELECT label,amount,tax_percent taxPercent
-    FROM company_charges WHERE company_id=?`,[proposal.company_id]);
+//   /* CHARGES */
+//   const [charges] = await db.query(`
+//     SELECT label,amount,tax_percent taxPercent
+//     FROM company_charges WHERE company_id=?`,[proposal.company_id]);
 
-  /* CALC */
-  let subtotal=0,cgstTotal=0,sgstTotal=0,igstTotal=0;
+//   /* CALC */
+//   let subtotal=0,cgstTotal=0,sgstTotal=0,igstTotal=0;
 
-  const computedItems = items.map(i=>{
-    const qty=+i.qty||0,rate=+i.rate||0,disc=+i.discount||0;
-    const amt=qty*rate-(qty*rate*disc)/100;
-    const cg=amt*(+i.cgst_rate||0)/100;
-    const sg=amt*(+i.sgst_rate||0)/100;
-    const ig=amt*(+i.igst_rate||0)/100;
-    subtotal+=amt;cgstTotal+=cg;sgstTotal+=sg;igstTotal+=ig;
-    return {...i,qty,rate,discount:disc,cgst:cg,sgst:sg,igst:ig,amount:amt,total:amt+cg+sg+ig};
-  });
+//   const computedItems = items.map(i=>{
+//     const qty=+i.qty||0,rate=+i.rate||0,disc=+i.discount||0;
+//     const amt=qty*rate-(qty*rate*disc)/100;
+//     const cg=amt*(+i.cgst_rate||0)/100;
+//     const sg=amt*(+i.sgst_rate||0)/100;
+//     const ig=amt*(+i.igst_rate||0)/100;
+//     subtotal+=amt;cgstTotal+=cg;sgstTotal+=sg;igstTotal+=ig;
+//     return {...i,qty,rate,discount:disc,cgst:cg,sgst:sg,igst:ig,amount:amt,total:amt+cg+sg+ig};
+//   });
 
-  let chargesAmount=0,chargesTax=0;
-  charges.forEach(c=>{
-    chargesAmount+=+c.amount||0;
-    chargesTax+=(+c.amount||0)*(c.taxPercent||0)/100;
-  });
+//   let chargesAmount=0,chargesTax=0;
+//   charges.forEach(c=>{
+//     chargesAmount+=+c.amount||0;
+//     chargesTax+=(+c.amount||0)*(c.taxPercent||0)/100;
+//   });
 
-  const totalTax=cgstTotal+sgstTotal+igstTotal+chargesTax;
-  const grandTotal=subtotal+totalTax+chargesAmount;
+//   const totalTax=cgstTotal+sgstTotal+igstTotal+chargesTax;
+//   const grandTotal=subtotal+totalTax+chargesAmount;
 
-  const formattedDate=new Date(proposal.proposal_date)
-    .toLocaleDateString("en-IN",{day:"2-digit",month:"2-digit",year:"numeric"});
+//   const formattedDate=new Date(proposal.proposal_date)
+//     .toLocaleDateString("en-IN",{day:"2-digit",month:"2-digit",year:"numeric"});
 
-  const html = buildHTML({
-    proposal,computedItems,charges,
-    subtotal,cgstTotal,sgstTotal,igstTotal,
-    totalTax,grandTotal,formattedDate
-  });
+//   const html = buildHTML({
+//     proposal,computedItems,charges,
+//     subtotal,cgstTotal,sgstTotal,igstTotal,
+//     totalTax,grandTotal,formattedDate
+//   });
 
-  /* PDFSHIFT */
-  const pdfRes = await fetch("https://api.pdfshift.io/v3/convert/pdf",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:"Basic "+Buffer.from("api:"+process.env.PDFSHIFT_API_KEY).toString("base64")
-    },
-    body:JSON.stringify({
-      source:html,
-      format:"A4",
-      use_print:true
-    })
-  });
+//   /* PDFSHIFT */
+//   const pdfRes = await fetch("https://api.pdfshift.io/v3/convert/pdf",{
+//     method:"POST",
+//     headers:{
+//       "Content-Type":"application/json",
+//       Authorization:"Basic "+Buffer.from("api:"+process.env.PDFSHIFT_API_KEY).toString("base64")
+//     },
+//     body:JSON.stringify({
+//       source:html,
+//       format:"A4",
+//       use_print:true
+//     })
+//   });
 
-  if(!pdfRes.ok){
-    const txt = await pdfRes.text();
-    console.error("PDFShift error:", txt);
-    return Response.json({message:"PDFShift failed"},{status:500});
-  }
+//   if(!pdfRes.ok){
+//     const txt = await pdfRes.text();
+//     console.error("PDFShift error:", txt);
+//     return Response.json({message:"PDFShift failed"},{status:500});
+//   }
 
-  const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
+//   const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
 
-  return new Response(pdfBuffer,{
-    headers:{
-      "Content-Type":"application/pdf",
-      "Content-Disposition":`attachment; filename="${proposal.proposal_number}.pdf"`
-    }
-  });
+//   return new Response(pdfBuffer,{
+//     headers:{
+//       "Content-Type":"application/pdf",
+//       "Content-Disposition":`attachment; filename="${proposal.proposal_number}.pdf"`
+//     }
+//   });
 
-}catch(e){
-  console.error("PDF ERROR:",e);
-  return Response.json({message:"PDF error"},{status:500});
-}
-}
+// }catch(e){
+//   console.error("PDF ERROR:",e);
+//   return Response.json({message:"PDF error"},{status:500});
+// }
+// }
 
 
 
@@ -995,3 +1090,228 @@ try{
 //     return Response.json({ message: "Server error" }, { status: 500 });
 //   }
 // }
+export async function GET(req, { params }) {
+  try {
+
+    const { rfqid } = await params;
+    const rfqId = Number(rfqid);
+
+    const [[proposal]] = await db.query(`
+SELECT 
+  p.id,
+  p.company_id,
+  p.proposal_number,
+  p.proposal_date,
+  p.billing_address,
+  p.subtotal,
+  p.cgst_total,
+  p.sgst_total,
+  p.igst_total,
+  p.grand_total,
+  c.company_name AS company,
+  cb.gstin,
+  r.client_name,
+  r.client_phone
+FROM proposals p
+JOIN rfqs r ON r.id = p.rfq_id
+JOIN companies c ON c.id = r.company_id
+JOIN company_branches cb ON cb.id = r.branch_id
+WHERE p.id = ?
+`, [rfqId]);
+
+    const [[sender]] = await db.query(`
+  SELECT *
+  FROM company_info
+  LIMIT 1
+`);
+    if (!sender) {
+      return Response.json(
+        { message: "Sender company not configured" },
+        { status: 500 }
+      );
+    }
+
+    if (!proposal) {
+      return Response.json({ message: "Proposal not found" }, { status: 404 });
+    }
+    const clientStateCode = proposal.gstin?.substring(0, 2) || "";
+const senderStateCode = sender.gstin?.substring(0, 2) || "";
+
+const isInterState = clientStateCode !== senderStateCode;
+
+    const [items] = await db.query(`
+SELECT 
+  pi.quantity qty,
+  pi.rate,
+  pi.discount,
+  pi.cgst_rate,
+  pi.sgst_rate,
+  pi.igst_rate,
+  pi.line_total,
+  pr.product_name description,
+  pr.hsn
+FROM proposal_items pi
+JOIN products pr ON pr.id = pi.product_id
+WHERE pi.proposal_id = ?
+ORDER BY pi.id
+`, [proposal.id]);
+
+    const [charges] = await db.query(`
+SELECT label,amount,tax_percent taxPercent
+FROM company_charges WHERE company_id=?`, [proposal.company_id]);
+
+    const [proposalCharges] = await db.query(`
+SELECT label, amount, tax_percent taxPercent
+FROM proposal_charges
+WHERE proposal_id = ?
+`, [proposal.id]);
+
+// Determine correct charge source
+let allCharges = proposalCharges.length > 0
+  ? proposalCharges
+  : charges;
+
+// ================= ITEMS CALCULATION =================
+
+const computedItems = items.map(i => {
+  const qty = +i.qty || 0;
+  const rate = +i.rate || 0;
+  const disc = +i.discount || 0;
+
+  const taxable = qty * rate - (qty * rate * disc) / 100;
+
+  let cg = 0, sg = 0, ig = 0;
+
+  if (isInterState) {
+    ig = taxable * (+i.igst_rate || 0) / 100;
+  } else {
+    cg = taxable * (+i.cgst_rate || 0) / 100;
+    sg = taxable * (+i.sgst_rate || 0) / 100;
+  }
+
+  return {
+    ...i,
+    qty,
+    rate,
+    discount: disc,
+    amount: taxable,
+    cgst: cg,
+    sgst: sg,
+    igst: ig,
+    total: taxable + cg + sg + ig
+  };
+});
+
+// ================= TOTAL CALCULATION =================
+
+let subtotal = 0;
+let cgstTotal = 0;
+let sgstTotal = 0;
+let igstTotal = 0;
+
+// Add item totals
+computedItems.forEach(i => {
+  subtotal += i.amount;
+  cgstTotal += i.cgst;
+  sgstTotal += i.sgst;
+  igstTotal += i.igst;
+});
+
+const computedCharges = allCharges.map(c => {
+  const amt = +c.amount || 0;
+  const taxRate = +c.taxPercent || 0;
+
+  let cg = 0, sg = 0, ig = 0;
+
+  if (isInterState) {
+    ig = amt * taxRate / 100;
+  } else {
+    cg = amt * (taxRate / 2) / 100;
+    sg = amt * (taxRate / 2) / 100;
+  }
+
+  subtotal += amt;
+  cgstTotal += cg;
+  sgstTotal += sg;
+  igstTotal += ig;
+
+  return {
+    label: c.label,
+    amount: amt,
+    taxPercent: taxRate,
+    cgst: cg,
+    sgst: sg,
+    igst: ig,
+    total: amt + cg + sg + ig
+  };
+});
+
+const totalTax = cgstTotal + sgstTotal + igstTotal;
+const grandTotal = subtotal + totalTax;
+
+
+
+    // let allCharges = [];
+
+    // if (proposalCharges.length > 0) {
+    //   allCharges = proposalCharges;
+    // } else {
+    //   allCharges = charges;
+    // }
+    // let chargesAmount = 0;
+    // let chargesTax = 0;
+
+    // allCharges.forEach(c => {
+    //   const amt = +c.amount || 0;
+    //   const tax = (amt * (+c.taxPercent || 0)) / 100;
+    //   chargesAmount += amt;
+    //   chargesTax += tax;
+    // });
+
+
+
+    const formattedDate = new Date(proposal.proposal_date)
+      .toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+    const html = buildHTML({
+      proposal,
+      sender,
+      computedItems,
+      charges: computedCharges,
+      subtotal,
+      cgstTotal,
+      sgstTotal,
+      igstTotal,
+      totalTax,
+      grandTotal,
+      formattedDate
+    });
+
+    /* PDFSHIFT */
+    const pdfRes = await fetch("https://api.pdfshift.io/v3/convert/pdf", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Basic " + Buffer.from("api:" + process.env.PDFSHIFT_API_KEY).toString("base64")
+      },
+      body: JSON.stringify({
+        source: html,
+        format: "A4",
+        use_print: true
+      })
+    });
+
+    const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
+
+    return new Response(pdfBuffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${proposal.proposal_number}.pdf"`
+      }
+    });
+
+  } catch (e) {
+    console.error(e);
+    return Response.json({ message: "PDF error" }, { status: 500 });
+  }
+}
