@@ -4,204 +4,6 @@ export const dynamic = "force-dynamic";
 import { db } from "../../../../db";
 
 
-
-
-
-/* ================= API ================= */
-// export async function GET(req, { params }) {
-//   try {
-
-//     const { rfqid } = await params;
-//     const rfqId = Number(rfqid);
-
-//     const [[proposal]] = await db.query(`
-// SELECT 
-//   p.id,
-//   p.company_id,
-//   p.proposal_number,
-//   p.proposal_date,
-//   p.billing_address,
-//   p.subtotal,
-//   p.cgst_total,
-//   p.sgst_total,
-//   p.igst_total,
-//   p.grand_total,
-//   c.company_name AS company,
-//   cb.gstin,
-//   r.client_name,
-//   r.client_phone
-// FROM proposals p
-// JOIN rfqs r ON r.id = p.rfq_id
-// JOIN companies c ON c.id = r.company_id
-// JOIN company_branches cb ON cb.id = r.branch_id
-// WHERE p.id = ?
-// `, [rfqId]);
-
-//     const [[sender]] = await db.query(`
-//   SELECT *
-//   FROM company_info
-//   LIMIT 1
-// `);
-//     if (!sender) {
-//       return Response.json(
-//         { message: "Sender company not configured" },
-//         { status: 500 }
-//       );
-//     }
-
-//     if (!proposal) {
-//       return Response.json({ message: "Proposal not found" }, { status: 404 });
-//     }
-//     const clientStateCode = proposal.gstin?.substring(0, 2) || "";
-// const senderStateCode = sender.gstin?.substring(0, 2) || "";
-
-// const isInterState = clientStateCode !== senderStateCode;
-
-//     const [items] = await db.query(`
-// SELECT 
-//   pi.quantity qty,
-//   pi.rate,
-//   pi.discount,
-//   pi.cgst_rate,
-//   pi.sgst_rate,
-//   pi.igst_rate,
-//   pi.line_total,
-//   pr.product_name description,
-//   pr.hsn
-// FROM proposal_items pi
-// JOIN products pr ON pr.id = pi.product_id
-// WHERE pi.proposal_id = ?
-// ORDER BY pi.id
-// `, [proposal.id]);
-
-//     const [charges] = await db.query(`
-// SELECT label,amount,tax_percent taxPercent
-// FROM company_charges WHERE company_id=?`, [proposal.company_id]);
-
-//     const [proposalCharges] = await db.query(`
-// SELECT label, amount, tax_percent taxPercent
-// FROM proposal_charges
-// WHERE proposal_id = ?
-// `, [proposal.id]);
-
-// // Determine correct charge source
-// let allCharges = proposalCharges.length > 0
-//   ? proposalCharges
-//   : charges;
-
-// // ================= ITEMS CALCULATION =================
-
-// const computedItems = items.map(i => {
-//   const qty = +i.qty || 0;
-//   const rate = +i.rate || 0;
-//   const disc = +i.discount || 0;
-
-//   const taxable = qty * rate - (qty * rate * disc) / 100;
-
-//   let cg = 0, sg = 0, ig = 0;
-
-//   if (isInterState) {
-//     ig = taxable * (+i.igst_rate || 0) / 100;
-//   } else {
-//     cg = taxable * (+i.cgst_rate || 0) / 100;
-//     sg = taxable * (+i.sgst_rate || 0) / 100;
-//   }
-
-//   return {
-//     ...i,
-//     qty,
-//     rate,
-//     discount: disc,
-//     amount: taxable,
-//     cgst: cg,
-//     sgst: sg,
-//     igst: ig,
-//     total: taxable + cg + sg + ig
-//   };
-// });
-
-// // ================= TOTAL CALCULATION =================
-
-// let subtotal = 0;
-// let cgstTotal = 0;
-// let sgstTotal = 0;
-// let igstTotal = 0;
-
-// // Add item totals
-// computedItems.forEach(i => {
-//   subtotal += i.amount;
-//   cgstTotal += i.cgst;
-//   sgstTotal += i.sgst;
-//   igstTotal += i.igst;
-// });
-
-// const computedCharges = allCharges.map(c => {
-//   const amt = +c.amount || 0;
-//   const taxRate = +c.taxPercent || 0;
-
-//   let cg = 0, sg = 0, ig = 0;
-
-//   if (isInterState) {
-//     ig = amt * taxRate / 100;
-//   } else {
-//     cg = amt * (taxRate / 2) / 100;
-//     sg = amt * (taxRate / 2) / 100;
-//   }
-
-//   subtotal += amt;
-//   cgstTotal += cg;
-//   sgstTotal += sg;
-//   igstTotal += ig;
-
-//   return {
-//     label: c.label,
-//     amount: amt,
-//     taxPercent: taxRate,
-//     cgst: cg,
-//     sgst: sg,
-//     igst: ig,
-//     total: amt + cg + sg + ig
-//   };
-// });
-
-// const totalTax = cgstTotal + sgstTotal + igstTotal;
-// const grandTotal = subtotal + totalTax;
-
-//     const formattedDate = new Date(proposal.proposal_date)
-//       .toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
-
-  
-
-//     /* PDFSHIFT */
-//     const pdfRes = await fetch("https://api.pdfshift.io/v3/convert/pdf", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: "Basic " + Buffer.from("api:" + process.env.PDFSHIFT_API_KEY).toString("base64")
-//       },
-//       body: JSON.stringify({
-//         source: html,
-//         format: "A4",
-//         use_print: true
-//       })
-//     });
-
-//     const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
-
-//     return new Response(pdfBuffer, {
-//       headers: {
-//         "Content-Type": "application/pdf",
-//         "Content-Disposition": `attachment; filename="${proposal.proposal_number}.pdf"`
-//       }
-//     });
-
-//   } catch (e) {
-//     console.error(e);
-//     return Response.json({ message: "PDF error" }, { status: 500 });
-//   }
-// }
-
-
 /* ================= NUMBER TO WORDS ================= */
 function numberToWords(num) {
   if (!num) return "Zero Only";
@@ -360,7 +162,13 @@ body{
   font-family:Segoe UI,Arial,sans-serif;
 }
 
-.page{ width:100% }
+
+.page{
+  width:100%;
+  min-height:277mm;   
+  display:flex;
+  flex-direction:column;
+}
 
 /* HEADER */
 /* HEADER */
@@ -560,12 +368,22 @@ th{
 }
 
 /* FOOTER */
+.footer-wrap{
+  margin-top:auto;
+}
+
+.thankyou{
+  text-align:center;
+  margin:10px 0 4px 0;
+  font-size:16px;
+  font-weight:bold;
+}
+
 .footer{
   background:#cfd84e;
   display:flex;
   justify-content:space-between;
   padding:6px 12px;
-  margin-top:10px;
   font-size:10px;
 }
 
@@ -753,9 +571,17 @@ Contact: ${sender.phone || ""} | ${sender.email || ""}
 </div>
 </div>
 
-<div class="footer">
-<span>CIN: U47735PN2025PTC244212</span>
-<span>Wonders by Hands</span>
+<div class="footer-wrap">
+
+  <div class="thankyou">
+    We look forward to your positive response.
+  </div>
+
+  <div class="footer">
+    <span>CIN: U47735PN2025PTC244212</span>
+    <span>Wonders by Hands</span>
+  </div>
+
 </div>
 
 </div>
