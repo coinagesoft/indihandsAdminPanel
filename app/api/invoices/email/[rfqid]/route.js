@@ -15,7 +15,7 @@ export async function POST(req, { params }) {
     }
 
     /* ================= FETCH INVOICE PDF ================= */
-    const pdfUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/invoices/pdf/${rfqid}`;
+    const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/invoices/pdf/${rfqid}`;
 
     const pdfRes = await fetch(pdfUrl);
 

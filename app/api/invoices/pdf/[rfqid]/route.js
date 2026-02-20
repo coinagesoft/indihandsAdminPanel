@@ -150,7 +150,12 @@ body{
   font-family:Segoe UI,Arial,sans-serif;
 }
 
-.page{ width:100% }
+.page{
+  position: relative;
+  min-height: 100vh;
+     /* space for footer */
+  box-sizing: border-box;
+}
 
 /* HEADER */
 /* HEADER */
@@ -342,8 +347,16 @@ body{
 }
 
 /* ===== FOOT ===== */
+/* FOOTER */
 .footer{
-  margin-top:8px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background:#cfd84e;
+  display:flex;
+  justify-content:space-between;
+  padding:6px 12px;
   font-size:10px;
 }
 </style>
@@ -523,8 +536,12 @@ Contact: ${sender.phone || ""} | ${sender.email || ""}
 
 </div>
 
-<div class="footer">
+<b>
 Thank you for your valued business.
+</b>
+<div class="footer">
+<span>CIN: U47735PN2025PTC244212</span>
+<span>Wonders by Hands</span>
 </div>
 
 </div>

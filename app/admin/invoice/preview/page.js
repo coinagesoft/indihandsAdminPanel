@@ -553,7 +553,7 @@ const grandTotal =
       <button
         className="btn w-100 mb-3"
         style={{
-          background: "#ff6b35",
+          background: "#F29E46",
           color: "#fff",
           borderRadius: "8px",
           fontWeight: 500
