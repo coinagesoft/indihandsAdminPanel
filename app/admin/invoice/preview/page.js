@@ -367,14 +367,14 @@ const grandTotal =
 
                   {/* ✅ Billing & Shipping (NOW CORRECT) */}
                   <div className="row">
-                    <div className="col-md-12">
-                      <strong>Billing Address</strong>
-                      <p className="mb-0">{header.billingAddress}</p>
+                    <div className=" col-12">
+                      <strong>Billing Address:</strong>
+                     {header.billingAddress}
                     </div>
 
-                    <div className="col-md-12 mt-2">
-                      <strong>Shipping Address</strong>
-                      <p className="mb-0">{header.shippingAddress}</p>
+                    <div className=" col-12 mt-2">
+                      <strong>Shipping Address:</strong>
+                      {header.shippingAddress}
                     </div>
                   </div>
                 </div>
