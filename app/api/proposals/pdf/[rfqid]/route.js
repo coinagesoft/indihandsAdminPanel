@@ -3,6 +3,205 @@ export const dynamic = "force-dynamic";
 
 import { db } from "../../../../db";
 
+
+
+
+
+/* ================= API ================= */
+// export async function GET(req, { params }) {
+//   try {
+
+//     const { rfqid } = await params;
+//     const rfqId = Number(rfqid);
+
+//     const [[proposal]] = await db.query(`
+// SELECT 
+//   p.id,
+//   p.company_id,
+//   p.proposal_number,
+//   p.proposal_date,
+//   p.billing_address,
+//   p.subtotal,
+//   p.cgst_total,
+//   p.sgst_total,
+//   p.igst_total,
+//   p.grand_total,
+//   c.company_name AS company,
+//   cb.gstin,
+//   r.client_name,
+//   r.client_phone
+// FROM proposals p
+// JOIN rfqs r ON r.id = p.rfq_id
+// JOIN companies c ON c.id = r.company_id
+// JOIN company_branches cb ON cb.id = r.branch_id
+// WHERE p.id = ?
+// `, [rfqId]);
+
+//     const [[sender]] = await db.query(`
+//   SELECT *
+//   FROM company_info
+//   LIMIT 1
+// `);
+//     if (!sender) {
+//       return Response.json(
+//         { message: "Sender company not configured" },
+//         { status: 500 }
+//       );
+//     }
+
+//     if (!proposal) {
+//       return Response.json({ message: "Proposal not found" }, { status: 404 });
+//     }
+//     const clientStateCode = proposal.gstin?.substring(0, 2) || "";
+// const senderStateCode = sender.gstin?.substring(0, 2) || "";
+
+// const isInterState = clientStateCode !== senderStateCode;
+
+//     const [items] = await db.query(`
+// SELECT 
+//   pi.quantity qty,
+//   pi.rate,
+//   pi.discount,
+//   pi.cgst_rate,
+//   pi.sgst_rate,
+//   pi.igst_rate,
+//   pi.line_total,
+//   pr.product_name description,
+//   pr.hsn
+// FROM proposal_items pi
+// JOIN products pr ON pr.id = pi.product_id
+// WHERE pi.proposal_id = ?
+// ORDER BY pi.id
+// `, [proposal.id]);
+
+//     const [charges] = await db.query(`
+// SELECT label,amount,tax_percent taxPercent
+// FROM company_charges WHERE company_id=?`, [proposal.company_id]);
+
+//     const [proposalCharges] = await db.query(`
+// SELECT label, amount, tax_percent taxPercent
+// FROM proposal_charges
+// WHERE proposal_id = ?
+// `, [proposal.id]);
+
+// // Determine correct charge source
+// let allCharges = proposalCharges.length > 0
+//   ? proposalCharges
+//   : charges;
+
+// // ================= ITEMS CALCULATION =================
+
+// const computedItems = items.map(i => {
+//   const qty = +i.qty || 0;
+//   const rate = +i.rate || 0;
+//   const disc = +i.discount || 0;
+
+//   const taxable = qty * rate - (qty * rate * disc) / 100;
+
+//   let cg = 0, sg = 0, ig = 0;
+
+//   if (isInterState) {
+//     ig = taxable * (+i.igst_rate || 0) / 100;
+//   } else {
+//     cg = taxable * (+i.cgst_rate || 0) / 100;
+//     sg = taxable * (+i.sgst_rate || 0) / 100;
+//   }
+
+//   return {
+//     ...i,
+//     qty,
+//     rate,
+//     discount: disc,
+//     amount: taxable,
+//     cgst: cg,
+//     sgst: sg,
+//     igst: ig,
+//     total: taxable + cg + sg + ig
+//   };
+// });
+
+// // ================= TOTAL CALCULATION =================
+
+// let subtotal = 0;
+// let cgstTotal = 0;
+// let sgstTotal = 0;
+// let igstTotal = 0;
+
+// // Add item totals
+// computedItems.forEach(i => {
+//   subtotal += i.amount;
+//   cgstTotal += i.cgst;
+//   sgstTotal += i.sgst;
+//   igstTotal += i.igst;
+// });
+
+// const computedCharges = allCharges.map(c => {
+//   const amt = +c.amount || 0;
+//   const taxRate = +c.taxPercent || 0;
+
+//   let cg = 0, sg = 0, ig = 0;
+
+//   if (isInterState) {
+//     ig = amt * taxRate / 100;
+//   } else {
+//     cg = amt * (taxRate / 2) / 100;
+//     sg = amt * (taxRate / 2) / 100;
+//   }
+
+//   subtotal += amt;
+//   cgstTotal += cg;
+//   sgstTotal += sg;
+//   igstTotal += ig;
+
+//   return {
+//     label: c.label,
+//     amount: amt,
+//     taxPercent: taxRate,
+//     cgst: cg,
+//     sgst: sg,
+//     igst: ig,
+//     total: amt + cg + sg + ig
+//   };
+// });
+
+// const totalTax = cgstTotal + sgstTotal + igstTotal;
+// const grandTotal = subtotal + totalTax;
+
+//     const formattedDate = new Date(proposal.proposal_date)
+//       .toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+  
+
+//     /* PDFSHIFT */
+//     const pdfRes = await fetch("https://api.pdfshift.io/v3/convert/pdf", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: "Basic " + Buffer.from("api:" + process.env.PDFSHIFT_API_KEY).toString("base64")
+//       },
+//       body: JSON.stringify({
+//         source: html,
+//         format: "A4",
+//         use_print: true
+//       })
+//     });
+
+//     const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
+
+//     return new Response(pdfBuffer, {
+//       headers: {
+//         "Content-Type": "application/pdf",
+//         "Content-Disposition": `attachment; filename="${proposal.proposal_number}.pdf"`
+//       }
+//     });
+
+//   } catch (e) {
+//     console.error(e);
+//     return Response.json({ message: "PDF error" }, { status: 500 });
+//   }
+// }
+
+
 /* ================= NUMBER TO WORDS ================= */
 function numberToWords(num) {
   if (!num) return "Zero Only";
@@ -21,8 +220,8 @@ function numberToWords(num) {
   };
   return inWords(Math.round(num)) + " Only";
 }
+/* ================= FORMAT DATE ================= */
 
-/* ================= HTML TEMPLATE ================= */
 function buildHTML(data) {
 
   const {
@@ -87,7 +286,12 @@ function buildHTML(data) {
   const senderStateName = stateMap[senderStateCode] || "";
 
 
-  const itemRows = computedItems.map((x, i) => `
+const itemRows = computedItems.map((x, i) => {
+const sgstRate = x.igst > 0 ? 0 : (x.sgst_rate || 0);
+const cgstRate = x.igst > 0 ? 0 : (x.cgst_rate || 0);
+const igstRate = x.igst > 0 ? (x.igstRate || 0) : 0;
+
+  return `
 <tr>
 <td>${i + 1}</td>
 <td class="tdl">${x.description}</td>
@@ -95,42 +299,49 @@ function buildHTML(data) {
 <td>${x.qty}</td>
 <td>${x.rate.toFixed(2)}</td>
 <td>${x.discount.toFixed(2)}%</td>
-<td>${(x.rate * x.qty * x.discount / 100).toFixed(2)}</td>
+<td>${(x.qty * x.rate * x.discount / 100).toFixed(2)}</td>
 <td>${x.amount.toFixed(2)}</td>
 <td>${x.amount.toFixed(2)}</td>
-<td>${x.sgst_rate || ""}</td>
-<td>${x.sgst?.toFixed(2) || ""}</td>
-<td>${x.cgst_rate || ""}</td>
-<td>${x.cgst?.toFixed(2) || ""}</td>
-<td>${x.igst_rate || ""}</td>
-<td>${x.igst?.toFixed(2) || ""}</td>
-<td>${x.total.toFixed(2)}</td>
-</tr>`).join("");
 
- const chargeRows = computedCharges.map(c => `
+<td>${sgstRate}</td>
+<td>${x.sgst.toFixed(2)}</td>
+
+<td>${cgstRate}</td>
+<td>${x.cgst.toFixed(2)}</td>
+
+<td>${igstRate}</td>
+<td>${x.igst.toFixed(2)}</td>
+
+<td>${x.total.toFixed(2)}</td>
+</tr>`;
+}).join("");
+
+const chargeRows = computedCharges.map(c => {
+  const sgstRate = c.igst > 0 ? 0 : c.taxPercent / 2;
+  const cgstRate = c.igst > 0 ? 0 : c.taxPercent / 2;
+  const igstRate = c.igst > 0 ? c.taxPercent : 0;
+
+  return `
 <tr>
 <td></td>
 <td class="tdl">${c.label}</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
+<td></td><td></td><td></td><td></td><td></td>
+
 <td>${c.amount.toFixed(2)}</td>
 <td>${c.amount.toFixed(2)}</td>
 
-<td></td>
-<td>${c.sgst ? c.sgst.toFixed(2) : ""}</td>
+<td>${sgstRate}</td>
+<td>${c.sgst.toFixed(2)}</td>
 
-<td></td>
-<td>${c.cgst ? c.cgst.toFixed(2) : ""}</td>
+<td>${cgstRate}</td>
+<td>${c.cgst.toFixed(2)}</td>
 
-<td></td>
-<td>${c.igst ? c.igst.toFixed(2) : ""}</td>
+<td>${igstRate}</td>
+<td>${c.igst.toFixed(2)}</td>
 
 <td>${c.total.toFixed(2)}</td>
-</tr>
-`).join("");
+</tr>`;
+}).join("");
 
   return `<!DOCTYPE html>
 <html>
@@ -552,101 +763,84 @@ Contact: ${sender.phone || ""} | ${sender.email || ""}
 </html>`;
 }
 
-// function getStateCode(gstin) {
-//   if (!gstin || gstin.length < 2) return null;
-//   return gstin.substring(0, 2);
-// }
-
-// const clientStateCode = getStateCode(proposal.gstin);
-// const senderStateCode = getStateCode(sender.gstin);
-
-// const isInterState =
-//   clientStateCode && senderStateCode
-//     ? clientStateCode !== senderStateCode
-//     : false;
 /* ================= API ================= */
 export async function GET(req, { params }) {
   try {
-
     const { rfqid } = await params;
-    const rfqId = Number(rfqid);
+    const proposalId = Number(rfqid);
 
+    /* ================= FETCH DATA ================= */
     const [[proposal]] = await db.query(`
-SELECT 
-  p.id,
-  p.company_id,
-  p.proposal_number,
-  p.proposal_date,
-  p.billing_address,
-  p.subtotal,
-  p.cgst_total,
-  p.sgst_total,
-  p.igst_total,
-  p.grand_total,
-  c.company_name AS company,
-  cb.gstin,
-  r.client_name,
-  r.client_phone
-FROM proposals p
-JOIN rfqs r ON r.id = p.rfq_id
-JOIN companies c ON c.id = r.company_id
-JOIN company_branches cb ON cb.id = r.branch_id
-WHERE p.id = ?
-`, [rfqId]);
+      SELECT 
+        p.id,
+        p.company_id,
+        p.proposal_number,
+        p.proposal_date,
+        p.billing_address,
+        c.company_name AS company,
+        cb.gstin,
+        r.client_name,
+        r.client_phone
+      FROM proposals p
+      JOIN rfqs r ON r.id = p.rfq_id
+      JOIN companies c ON c.id = r.company_id
+      JOIN company_branches cb ON cb.id = r.branch_id
+      WHERE p.id = ?
+    `, [proposalId]);
 
-    const [[sender]] = await db.query(`
-  SELECT *
-  FROM company_info
-  LIMIT 1
-`);
-    if (!sender) {
-      return Response.json(
-        { message: "Sender company not configured" },
-        { status: 500 }
-      );
-    }
-
-    if (!proposal) {
+    if (!proposal)
       return Response.json({ message: "Proposal not found" }, { status: 404 });
-    }
+
+    const formattedDate = new Date(proposal.proposal_date)
+  .toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+    const [[sender]] = await db.query(`SELECT * FROM company_info LIMIT 1`);
+
+    /* ================= STATE LOGIC ================= */
     const clientStateCode = proposal.gstin?.substring(0, 2) || "";
-const senderStateCode = sender.gstin?.substring(0, 2) || "";
+    const senderStateCode = sender.gstin?.substring(0, 2) || "";
+    const isInterState = clientStateCode !== senderStateCode;
 
-const isInterState = clientStateCode !== senderStateCode;
-
+    /* ================= ITEMS ================= */
     const [items] = await db.query(`
-SELECT 
-  pi.quantity qty,
-  pi.rate,
-  pi.discount,
-  pi.cgst_rate,
-  pi.sgst_rate,
-  pi.igst_rate,
-  pi.line_total,
-  pr.product_name description,
-  pr.hsn
-FROM proposal_items pi
-JOIN products pr ON pr.id = pi.product_id
-WHERE pi.proposal_id = ?
-ORDER BY pi.id
-`, [proposal.id]);
+      SELECT 
+        pi.quantity qty,
+        pi.rate,
+        pi.discount,
+        pi.cgst_rate,
+        pi.sgst_rate,
+        pi.igst_rate,
+        pr.product_name description,
+        pr.hsn
+      FROM proposal_items pi
+      JOIN products pr ON pr.id = pi.product_id
+      WHERE pi.proposal_id = ?
+      ORDER BY pi.id
+    `, [proposal.id]);
 
-    const [charges] = await db.query(`
-SELECT label,amount,tax_percent taxPercent
-FROM company_charges WHERE company_id=?`, [proposal.company_id]);
+    /* ================= CHARGES ================= */
+    const [companyCharges] = await db.query(`
+      SELECT label,amount,tax_percent taxPercent
+      FROM company_charges
+      WHERE company_id=?
+    `, [proposal.company_id]);
 
     const [proposalCharges] = await db.query(`
-SELECT label, amount, tax_percent taxPercent
-FROM proposal_charges
-WHERE proposal_id = ?
-`, [proposal.id]);
+      SELECT label,amount,tax_percent taxPercent
+      FROM proposal_charges
+      WHERE proposal_id=?
+    `, [proposal.id]);
 
-// Determine correct charge source
-let allCharges = proposalCharges.length > 0
-  ? proposalCharges
-  : charges;
+    const allCharges = proposalCharges.length ? proposalCharges : companyCharges;
 
-// ================= ITEMS CALCULATION =================
+    /* ================= CALCULATE ITEMS ================= */
+    let itemSubtotal = 0;
+    let cgstTotal = 0;
+    let sgstTotal = 0;
+    let igstTotal = 0;
 
 const computedItems = items.map(i => {
   const qty = +i.qty || 0;
@@ -657,12 +851,21 @@ const computedItems = items.map(i => {
 
   let cg = 0, sg = 0, ig = 0;
 
+  const igstRate =
+    (+i.igst_rate || 0) ||
+    ((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
+
   if (isInterState) {
-    ig = taxable * (+i.igst_rate || 0) / 100;
+    ig = taxable * igstRate / 100;
   } else {
     cg = taxable * (+i.cgst_rate || 0) / 100;
     sg = taxable * (+i.sgst_rate || 0) / 100;
   }
+
+  itemSubtotal += taxable;
+  cgstTotal += cg;
+  sgstTotal += sg;
+  igstTotal += ig;
 
   return {
     ...i,
@@ -673,26 +876,14 @@ const computedItems = items.map(i => {
     cgst: cg,
     sgst: sg,
     igst: ig,
+    igstRate,   // ⭐ ADD
     total: taxable + cg + sg + ig
   };
 });
+    /* ================= CALCULATE CHARGES ================= */
+    let chargeSubtotal = 0;
 
-// ================= TOTAL CALCULATION =================
-
-let subtotal = 0;
-let cgstTotal = 0;
-let sgstTotal = 0;
-let igstTotal = 0;
-
-// Add item totals
-computedItems.forEach(i => {
-  subtotal += i.amount;
-  cgstTotal += i.cgst;
-  sgstTotal += i.sgst;
-  igstTotal += i.igst;
-});
-
-const computedCharges = allCharges.map(c => {
+    const computedCharges = allCharges.map(c => {
   const amt = +c.amount || 0;
   const taxRate = +c.taxPercent || 0;
 
@@ -705,7 +896,7 @@ const computedCharges = allCharges.map(c => {
     sg = amt * (taxRate / 2) / 100;
   }
 
-  subtotal += amt;
+  chargeSubtotal += amt;
   cgstTotal += cg;
   sgstTotal += sg;
   igstTotal += ig;
@@ -713,7 +904,7 @@ const computedCharges = allCharges.map(c => {
   return {
     label: c.label,
     amount: amt,
-    taxPercent: taxRate,
+     taxPercent: taxRate, 
     cgst: cg,
     sgst: sg,
     igst: ig,
@@ -721,34 +912,45 @@ const computedCharges = allCharges.map(c => {
   };
 });
 
-const totalTax = cgstTotal + sgstTotal + igstTotal;
-const grandTotal = subtotal + totalTax;
+    const subtotal = itemSubtotal + chargeSubtotal;
+    const totalTax = cgstTotal + sgstTotal + igstTotal;
+    const grandTotal = subtotal + totalTax;
 
+    /* ================= TABLE ROWS ================= */
+    const itemRows = computedItems.map((x, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${x.description}</td>
+        <td>${x.hsn}</td>
+        <td>${x.qty}</td>
+        <td>${x.rate.toFixed(2)}</td>
+        <td>${x.discount}%</td>
+        <td>${x.amount.toFixed(2)}</td>
+        <td>${x.cgst.toFixed(2)}</td>
+        <td>${x.sgst.toFixed(2)}</td>
+        <td>${x.igst.toFixed(2)}</td>
+        <td>${x.total.toFixed(2)}</td>
+      </tr>
+    `).join("");
 
+    const chargeRows = computedCharges.map(c => `
+      <tr>
+        <td></td>
+        <td>${c.label}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>${c.amount.toFixed(2)}</td>
+        <td>${c.cgst.toFixed(2)}</td>
+        <td>${c.sgst.toFixed(2)}</td>
+        <td>${c.igst.toFixed(2)}</td>
+        <td>${c.total.toFixed(2)}</td>
+      </tr>
+    `).join("");
 
-    // let allCharges = [];
-
-    // if (proposalCharges.length > 0) {
-    //   allCharges = proposalCharges;
-    // } else {
-    //   allCharges = charges;
-    // }
-    // let chargesAmount = 0;
-    // let chargesTax = 0;
-
-    // allCharges.forEach(c => {
-    //   const amt = +c.amount || 0;
-    //   const tax = (amt * (+c.taxPercent || 0)) / 100;
-    //   chargesAmount += amt;
-    //   chargesTax += tax;
-    // });
-
-
-
-    const formattedDate = new Date(proposal.proposal_date)
-      .toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
-
-    const html = buildHTML({
+    /* ================= HTML ================= */
+     const html = buildHTML({
       proposal,
       sender,
       computedItems,
@@ -762,18 +964,20 @@ const grandTotal = subtotal + totalTax;
       formattedDate
     });
 
-    /* PDFSHIFT */
+    /* ================= PDFSHIFT ================= */
     const pdfRes = await fetch("https://api.pdfshift.io/v3/convert/pdf", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Basic " + Buffer.from("api:" + process.env.PDFSHIFT_API_KEY).toString("base64")
+        Authorization:
+          "Basic " +
+          Buffer.from("api:" + process.env.PDFSHIFT_API_KEY).toString("base64"),
       },
       body: JSON.stringify({
         source: html,
         format: "A4",
-        use_print: true
-      })
+        use_print: true,
+      }),
     });
 
     const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
@@ -781,10 +985,9 @@ const grandTotal = subtotal + totalTax;
     return new Response(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${proposal.proposal_number}.pdf"`
-      }
+        "Content-Disposition": `attachment; filename="${proposal.proposal_number}.pdf"`,
+      },
     });
-
   } catch (e) {
     console.error(e);
     return Response.json({ message: "PDF error" }, { status: 500 });
