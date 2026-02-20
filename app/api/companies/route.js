@@ -69,14 +69,16 @@ export async function POST(req) {
     if (!companyName?.trim())
       return Response.json({ message: "Company name required" }, { status: 400 });
 
-    if (!companyEmail?.trim())
-      return Response.json({ message: "Company email required" }, { status: 400 });
+    // if (!companyEmail?.trim())
+    //   return Response.json({ message: "Company email required" }, { status: 400 });
 
     // create company
-    const [result] = await db.query(
-      `INSERT INTO companies (company_name, company_email) VALUES (?, ?)`,
-      [companyName.trim(), companyEmail.trim()]
-    );
+const email = companyEmail?.trim() || null;
+
+const [result] = await db.query(
+  `INSERT INTO companies (company_name, company_email) VALUES (?, ?)`,
+  [companyName.trim(), email]
+);
 
     const companyId = result.insertId;
 
