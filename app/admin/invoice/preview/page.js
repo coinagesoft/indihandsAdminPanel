@@ -586,7 +586,7 @@ const grandTotal =
       </button>
 
       {/* DOWNLOAD INVOICE */}
-      <button
+      {/* <button
         className="btn w-100 mb-3"
         style={{
           border: "1px solid #2e7d32",
@@ -598,7 +598,7 @@ const grandTotal =
         disabled={!proposalId}
       >
         Download Invoice
-      </button>
+      </button> */}
 
     </div>
   </div>

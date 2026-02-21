@@ -163,7 +163,12 @@ const Sidebar = () => {
 
           </ul>
         </li>
-
+  <li className={`menu-item ${pathname === "/admin/challan" ? "active" : ""}`}>
+          <Link href="/admin/challan" className="menu-link">
+            <i className="menu-icon tf-icons ri-settings-3-line"></i>
+            <div>Invoice</div>
+          </Link>
+        </li>
         {/* Settings */}
         <li className={`menu-item ${pathname === "/admin/settings" ? "active" : ""}`}>
           <Link href="/admin/settings" className="menu-link">
