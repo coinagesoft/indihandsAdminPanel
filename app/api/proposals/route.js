@@ -502,3 +502,20 @@ export async function POST(req) {
     return Response.json({ message: "Server error" }, { status: 500 });
   }
 }
+
+
+export async function GET() {
+  try {
+    const [rows] = await db.query(`
+      SELECT p.id, p.proposal_number, c.company_name, p.grand_total
+      FROM proposals p
+      JOIN companies c ON c.id = p.company_id
+      ORDER BY p.id DESC
+    `);
+
+    return Response.json(rows);
+  } catch (err) {
+    console.error("❌ proposals list error:", err);
+    return Response.json({ error: "DB error" }, { status: 500 });
+  }
+}
