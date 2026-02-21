@@ -1337,11 +1337,11 @@ const computedItems = items.map(i => {
     });
 
     const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
-
+const invoiceNo = proposal.proposal_number.replace(/^QTN/i, "INV");
     return new Response(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${proposal.proposal_number}.pdf"`,
+        "Content-Disposition": `attachment; filename="${invoiceNo}.pdf"`,
       },
     });
   } catch (e) {
