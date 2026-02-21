@@ -443,7 +443,7 @@ const grandTotal =
             <td>
   <input
     className="form-control form-control-sm"
-    value={c.label}
+    value={c.label }
     onChange={(e) =>
       updateCharge(i, "label", e.target.value)
     }
@@ -451,27 +451,27 @@ const grandTotal =
 </td>
 
 
-              <td>
-                <input
-                  type="number"
-                  className="form-control form-control-sm"
-                  value={c.amount}
-                  onChange={(e) =>
-                    updateCharge(i, "amount", Number(e.target.value))
-                  }
-                />
-              </td>
+           <td>
+  <input
+    type="number"
+    className="form-control form-control-sm"
+    value={c.amount ?? ""}
+    onChange={(e) =>
+      updateCharge(i, "amount", e.target.value)
+    }
+  />
+</td>
 
-              <td>
-                <input
-                  type="number"
-                  className="form-control form-control-sm"
-                  value={c.taxPercent}
-                  onChange={(e) =>
-                    updateCharge(i, "taxPercent", Number(e.target.value))
-                  }
-                />
-              </td>
+<td>
+  <input
+    type="number"
+    className="form-control form-control-sm"
+    value={c.taxPercent ?? ""}
+    onChange={(e) =>
+      updateCharge(i, "taxPercent", e.target.value)
+    }
+  />
+</td>
 
               <td className="fw-semibold">
                 ₹ {total.toFixed(2)}
