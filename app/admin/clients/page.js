@@ -322,21 +322,21 @@ const Page = () => {
 
                 <div className="row small">
                   <div className="col-md-6"><b>GSTIN:</b> {b.gstin}</div>
-                  <div className="col-md-6"><b>Contact:</b> {b.contactPerson}</div>
+                  {/* <div className="col-md-6"><b>Contact:</b> {b.contactPerson}</div> */}
 
-                  <div className="col-md-6">
+                  {/* <div className="col-md-6">
                     <b>Phones:</b>
                     <ul>{(b.phones || []).map((p, i) => <li key={i}>{p}</li>)}</ul>
-                  </div>
+                  </div> */}
 
-                  <div className="col-md-6">
+                  {/* <div className="col-md-6">
                     <b>Emails:</b>
                     <ul>{(b.emails || []).map((e, i) => <li key={i}>{e}</li>)}</ul>
-                  </div>
+                  </div> */}
+                  <div className="col-md-6"><b>Login:</b> {b.loginEmail}</div>
 
                   <div className="col-6"><b>Shipping:</b> {b.shippingAddress}</div>
                   <div className="col-6"><b>Billing:</b> {b.billingAddress}</div>
-                  <div className="col-md-6"><b>Login:</b> {b.loginEmail}</div>
                   {/* <div className="col-md-6"><b>Password:</b> {b.password_hash}</div> */}
                 </div>
 
@@ -510,7 +510,7 @@ const Page = () => {
                 {[
                   { label: "Branch Name", key: "branchName", type: "text", required: true },
                   { label: "GSTIN", key: "gstin", type: "text", required: true },
-                  { label: "Contact Person", key: "contactPerson", type: "text" },
+                  // { label: "Contact Person", key: "contactPerson", type: "text" },
                   { label: "Login Email", key: "loginEmail", type: "email", required: true },
                 ].map(({ label, key, type, required }) => (
                   <div key={key} className="col-md-6">
@@ -526,6 +526,19 @@ const Page = () => {
                     />
                   </div>
                 ))}
+                 <div className="col-md-6">
+                  <label className="form-label mb-1">Password</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Minimum 6 characters"
+                    value={newBranch.password || ""}
+                    onChange={(e) =>
+                      setNewBranch({ ...newBranch, password: e.target.value })
+                    }
+                    required
+                  />
+                </div>
 
                 {/* Addresses */}
                 <div className="col-md-6">
@@ -553,22 +566,10 @@ const Page = () => {
                 </div>
 
                 {/* Password */}
-                <div className="col-md-6">
-                  <label className="form-label mb-1">Password</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    placeholder="Minimum 6 characters"
-                    value={newBranch.password || ""}
-                    onChange={(e) =>
-                      setNewBranch({ ...newBranch, password: e.target.value })
-                    }
-                    required
-                  />
-                </div>
+               
 
                 {/* Phones */}
-                <div className="col-12 mt-2">
+                {/* <div className="col-12 mt-2">
                   <div className="d-flex justify-content-between align-items-center mb-1">
                     <label className="form-label mb-0">Phones</label>
                     <button
@@ -611,10 +612,10 @@ const Page = () => {
                       </button>
                     </div>
                   ))}
-                </div>
+                </div> */}
 
                 {/* Emails */}
-                <div className="col-12 mt-2">
+                {/* <div className="col-12 mt-2">
                   <div className="d-flex justify-content-between align-items-center mb-1">
                     <label className="form-label mb-0">Emails</label>
                     <button
@@ -657,7 +658,7 @@ const Page = () => {
                       </button>
                     </div>
                   ))}
-                </div>
+                </div> */}
 
                 {/* Footer */}
                 <div className="col-12 mt-3 d-flex justify-content-between flex-wrap gap-2">
@@ -692,7 +693,7 @@ const Page = () => {
                   {[
                     { label: "Branch Name", key: "branchName", type: "text" },
                     { label: "GSTIN", key: "gstin", type: "text" },
-                    { label: "Contact Person", key: "contactPerson", type: "text" },
+                    // { label: "Contact Person", key: "contactPerson", type: "text" },
                     { label: "Login Email", key: "loginEmail", type: "email" },
                   ].map(({ label, key, type }) => (
                     <div key={key} className="col-md-6">
@@ -705,28 +706,7 @@ const Page = () => {
                       />
                     </div>
                   ))}
-
-                  {/* Addresses */}
-                  <div className="col-md-6">
-                    <label className="form-label mb-1">Shipping Address</label>
-                    <textarea
-                      className="form-control"
-                      rows={2}
-                      value={editingBranch.shippingAddress || ""}
-                      onChange={(e) => setEditingBranch({ ...editingBranch, shippingAddress: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label mb-1">Billing Address</label>
-                    <textarea
-                      className="form-control"
-                      rows={2}
-                      value={editingBranch.billingAddress || ""}
-                      onChange={(e) => setEditingBranch({ ...editingBranch, billingAddress: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-md-6">
+ <div className="col-md-6">
                     <label className="form-label mb-1">
                       New Password <small className="text-muted">(optional)</small>
                     </label>
@@ -740,10 +720,31 @@ const Page = () => {
                       }
                     />
                   </div>
+                  {/* Addresses */}
+                  <div className="col-md-6">
+                    <label className="form-label mb-1">Shipping Address</label>
+                    <textarea
+                      className="form-control"
+                      rows={3}
+                      value={editingBranch.shippingAddress || ""}
+                      onChange={(e) => setEditingBranch({ ...editingBranch, shippingAddress: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label mb-1">Billing Address</label>
+                    <textarea
+                      className="form-control"
+                      rows={3}
+                      value={editingBranch.billingAddress || ""}
+                      onChange={(e) => setEditingBranch({ ...editingBranch, billingAddress: e.target.value })}
+                    />
+                  </div>
+                 
 
 
                   {/* Phones */}
-                  <div className="col-12 mt-2">
+                  {/* <div className="col-12 mt-2">
                     <div className="d-flex justify-content-between align-items-center mb-1">
                       <label className="form-label mb-0">Phones</label>
                       <button
@@ -784,10 +785,10 @@ const Page = () => {
                         </button>
                       </div>
                     ))}
-                  </div>
+                  </div> */}
 
                   {/* Emails */}
-                  <div className="col-12 mt-2">
+                  {/* <div className="col-12 mt-2">
                     <div className="d-flex justify-content-between align-items-center mb-1">
                       <label className="form-label mb-0">Emails</label>
                       <button
@@ -828,7 +829,7 @@ const Page = () => {
                         </button>
                       </div>
                     ))}
-                  </div>
+                  </div> */}
 
                   {/* Footer */}
                   <div className="col-12 mt-3 d-flex justify-content-between flex-wrap gap-2">

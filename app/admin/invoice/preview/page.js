@@ -495,20 +495,27 @@ const grandTotal =
     <td>IGST Total</td>
     <td>₹ {totals.igst.toFixed(2)}</td>
   </tr>
+  {/* ✅ Charges with label */}
+  {charges.map((c, i) => {
+    const amt = Number(c.amount || 0);
+    const tax = (amt * Number(c.taxPercent || 0)) / 100;
+    const total = amt + tax;
+    if (total <= 0) return null;
 
-  {chargesSummary.amount > 0 && (
-    <tr>
-      <td>Additional Charges</td>
-      <td>₹ {chargesSummary.amount.toFixed(2)}</td>
-    </tr>
-  )}
+    return (
+      <tr key={i}>
+        <td>{c.label}</td>
+        <td>₹ {total.toFixed(2)}</td>
+      </tr>
+    );
+  })}
 
-  {chargesSummary.tax > 0 && (
+  {/* {chargesSummary.tax > 0 && (
     <tr>
       <td>Charges Tax</td>
       <td>₹ {chargesSummary.tax.toFixed(2)}</td>
     </tr>
-  )}
+  )} */}
 
   <tr className="fw-bold">
     <th>Grand Total</th>
