@@ -2,7 +2,7 @@ import { db } from "../../../db";
 
 export async function PATCH(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const companyId = Number(id);
 
     if (!companyId) {

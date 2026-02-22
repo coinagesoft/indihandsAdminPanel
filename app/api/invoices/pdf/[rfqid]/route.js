@@ -363,9 +363,15 @@ body{
 .footer{
   background:#cfd84e;
   display:flex;
+  align-items:center;
   justify-content:space-between;
-  padding:6px 12px;
+  padding:15px 12px;   /* reduce height */
   font-size:10px;
+
+  /* ⭐ stretch to paper edge */
+  margin-left:-10mm;
+  margin-right:-10mm;
+  margin-bottom:-10mm;
 }
 </style>
 </head>
@@ -387,7 +393,7 @@ body{
   <!-- RIGHT BLOCK -->
   <div class="hdr-right">
     <img 
-      src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771481107/design-studio_jm1fm9.png"
+      src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771752355/manik_trifaley_logo_white_bgdbsp.png"
     >
 
   <div class="hdr-text">

@@ -136,6 +136,12 @@ const Sidebar = () => {
             <div>RFQs</div>
           </Link>
         </li>
+        <li className={`menu-item ${pathname === "/admin/proposal" ? "active" : ""}`}>
+  <Link href="/admin/proposal" className="menu-link">
+<i className="menu-icon tf-icons ri-draft-line"></i>
+    <div>Proposal History</div>
+  </Link>
+</li>
 
         <li className={`menu-item ${openMenu === "invoice" ? "open" : ""}`}>
           <a
@@ -163,12 +169,12 @@ const Sidebar = () => {
 
           </ul>
         </li>
-  <li className={`menu-item ${pathname === "/admin/challan" ? "active" : ""}`}>
-          <Link href="/admin/challan" className="menu-link">
-            <i className="menu-icon tf-icons ri-settings-3-line"></i>
-            <div>Invoice</div>
-          </Link>
-        </li>
+<li className={`menu-item ${pathname === "/admin/challan" ? "active" : ""}`}>
+  <Link href="/admin/challan" className="menu-link">
+<i className="menu-icon tf-icons ri-receipt-line"></i>
+    <div>Invoice</div>
+  </Link>
+</li>
         {/* Settings */}
         <li className={`menu-item ${pathname === "/admin/settings" ? "active" : ""}`}>
           <Link href="/admin/settings" className="menu-link">

@@ -196,8 +196,8 @@ setCompanyInfo({
   return (
     <div className="container-xxl flex-grow-1 container-p-y">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="mb-0">Admin Settings</h4>
-        <button className="btn btn-sm btn-outline-primary" onClick={fetchSettings}>
+ <h4 className="mb-4 text-primary">Admin Settings</h4>
+         <button className="btn btn-sm btn-outline-primary" onClick={fetchSettings}>
           Refresh
         </button>
       </div>
