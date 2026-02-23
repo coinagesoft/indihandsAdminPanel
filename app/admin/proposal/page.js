@@ -150,9 +150,8 @@ export default function ProposalStatusPage() {
             <tbody>
               {filtered.map(p => (
                 <tr key={p.id}>
-                  <td><b>{p.proposal_number}</b></td>
-
-                  {/* <td>{p.rfq_number || "-"}</td> */}
+<td style={{ fontSize: "12px" }}> <b>{p.proposal_number}</b></td>           
+       {/* <td>{p.rfq_number || "-"}</td> */}
 
                   {/* <td>
                     {p.client_name}

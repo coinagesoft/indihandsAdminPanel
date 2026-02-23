@@ -17,11 +17,7 @@ async function generateNextProposalNumber() {
   const MM = String(now.getMonth() + 1).padStart(2, "0");
   const DD = String(now.getDate()).padStart(2, "0");
 
-  const HH = String(now.getHours()).padStart(2, "0");
-  const MIN = String(now.getMinutes()).padStart(2, "0");
-  const SS = String(now.getSeconds()).padStart(2, "0");
-
-  const baseKey = `${YYYY}${MM}${DD}-${HH}${MIN}${SS}`;
+  const baseKey = `${YYYY}${MM}${DD}`;
 
   const [[row]] = await db.query(
     `
@@ -37,7 +33,7 @@ async function generateNextProposalNumber() {
   let nextSeq = 1;
 
   if (row?.proposal_number) {
-    const match = row.proposal_number.match(/QTN-\d{8}-\d{6}-(\d+)/);
+    const match = row.proposal_number.match(/QTN-\d{8}-(\d+)/);
     if (match) nextSeq = Number(match[1]) + 1;
   }
 
