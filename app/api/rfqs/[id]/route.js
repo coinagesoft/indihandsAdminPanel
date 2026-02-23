@@ -89,19 +89,29 @@ export async function PATCH(req, { params }) {
     await connection.commit();
 
     /* 4️⃣ Send email notification if status is Under Review, Accepted, or Rejected */
+    let emailSent = false;
+    let emailError = null;
     const emailStatuses = ["Under Review", "Accepted", "Rejected"];
     if (emailStatuses.includes(status) && clientEmail) {
       try {
         await sendRFQStatusEmail(clientEmail, clientName, rfqNumber, status);
         console.log(`Email sent to ${clientEmail} for RFQ ${rfqNumber} status: ${status}`);
+        emailSent = true;
       } catch (emailErr) {
         console.error("Failed to send email notification:", emailErr);
+        emailError = emailErr.message;
         // Don't fail the request if email fails, just log the error
       }
     }
 
     return Response.json(
-      { message: "RFQ status updated successfully" },
+      { 
+        message: "RFQ status updated successfully",
+        emailSent,
+        emailError,
+        clientEmail,
+        status
+      },
       { status: 200 }
     );
 
