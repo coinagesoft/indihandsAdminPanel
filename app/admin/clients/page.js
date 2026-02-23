@@ -19,7 +19,8 @@ const EMPTY_BRANCH = {
 const EMPTY_COMPANY = {
   id: null,
   companyName: "",
-  companyEmail: "",
+  shortName: "",
+  // companyEmail: "",
   branches: [],
 };
 
@@ -73,7 +74,7 @@ const Page = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         companyName: editingCompany.companyName,
-        companyEmail: editingCompany.companyEmail || null,
+        shortName: editingCompany.shortName,
         charges: companyCharges.filter(
           c => c.label?.trim() && Number(c.amount) > 0
         ),
@@ -100,7 +101,7 @@ const Page = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         companyName: newCompany.companyName,
-        companyEmail: newCompany.companyEmail || null,
+        shortName: newCompany.shortName,
         charges: companyCharges.filter(
           c => c.label?.trim() && Number(c.amount) > 0
         ),
@@ -396,19 +397,20 @@ const Page = () => {
 
               <input
                 className="form-control mb-2"
-                placeholder="Company Email"
+                placeholder="Company Short Name (e.g. TCS)"
                 value={
                   editingCompany?.id
-                    ? editingCompany.companyEmail || ""
-                    : newCompany.companyEmail || ""
+                    ? editingCompany.shortName || ""
+                    : newCompany.shortName || ""
                 }
                 onChange={(e) => {
-                  const val = e.target.value || null;   // 👈 key fix
+                  const val = e.target.value.toUpperCase();
 
                   editingCompany?.id
-                    ? setEditingCompany({ ...editingCompany, companyEmail: val })
-                    : setNewCompany({ ...newCompany, companyEmail: val });
+                    ? setEditingCompany({ ...editingCompany, shortName: val })
+                    : setNewCompany({ ...newCompany, shortName: val });
                 }}
+                required
               />
               <hr className="my-3" />
               <h6>Company Charges</h6>
@@ -526,7 +528,7 @@ const Page = () => {
                     />
                   </div>
                 ))}
-                 <div className="col-md-6">
+                <div className="col-md-6">
                   <label className="form-label mb-1">Password</label>
                   <input
                     type="password"
@@ -566,7 +568,7 @@ const Page = () => {
                 </div>
 
                 {/* Password */}
-               
+
 
                 {/* Phones */}
                 {/* <div className="col-12 mt-2">
@@ -706,7 +708,7 @@ const Page = () => {
                       />
                     </div>
                   ))}
- <div className="col-md-6">
+                  <div className="col-md-6">
                     <label className="form-label mb-1">
                       New Password <small className="text-muted">(optional)</small>
                     </label>
@@ -740,7 +742,7 @@ const Page = () => {
                       onChange={(e) => setEditingBranch({ ...editingBranch, billingAddress: e.target.value })}
                     />
                   </div>
-                 
+
 
 
                   {/* Phones */}

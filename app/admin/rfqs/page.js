@@ -180,7 +180,7 @@ const RFQPage = () => {
         <div key={rfq.id} className="card mb-4 shadow-sm">
           <div className="card-header d-flex justify-content-between">
             <strong>
-              RFQ #{rfq.id} — {rfq.orgName} ({rfq.branch})
+              {rfq.rfqNumber} — {rfq.orgName} ({rfq.branch})
             </strong>
             <span className={`badge ${statusBadgeClass(rfq.status)}`}>
               {rfq.status}

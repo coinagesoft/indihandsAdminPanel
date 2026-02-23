@@ -4,7 +4,10 @@ import { db } from "../../db";
 export async function GET() {
   try {
     const [companies] = await db.query(`
-      SELECT id, company_name AS companyName, company_email AS companyEmail
+      SELECT 
+        id,
+        company_name AS companyName,
+        short_name AS shortName
       FROM companies
       ORDER BY id DESC
     `);
@@ -42,11 +45,17 @@ export async function GET() {
         .filter((b) => b.companyId === c.id)
         .map((b) => ({
           ...b,
-          phones: typeof b.phones === "string" ? JSON.parse(b.phones || "[]") : (b.phones || []),
-          emails: typeof b.emails === "string" ? JSON.parse(b.emails || "[]") : (b.emails || []),
+          phones:
+            typeof b.phones === "string"
+              ? JSON.parse(b.phones || "[]")
+              : b.phones || [],
+          emails:
+            typeof b.emails === "string"
+              ? JSON.parse(b.emails || "[]")
+              : b.emails || [],
         })),
 
-      charges: charges.filter((ch) => ch.companyId === c.id)   // ✅ ADD
+      charges: charges.filter((ch) => ch.companyId === c.id),
     }));
 
     return Response.json({ companies: formatted }, { status: 200 });
@@ -64,21 +73,40 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { companyName, companyEmail, charges } = body;
+    const { companyName, shortName, charges } = body;
 
     if (!companyName?.trim())
-      return Response.json({ message: "Company name required" }, { status: 400 });
+      return Response.json(
+        { message: "Company name required" },
+        { status: 400 }
+      );
 
-    // if (!companyEmail?.trim())
-    //   return Response.json({ message: "Company email required" }, { status: 400 });
+    if (!shortName?.trim())
+      return Response.json(
+        { message: "Short name required" },
+        { status: 400 }
+      );
+
+    const short = shortName.trim().toUpperCase();
+
+    // ✅ duplicate short check
+    const [[exists]] = await db.query(
+      "SELECT id FROM companies WHERE short_name=?",
+      [short]
+    );
+
+    if (exists)
+      return Response.json(
+        { message: "Short name already exists" },
+        { status: 400 }
+      );
 
     // create company
-const email = companyEmail?.trim() || null;
-
-const [result] = await db.query(
-  `INSERT INTO companies (company_name, company_email) VALUES (?, ?)`,
-  [companyName.trim(), email]
-);
+    const [result] = await db.query(
+      `INSERT INTO companies (company_name, short_name)
+       VALUES (?, ?)`,
+      [companyName.trim(), short]
+    );
 
     const companyId = result.insertId;
 
@@ -92,7 +120,8 @@ const [result] = await db.query(
       ]);
 
       await db.query(
-        `INSERT INTO company_charges (company_id, label, amount, tax_percent)
+        `INSERT INTO company_charges 
+         (company_id, label, amount, tax_percent)
          VALUES ?`,
         [values]
       );

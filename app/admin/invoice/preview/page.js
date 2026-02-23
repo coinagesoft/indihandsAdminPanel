@@ -3,24 +3,24 @@ import React, { useState, useEffect } from "react";
 
 const Page = () => {
 
-const [selectedRfq, setSelectedRfq] = useState("");
-const [acceptedRfqs, setAcceptedRfqs] = useState([]);
-const [sendingProposal, setSendingProposal] = useState(false);
-const [sendingInvoice, setSendingInvoice] = useState(false);
-const [proposalId, setProposalId] = useState(null);
+  const [selectedRfq, setSelectedRfq] = useState("");
+  const [acceptedRfqs, setAcceptedRfqs] = useState([]);
+  const [sendingProposal, setSendingProposal] = useState(false);
+  const [sendingInvoice, setSendingInvoice] = useState(false);
+  const [proposalId, setProposalId] = useState(null);
 
   const [header, setHeader] = useState({
     quotationNo: "",
     date: "",
     clientName: "",
-    clientPhone: "",   
-    clientEmail: "",  
+    clientPhone: "",
+    clientEmail: "",
     company: "",
     gstin: "",
     place: "",
     billingAddress: "",
     shippingAddress: "",
-    companyId: null,   
+    companyId: null,
     branchId: null,
   });
 
@@ -57,7 +57,7 @@ const [proposalId, setProposalId] = useState(null);
           sgst_rate: x.sgst,
           igst_rate: x.igst,
         })),
-   
+
       };
 
       const res = await fetch("/api/proposals", {
@@ -67,156 +67,156 @@ const [proposalId, setProposalId] = useState(null);
       });
 
       const data = await res.json();
-  console.log("proposal",data)
-    if (res.status === 409) {
-  setHeader(prev => ({
-    ...prev,
-    quotationNo: data.proposal_number
-  }));
+      console.log("proposal", data)
+      if (res.status === 409) {
+        setHeader(prev => ({
+          ...prev,
+          quotationNo: data.proposal_number
+        }));
 
-  setProposalId(data.proposalId); // ⭐ add
+        setProposalId(data.proposalId); // ⭐ add
 
-  return alert("⚠️ Proposal already exists: " + data.proposal_number);
-}
+        return alert("⚠️ Proposal already exists: " + data.proposal_number);
+      }
 
-   
+
 
       // ✅ DB generated proposal no show in UI
       if (data.proposal_number) {
         setHeader((prev) => ({ ...prev, quotationNo: data.proposal_number }));
       }
 
-  if (data.proposalId) {
-      setProposalId(data.proposalId);
+      if (data.proposalId) {
+        setProposalId(data.proposalId);
+      }
+
+      setTimeout(() => {
+        alert("✅ Proposal sent");
+      }, 50);
+
+    } finally {
+      setSaving(false);
     }
-
-    setTimeout(() => {
-      alert("✅ Proposal sent");
-    }, 50);
-
-  } finally {
-    setSaving(false);
-  }
   };
- const handleDownloadPdf = () => {
-  if (!selectedRfq) return alert("❌ Select RFQ first");
-  if (!proposalId) return alert("❌ Please send proposal first");
+  const handleDownloadPdf = () => {
+    if (!selectedRfq) return alert("❌ Select RFQ first");
+    if (!proposalId) return alert("❌ Please send proposal first");
 
-  window.open(`/api/proposals/pdf/${proposalId}`, "_blank");
-};
-  
-const handleEmailProposal = async () => {
-  if (!selectedRfq) return alert("❌ Select RFQ first");
-  if (!header.clientEmail) return alert("❌ Client email missing");
+    window.open(`/api/proposals/pdf/${proposalId}`, "_blank");
+  };
 
-  try {
-    setSendingProposal(true);
+  const handleEmailProposal = async () => {
+    if (!selectedRfq) return alert("❌ Select RFQ first");
+    if (!header.clientEmail) return alert("❌ Client email missing");
 
-    const res = await fetch(`/api/proposals/email/${proposalId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "proposal",
-        email: header.clientEmail,
-      }),
-    });
+    try {
+      setSendingProposal(true);
 
+      const res = await fetch(`/api/proposals/email/${proposalId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "proposal",
+          email: header.clientEmail,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Email failed");
+
+      alert("✅ Proposal emailed to client");
+    } catch (e) {
+      alert("❌ " + e.message);
+    } finally {
+      setSendingProposal(false);
+    }
+  };
+
+
+  const handleDownloadInvoice = () => {
+    if (!selectedRfq) return alert("❌ Select RFQ first");
+    if (!proposalId) return alert("❌ Please send proposal first");
+
+    window.open(`/api/invoices/pdf/${proposalId}`, "_blank");
+  };
+
+
+
+  const handleRfqSelect = async (e) => {
+    const rfqId = Number(e.target.value);
+
+    setSelectedRfq(rfqId);
+
+    if (!rfqId) return;
+
+    /* 1️⃣ RFQ details */
+    const res = await fetch(`/api/rfqs/${rfqId}/details`);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Email failed");
+    if (!res.ok) return alert("❌ " + data.message);
 
-    alert("✅ Proposal emailed to client");
-  } catch (e) {
-    alert("❌ " + e.message);
-  } finally {
-    setSendingProposal(false);
-  }
-};
+    const companyId = data.header.companyId;
 
+    /* 2️⃣ Charges → proposal override OR company default */
+    let loadedCharges = [];
 
-const handleDownloadInvoice = () => {
-  if (!selectedRfq) return alert("❌ Select RFQ first");
-  if (!proposalId) return alert("❌ Please send proposal first");
+    try {
+      const proposalChargesRes = await fetch(
+        `/api/proposals/${rfqId}/charges`
+      );
+      const proposalChargesData = await proposalChargesRes.json();
 
-  window.open(`/api/invoices/pdf/${proposalId}`, "_blank");
-};
-
-
-
-const handleRfqSelect = async (e) => {
-  const rfqId = Number(e.target.value);
-  
-  setSelectedRfq(rfqId);
-
-  if (!rfqId) return;
-
-  /* 1️⃣ RFQ details */
-  const res = await fetch(`/api/rfqs/${rfqId}/details`);
-  const data = await res.json();
-  if (!res.ok) return alert("❌ " + data.message);
-
-  const companyId = data.header.companyId;
-
-  /* 2️⃣ Charges → proposal override OR company default */
-  let loadedCharges = [];
-
-  try {
-    const proposalChargesRes = await fetch(
-      `/api/proposals/${rfqId}/charges`
-    );
-    const proposalChargesData = await proposalChargesRes.json();
-
-    if (
-      proposalChargesData.success &&
-      proposalChargesData.charges?.length
-    ) {
-      loadedCharges = proposalChargesData.charges;
-    } else {
+      if (
+        proposalChargesData.success &&
+        proposalChargesData.charges?.length
+      ) {
+        loadedCharges = proposalChargesData.charges;
+      } else {
+        const companyRes = await fetch(
+          `/api/companies/${companyId}/charges`
+        );
+        const companyData = await companyRes.json();
+        loadedCharges = companyData.charges || [];
+      }
+    } catch {
+      // fallback if proposal API fails
       const companyRes = await fetch(
         `/api/companies/${companyId}/charges`
       );
       const companyData = await companyRes.json();
       loadedCharges = companyData.charges || [];
     }
-  } catch {
-    // fallback if proposal API fails
-    const companyRes = await fetch(
-      `/api/companies/${companyId}/charges`
+
+    setCharges(
+      loadedCharges.map((c) => ({
+        label: c.label,
+        amount: Number(c.amount),
+        taxPercent: Number(c.taxPercent || 0),
+      }))
     );
-    const companyData = await companyRes.json();
-    loadedCharges = companyData.charges || [];
-  }
 
-  setCharges(
-    loadedCharges.map((c) => ({
-      label: c.label,
-      amount: Number(c.amount),
-      taxPercent: Number(c.taxPercent || 0),
-    }))
-  );
+    /* 3️⃣ Header + items */
+    const selected = acceptedRfqs.find((x) => x.id == rfqId);
+    setHeader((prev) => ({
+      ...prev,
+      quotationNo: selected?.proposalNumber || "",
+      date: new Date().toISOString().slice(0, 10),
 
-  /* 3️⃣ Header + items */
-const selected = acceptedRfqs.find((x) => x.id == rfqId);
-  setHeader((prev) => ({
-    ...prev,
-     quotationNo: selected?.proposalNumber || "",
-    date: new Date().toISOString().slice(0, 10),
+      clientName: data.header.clientName,
+      clientPhone: data.header.clientPhone,
+      clientEmail: data.header.clientEmail,
 
-    clientName: data.header.clientName,
-    clientPhone: data.header.clientPhone,
-    clientEmail: data.header.clientEmail,
+      company: data.header.company,
+      gstin: data.header.gstin,
+      billingAddress: data.header.billing_address,
+      shippingAddress: data.header.shipping_address,
 
-    company: data.header.company,
-    gstin: data.header.gstin,
-    billingAddress: data.header.billing_address,
-    shippingAddress: data.header.shipping_address,
+      companyId,
+      branchId: data.header.branchId,
+    }));
 
-    companyId,
-    branchId: data.header.branchId,
-  }));
-
-setProposalId(selected?.proposalId || null);
-  setItems(data.items || []);
-};
+    setProposalId(selected?.proposalId || null);
+    setItems(data.items || []);
+  };
 
 
   const calcAmount = (item) => {
@@ -239,25 +239,25 @@ setProposalId(selected?.proposalId || null);
     { subtotal: 0, cgst: 0, sgst: 0, igst: 0 }
   );
 
-const chargesSummary = charges.reduce(
-  (acc, c) => {
-    const amt = Number(c.amount || 0);
-    const tax = (amt * Number(c.taxPercent || 0)) / 100;
-    acc.amount += amt;
-    acc.tax += tax;
-    return acc;
-  },
-  { amount: 0, tax: 0 }
-);
+  const chargesSummary = charges.reduce(
+    (acc, c) => {
+      const amt = Number(c.amount || 0);
+      const tax = (amt * Number(c.taxPercent || 0)) / 100;
+      acc.amount += amt;
+      acc.tax += tax;
+      return acc;
+    },
+    { amount: 0, tax: 0 }
+  );
 
 
-const grandTotal =
-  totals.subtotal +
-  totals.cgst +
-  totals.sgst +
-  totals.igst +
-  chargesSummary.amount +
-  chargesSummary.tax;
+  const grandTotal =
+    totals.subtotal +
+    totals.cgst +
+    totals.sgst +
+    totals.igst +
+    chargesSummary.amount +
+    chargesSummary.tax;
 
 
   useEffect(() => {
@@ -267,7 +267,7 @@ const grandTotal =
   const fetchAcceptedRfqs = async () => {
     const res = await fetch("/api/proposals/accepted-rfqs");
     const data = await res.json();
-    console.log("data",data)
+    console.log("data", data)
     if (!res.ok) return alert("❌ " + data.message);
     setAcceptedRfqs(data.rfqs || []);
   };
@@ -286,7 +286,7 @@ const grandTotal =
           <option value="">-- Select RFQ --</option>
           {acceptedRfqs.map((r) => (
             <option key={r.id} value={r.id}>
-              RFQ #{r.id} — {r.company}
+              {r.rfqNumber} — {r.company}
             </option>
           ))}
 
@@ -343,10 +343,10 @@ const grandTotal =
                   <p className="mb-1">
                     <strong>To:</strong> {header.clientName}
                   </p>
-                    <p className="mb-1">
+                  <p className="mb-1">
                     <strong>Customer Email:</strong> {header.clientEmail}
                   </p>
-                    <p className="mb-1">
+                  <p className="mb-1">
                     <strong>Company Name:</strong> {header.company}
                   </p>
                   <p className="mb-1">
@@ -360,7 +360,7 @@ const grandTotal =
                   <div className="row">
                     <div className=" col-12">
                       <strong>Billing Address:</strong>
-                     {header.billingAddress}
+                      {header.billingAddress}
                     </div>
 
                     <div className=" col-12 mt-2">
@@ -451,25 +451,25 @@ const grandTotal =
               </div>
             </div>
 
-{charges.length > 0 && (
-  <div className="mb-3">
-    <h6>Additional Charges</h6>
-    <ul className="mb-0">
-      {charges.map((c, i) => {
-  const tax = (Number(c.amount || 0) * Number(c.taxPercent || 0)) / 100;
-  const total = Number(c.amount || 0) + tax;
+            {charges.length > 0 && (
+              <div className="mb-3">
+                <h6>Additional Charges</h6>
+                <ul className="mb-0">
+                  {charges.map((c, i) => {
+                    const tax = (Number(c.amount || 0) * Number(c.taxPercent || 0)) / 100;
+                    const total = Number(c.amount || 0) + tax;
 
-  return (
-    <li key={i}>
-      {c.label}: ₹ {total.toFixed(2)}
-      {c.taxPercent > 0 && ` (${c.taxPercent}% tax)`}
-    </li>
-  );
-})}
+                    return (
+                      <li key={i}>
+                        {c.label}: ₹ {total.toFixed(2)}
+                        {c.taxPercent > 0 && ` (${c.taxPercent}% tax)`}
+                      </li>
+                    );
+                  })}
 
-    </ul>
-  </div>
-)}
+                </ul>
+              </div>
+            )}
 
 
             {/* Totals */}
@@ -478,50 +478,50 @@ const grandTotal =
                 <div className="col-md-6" />
                 <div className="col-md-6">
                   <table className="table">
-                 <tbody>
-  <tr>
-    <td>Total Before Tax</td>
-    <td>₹ {totals.subtotal.toFixed(2)}</td>
-  </tr>
-  <tr>
-    <td>CGST Total</td>
-    <td>₹ {totals.cgst.toFixed(2)}</td>
-  </tr>
-  <tr>
-    <td>SGST Total</td>
-    <td>₹ {totals.sgst.toFixed(2)}</td>
-  </tr>
-  <tr>
-    <td>IGST Total</td>
-    <td>₹ {totals.igst.toFixed(2)}</td>
-  </tr>
-  {/* ✅ Charges with label */}
-  {charges.map((c, i) => {
-    const amt = Number(c.amount || 0);
-    const tax = (amt * Number(c.taxPercent || 0)) / 100;
-    const total = amt + tax;
-    if (total <= 0) return null;
+                    <tbody>
+                      <tr>
+                        <td>Total Before Tax</td>
+                        <td>₹ {totals.subtotal.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td>CGST Total</td>
+                        <td>₹ {totals.cgst.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td>SGST Total</td>
+                        <td>₹ {totals.sgst.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td>IGST Total</td>
+                        <td>₹ {totals.igst.toFixed(2)}</td>
+                      </tr>
+                      {/* ✅ Charges with label */}
+                      {charges.map((c, i) => {
+                        const amt = Number(c.amount || 0);
+                        const tax = (amt * Number(c.taxPercent || 0)) / 100;
+                        const total = amt + tax;
+                        if (total <= 0) return null;
 
-    return (
-      <tr key={i}>
-        <td>{c.label}</td>
-        <td>₹ {total.toFixed(2)}</td>
-      </tr>
-    );
-  })}
+                        return (
+                          <tr key={i}>
+                            <td>{c.label}</td>
+                            <td>₹ {total.toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
 
-  {/* {chargesSummary.tax > 0 && (
+                      {/* {chargesSummary.tax > 0 && (
     <tr>
       <td>Charges Tax</td>
       <td>₹ {chargesSummary.tax.toFixed(2)}</td>
     </tr>
   )} */}
 
-  <tr className="fw-bold">
-    <th>Grand Total</th>
-    <th>₹ {grandTotal.toFixed(2)}</th>
-  </tr>
-</tbody>
+                      <tr className="fw-bold">
+                        <th>Grand Total</th>
+                        <th>₹ {grandTotal.toFixed(2)}</th>
+                      </tr>
+                    </tbody>
 
                   </table>
                 </div>
@@ -542,58 +542,58 @@ const grandTotal =
           </div>
         </div>
 
-     {/* Actions */}
-<div className="col-lg-3 col-12 invoice-actions">
-  <div className="card border-0 shadow-sm">
-    <div className="card-body p-3">
+        {/* Actions */}
+        <div className="col-lg-3 col-12 invoice-actions">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body p-3">
 
-      {/* SAVE */}
-      <button
-        className="btn w-100 mb-3"
-        style={{
-          background: "#F29E46",
-          color: "#fff",
-          borderRadius: "8px",
-          fontWeight: 500
-        }}
-        onClick={handleSaveProposal}
-        disabled={saving}
-      >
-        {saving ? "Saving..." : "Send Proposal"}
-      </button>
+              {/* SAVE */}
+              <button
+                className="btn w-100 mb-3"
+                style={{
+                  background: "#F29E46",
+                  color: "#fff",
+                  borderRadius: "8px",
+                  fontWeight: 500
+                }}
+                onClick={handleSaveProposal}
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Send Proposal"}
+              </button>
 
-      {/* DOWNLOAD PROPOSAL PDF */}
-      <button
-        className="btn w-100 mb-3"
-        style={{
-          border: "1px solid #e0e0e0",
-          borderRadius: "8px",
-          color: "#444",
-          background: "#fff"
-        }}
-        onClick={handleDownloadPdf}
-        disabled={!proposalId}
-      >
-        Download Proposal
-      </button>
+              {/* DOWNLOAD PROPOSAL PDF */}
+              <button
+                className="btn w-100 mb-3"
+                style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px",
+                  color: "#444",
+                  background: "#fff"
+                }}
+                onClick={handleDownloadPdf}
+                disabled={!proposalId}
+              >
+                Download Proposal
+              </button>
 
-      {/* EMAIL PROPOSAL */}
-      <button
-        className="btn w-100 mb-2"
-        style={{
-          border: "1px solid #ff6b35",
-          color: "#ff6b35",
-          borderRadius: "8px",
-          background: "#fff"
-        }}
-        onClick={handleEmailProposal}
-        disabled={!proposalId || !header.clientEmail || sendingProposal}
-      >
-        {sendingProposal ? "Sending..." : "Email Proposal"}
-      </button>
+              {/* EMAIL PROPOSAL */}
+              <button
+                className="btn w-100 mb-2"
+                style={{
+                  border: "1px solid #ff6b35",
+                  color: "#ff6b35",
+                  borderRadius: "8px",
+                  background: "#fff"
+                }}
+                onClick={handleEmailProposal}
+                disabled={!proposalId || !header.clientEmail || sendingProposal}
+              >
+                {sendingProposal ? "Sending..." : "Email Proposal"}
+              </button>
 
-      {/* DOWNLOAD INVOICE */}
-      {/* <button
+              {/* DOWNLOAD INVOICE */}
+              {/* <button
         className="btn w-100 mb-3"
         style={{
           border: "1px solid #2e7d32",
@@ -607,9 +607,9 @@ const grandTotal =
         Download Invoice
       </button> */}
 
-    </div>
-  </div>
-</div>
+            </div>
+          </div>
+        </div>
 
 
       </div>

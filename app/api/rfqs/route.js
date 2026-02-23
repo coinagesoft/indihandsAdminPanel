@@ -2,21 +2,21 @@ import { db } from "../../db";
 
 export async function GET() {
   try {
-    
+    /* ================= ORGANIZATIONS ================= */
     const [orgRows] = await db.query(`
       SELECT id, company_name AS name
       FROM companies
       ORDER BY id DESC
     `);
 
-
+    /* ================= BRANCHES ================= */
     const [branchRows] = await db.query(`
       SELECT id, company_id AS orgId, branch_name AS name
       FROM company_branches
       ORDER BY id DESC
     `);
 
-   
+    /* ================= RFQS ================= */
     const [rfqRows] = await db.query(`
       SELECT 
         r.id,
@@ -26,18 +26,19 @@ export async function GET() {
         b.branch_name AS branch,
         r.submitted_at AS submittedAt,
         r.status,
+        r.rfq_number,
         r.notes,
         r.client_name,
-  r.client_phone,
-  r.client_email
+        r.client_phone,
+        r.client_email
       FROM rfqs r
       JOIN companies c ON c.id = r.company_id
       JOIN company_branches b ON b.id = r.branch_id
-       WHERE r.status != 'Draft'
+      WHERE r.status != 'Draft'
       ORDER BY r.id DESC
     `);
 
-  
+    /* ================= PRODUCTS ================= */
     const [productRows] = await db.query(`
       SELECT
         rp.rfq_id AS rfqId,
@@ -51,7 +52,7 @@ export async function GET() {
       ORDER BY rp.rfq_id DESC
     `);
 
-    // ✅ Make organizations array with branches
+    /* ================= ORG STRUCTURE ================= */
     const organizations = orgRows.map((o) => ({
       id: o.id,
       name: o.name,
@@ -60,26 +61,31 @@ export async function GET() {
         .map((b) => ({ id: b.id, name: b.name })),
     }));
 
-    // ✅ Attach products to each rfq
+    /* ================= RFQ STRUCTURE ================= */
     const rfqs = rfqRows.map((r) => ({
       id: r.id,
       orgId: r.orgId,
       orgName: r.orgName,
       branchId: r.branchId,
       branch: r.branch,
+
+      // ✅ RFQ NUMBER SAFE
+      rfqNumber: r.rfq_number || "",
+
       submittedAt: r.submittedAt,
       status: r.status,
       notes: r.notes,
-        // ✅ ADD THESE
-  clientName: r.client_name || "",
-  clientPhone: r.client_phone || "",
-  clientEmail: r.client_email || "",
+
+      clientName: r.client_name || "",
+      clientPhone: r.client_phone || "",
+      clientEmail: r.client_email || "",
+
       products: productRows
         .filter((p) => p.rfqId === r.id)
         .map((p) => ({
           id: p.productId,
           name: p.name,
-          hsn:p.hsn,
+          hsn: p.hsn,
           code: p.code,
           quantity: p.quantity,
         })),
