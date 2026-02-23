@@ -8,4 +8,4 @@ Race condition between duplicate check (SELECT) and INSERT - two concurrent requ
 
 ## Plan
 - [x] Analyze the error and understand the codebase
-- [x] Fix app/api/companies/route.js to catch ER_DUP_ENTRY error (errno 1062) and return proper 400 response
+- [x] Fix app/api/companies/route.js to catch ER_DUP_ENTRY error (errno 1062) and return proper 400 respo
