@@ -30,77 +30,92 @@ const Page = () => {
   const [charges, setCharges] = useState([]);
 
   /* ================= HANDLERS ================= */
-  const handleSaveProposal = async () => {
-    if (!selectedRfq) return alert("❌ Please select RFQ first");
-    if (!header.companyId || !header.branchId) return alert("❌ companyId / branchId missing");
+const handleSaveProposal = async () => {
+  if (!selectedRfq) return alert("❌ Please select RFQ first");
+  if (!header.companyId || !header.branchId) return alert("❌ companyId / branchId missing");
 
-    if (saving) return;
+  if (saving) return;
 
-    try {
-      setSaving(true);
+  try {
+    setSaving(true);
 
-      const payload = {
-        rfqId: Number(selectedRfq),
-        companyId: header.companyId,
-        branchId: header.branchId,
-        place: header.place,
-        proposal_date: header.date,
-        billing_address: header.billingAddress,
-        shipping_address: header.shippingAddress,
+    const payload = {
+      rfqId: Number(selectedRfq),
+      companyId: header.companyId,
+      branchId: header.branchId,
+      place: header.place,
+      proposal_date: header.date,
+      billing_address: header.billingAddress,
+      shipping_address: header.shippingAddress,
+      items: items.map((x) => ({
+        productId: x.productId,
+        quantity: x.qty,
+        rate: x.rate,
+        discount: x.discount,
+        cgst_rate: x.cgst,
+        sgst_rate: x.sgst,
+        igst_rate: x.igst,
+      })),
+    };
 
-        items: items.map((x) => ({
-          productId: x.productId,
-          quantity: x.qty,
-          rate: x.rate,
-          discount: x.discount,
-          cgst_rate: x.cgst,
-          sgst_rate: x.sgst,
-          igst_rate: x.igst,
-        })),
+    /* 1️⃣ SAVE PROPOSAL */
+    const res = await fetch("/api/proposals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-      };
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Proposal save failed");
 
-      const res = await fetch("/api/proposals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      console.log("proposal", data)
-      if (res.status === 409) {
-        setHeader(prev => ({
-          ...prev,
-          quotationNo: data.proposal_number
-        }));
-
-        setProposalId(data.proposalId); // ⭐ add
-
-        return alert("⚠️ Proposal already exists: " + data.proposal_number);
-      }
-
-
-
-      // ✅ DB generated proposal no show in UI
-      if (data.proposal_number) {
-        setHeader((prev) => ({ ...prev, quotationNo: data.proposal_number }));
-      }
-
-      if (data.proposalId) {
-        setProposalId(data.proposalId);
-      }
-
-setTimeout(() => {
-        const clientInfo = header.clientName 
-          ? `${header.clientName} (${header.clientEmail || "no email"})`
-          : header.clientEmail || "client";
-        alert(`✅ Proposal sent successfully `);
-      }, 50);
-
-    } finally {
-      setSaving(false);
+    const newProposalId = data.proposalId;
+    if (data.proposal_number) {
+      setHeader(prev => ({ ...prev, quotationNo: data.proposal_number }));
     }
-  };
+    if (newProposalId) {
+      setProposalId(newProposalId);
+    }
+
+    /* 2️⃣ SEND EMAIL */
+    let mailSent = false;
+    if (header.clientEmail && newProposalId) {
+      try {
+        const mailRes = await fetch(`/api/proposals/email/${newProposalId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "proposal",
+            email: header.clientEmail,
+          }),
+        });
+
+        const mailData = await mailRes.json();
+        mailSent = mailRes.ok;
+        console.log("MAIL RESULT:", mailData);
+      } catch (mailErr) {
+        console.error("MAIL ERROR:", mailErr);
+      }
+    }
+
+    /* 3️⃣ ALERT STATUS */
+    const clientInfo = header.clientName
+      ? `${header.clientName} (${header.clientEmail || "no email"})`
+      : header.clientEmail || "client";
+
+    if (mailSent) {
+      alert(`✅ Proposal saved & emailed to ${clientInfo}`);
+    } else if (header.clientEmail) {
+      alert(`⚠️ Proposal saved but email failed for ${clientInfo}`);
+    } else {
+      alert(`✅ Proposal saved (no client email)`);
+    }
+
+  } catch (e) {
+    alert("❌ " + e.message);
+  } finally {
+    setSaving(false);
+  }
+};
   const handleDownloadPdf = () => {
     if (!selectedRfq) return alert("❌ Select RFQ first");
     if (!proposalId) return alert("❌ Please send proposal first");
@@ -582,8 +597,8 @@ const data = await res.json();
               >
                 Download Proposal
               </button>
-
-              {/* EMAIL PROPOSAL */}
+{/* 
+              EMAIL PROPOSAL
               <button
                 className="btn w-100 mb-2"
                 style={{
@@ -596,7 +611,7 @@ const data = await res.json();
                 disabled={!proposalId || !header.clientEmail || sendingProposal}
               >
                 {sendingProposal ? "Sending..." : "Email Proposal"}
-              </button>
+              </button> */}
 
               {/* DOWNLOAD INVOICE */}
               {/* <button
