@@ -1,11 +1,27 @@
-# TODO - Fix Duplicate Entry Error for Companies API
+# TODO: Proposal Response System
 
-## Issue
-POST /api/companies throws "Duplicate entry 'ADC' for key 'uniq_short_name'" error when attempting to create a company with an existing short_name.
+## Status: COMPLETED
 
-## Root Cause
-Race condition between duplicate check (SELECT) and INSERT - two concurrent requests can both pass the check but only one succeeds in INSERT.
+### Changes Made:
 
-## Plan
-- [x] Analyze the error and understand the codebase
-- [x] Fix app/api/companies/route.js to catch ER_DUP_ENTRY error (errno 1062) and return proper 400 respo
+### 1. Updated Email Content in lib/mailer.js
+- Changed `sendProposalNotificationEmail` function to accept `companyName` parameter
+- Updated email template to match user's requested format:
+  - Subject: "Proposal Sent – Action Required"
+  - New format with Proposal No, Date, Company, Grand Total Amount
+  - Message asking user to login and approve
+
+### 2. Updated Email API in app/api/proposals/email/[rfqid]/route.js
+- Added company_name to the SQL query (LEFT JOIN with companies table)
+- Updated the function call to pass companyName
+- Added status update to "Sent" after email is sent successfully
+
+### 3. Admin Proposal Page already supports "Sent" status
+- Badge styling for "Sent" status (bg-info)
+- Filter dropdown includes "Sent" option
+
+## Flow:
+1. Admin creates proposal (status = "Pending")
+2. Admin sends proposal via email → status changes to "Sent"
+3. Client receives email with proposal details
+4. Client can login to review and respond (approve/decline) - To be implemented
