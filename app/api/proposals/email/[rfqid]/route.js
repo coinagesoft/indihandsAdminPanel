@@ -7,10 +7,9 @@ export async function POST(req, { params }) {
   const connection = await db.getConnection();
 
   try {
-    const { rfqid } = await params;
-    const { email, clientName } = await req.json();
+    const { rfqid: proposalId } =await params;
+    const { email } = await req.json();
 
-    // Get proposal details from database
     const [[proposal]] = await connection.query(
       `SELECT p.proposal_number, p.proposal_date, p.grand_total, p.rfq_id,
               r.client_name, r.client_email,
@@ -19,91 +18,79 @@ export async function POST(req, { params }) {
        LEFT JOIN rfqs r ON r.id = p.rfq_id
        LEFT JOIN companies c ON c.id = p.company_id
        WHERE p.id = ?`,
-      [rfqid]
+      [proposalId]
     );
 
     if (!proposal) {
       return Response.json({ message: "Proposal not found" }, { status: 404 });
     }
 
-    const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/proposals/pdf/${rfqid}`;
-    const pdfRes = await fetch(pdfUrl);
-
-    if (!pdfRes.ok) {
-      return Response.json({ message: "PDF generation failed" }, { status: 500 });
+    /* ✅ recipient */
+    const recipient = email || proposal.client_email;
+    if (!recipient) {
+      console.error("NO RECIPIENT EMAIL");
+      return Response.json({ message: "Client email missing" }, { status: 400 });
     }
 
-    const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
+    /* ===== PDF FETCH ===== */
+ /* ===== PDF FETCH ===== */
+const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/proposals/pdf/${proposalId}`;
+let pdfBuffer = null;
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
-console.log("MAIL_USER:", process.env.MAIL_USER);
-console.log("SENDING TO:", email);
-console.log("PROPOSAL EMAIL DB:", proposal.client_email);
-    // Send email with PDF attachment
-    await transporter.sendMail({
-      from: `"Indihands" <${process.env.MAIL_USER}>`,
-      to: email,
-      subject: `Proposal ${proposal.proposal_number}`,
-      text: "Please find attached proposal PDF.",
-      attachments: [
-        {
-          filename: `Proposal-${proposal.proposal_number}.pdf`,
-          content: pdfBuffer,
-        },
-      ],
-    });
-
-    // Send notification email to client
-// Send notification email to RFQ client
 try {
-  const clientEmailForNotification = proposal.client_email;
-  const clientNameForNotification =
-    proposal.client_name || "Valued Customer";
-  const companyNameForNotification = proposal.company_name || "";
+  const pdfRes = await fetch(pdfUrl);
 
-  if (clientEmailForNotification) {
-    await sendProposalNotificationEmail(
-      clientEmailForNotification,
-      clientNameForNotification,
-      proposal.proposal_number,
-      proposal.proposal_date,
-      proposal.grand_total,
-      companyNameForNotification
-    );
-
-    console.log(
-      `Proposal notification sent to ${clientEmailForNotification}`
-    );
+  if (pdfRes.ok) {
+    pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
+    console.log("PDF attached");
   } else {
-    console.warn(
-      "No RFQ client email found for proposal",
-      proposal.proposal_number
-    );
+    console.warn("PDF fetch failed:", pdfUrl);
   }
-} catch (notifyErr) {
-  console.error("Failed to send proposal notification:", notifyErr);
+
+} catch (pdfErr) {
+  console.error("PDF ERROR:", pdfErr);
 }
 
-// Update proposal status to "Sent"
-await connection.query(
-  `UPDATE proposals SET status = 'Sent' WHERE id = ?`,
-  [rfqid]
-);
+    /* ===== MAIL ===== */
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
 
-console.log(`Proposal ${rfqid} status updated to Sent`);
+    console.log("SENDING MAIL TO:", recipient);
 
-    return Response.json({ message: "Proposal email sent" });
+  
+
+    /* notification */
+    if (proposal.client_email) {
+      await sendProposalNotificationEmail(
+        proposal.client_email,
+        proposal.client_name || "Valued Customer",
+        proposal.proposal_number,
+        proposal.proposal_date,
+        proposal.grand_total,
+        proposal.company_name || "",
+        pdfBuffer
+      );
+    }
+
+    await connection.query(
+      `UPDATE proposals SET status = 'Sent' WHERE id = ?`,
+      [proposalId]
+    );
+
+  return Response.json({
+  message: "Proposal email sent",
+  pdfAttached: !!pdfBuffer,
+});
 
   } catch (e) {
-    console.error(e);
+    console.error("EMAIL API ERROR:", e);
     return Response.json({ message: "Email error" }, { status: 500 });
   } finally {
     connection.release();
