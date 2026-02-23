@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 import nodemailer from "nodemailer";
 import { db } from "../../../../db";
-import { sendProposalNotificationEmail } from "../../../../lib/mailer";
+import { sendProposalNotificationEmail } from "../../../../../lib/mailer";
 
 export async function POST(req, { params }) {
   const connection = await db.getConnection();
