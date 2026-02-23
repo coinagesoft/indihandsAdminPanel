@@ -10,7 +10,7 @@ export async function PATCH(req, { params }) {
     }
 
     const body = await req.json();
-    const { companyName, companyEmail, charges } = body;
+    const { companyName, shortName, charges } = body;
 
     // ✅ company name REQUIRED
     const name = companyName?.trim();
@@ -21,15 +21,35 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    // ✅ email nullable
-    const email = companyEmail?.trim() || null;
+    // ✅ short name REQUIRED
+    const short = shortName?.trim().toUpperCase();
+    if (!short) {
+      return Response.json(
+        { message: "Short name required" },
+        { status: 400 }
+      );
+    }
+
+    // ✅ duplicate short check (exclude current)
+    const [[exists]] = await db.query(
+      `SELECT id FROM companies 
+       WHERE short_name = ? AND id <> ?`,
+      [short, companyId]
+    );
+
+    if (exists) {
+      return Response.json(
+        { message: "Short name already exists" },
+        { status: 400 }
+      );
+    }
 
     // ✅ update company
     await db.query(
       `UPDATE companies 
-       SET company_name = ?, company_email = ?
+       SET company_name = ?, short_name = ?
        WHERE id = ?`,
-      [name, email, companyId]
+      [name, short, companyId]
     );
 
     // ✅ replace charges
@@ -47,7 +67,8 @@ export async function PATCH(req, { params }) {
       ]);
 
       await db.query(
-        `INSERT INTO company_charges (company_id, label, amount, tax_percent)
+        `INSERT INTO company_charges 
+         (company_id, label, amount, tax_percent)
          VALUES ?`,
         [values]
       );

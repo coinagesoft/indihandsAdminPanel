@@ -6,6 +6,7 @@ export async function GET() {
       SELECT
         r.id,
         r.company_id AS companyId,
+         r.rfq_number, 
         r.branch_id AS branchId,
         c.company_name AS company,
         cb.gstin,
@@ -25,6 +26,7 @@ export async function GET() {
     const rfqs = rows.map((x) => ({
       id: x.id,
       companyId: x.companyId,
+        rfqNumber: x.rfq_number || "", 
       branchId: x.branchId,
       customerName: x.customerName || x.company,
       company: x.company,

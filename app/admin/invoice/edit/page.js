@@ -298,7 +298,7 @@ const Page = () => {
                   <option value="">-- Select RFQ --</option>
                   {acceptedRfqs.map((r) => (
                     <option key={r.id} value={r.id}>
-                      RFQ #{r.id} — {r.company}
+                      {r.rfqNumber} — {r.company}
                     </option>
                   ))}
                 </select>

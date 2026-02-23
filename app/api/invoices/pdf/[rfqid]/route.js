@@ -159,7 +159,6 @@ body{
 }
 
 /* HEADER */
-/* HEADER */
 .hdr{
   position:relative;
   display:flex;
@@ -182,6 +181,7 @@ body{
 }
 
 
+
 .hdr-right{
   display:flex;
   flex-direction:column;
@@ -190,10 +190,10 @@ body{
 }
 
 .hdr-right img{
-  width:180px;
+  width:190px;
   height:auto;
-  margin-end:20px;
-  margin-bottom:6px; /* gap logo→text */
+  margin-bottom:6px;
+   margin-right:35px;
 }
 
 .hdr-text{
@@ -202,6 +202,8 @@ body{
   text-align:left; /* text normal */
   width:100%;
 }
+
+
 
 /* ===== MAIN BOX ===== */
 .box{
@@ -301,10 +303,12 @@ body{
   border-top:1px dotted #b7b7b7;
 }
 
-.words{
+.amt-words{
+  flex:0 0 48%;
   padding:8px;
-  border-right:1px dotted #b7b7b7;
+  font-size:9.5px;
   text-align:center;
+  border-right:1px dotted #b5b5b5;
 }
 
 .totals{
@@ -466,7 +470,7 @@ ${sender.website || ""}
 <td class="label">State:</td>
 <td class="value">${senderStateName}</td>
 
-<td class="label">Contact Details:</td>
+<td class="label">Contact Number:</td>
 <td class="value">${proposal.client_phone || ""}</td>
 </tr>
 
@@ -535,7 +539,7 @@ ${chargeRows}
 <!-- AMOUNT -->
 <div class="amt">
 
-<div class="words">
+<div class="amt-words">
 Total invoice amount in words<br><br>
 <b>${numberToWords(grandTotal)}</b>
 </div>
