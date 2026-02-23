@@ -1,4 +1,5 @@
 import { db } from "../../../db";
+import { sendRFQStatusEmail } from "../../../../lib/mailer";
 
 export async function PATCH(req, { params }) {
   const connection = await db.getConnection();
@@ -20,9 +21,9 @@ export async function PATCH(req, { params }) {
 
     await connection.beginTransaction();
 
-    /* 1️⃣ Fetch current RFQ status */
+    /* 1️⃣ Fetch current RFQ status and client details */
     const [[rfq]] = await connection.query(
-      `SELECT status FROM rfqs WHERE id = ? FOR UPDATE`,
+      `SELECT status, client_name, client_email, rfq_number FROM rfqs WHERE id = ? FOR UPDATE`,
       [rfqId]
     );
 
@@ -32,6 +33,9 @@ export async function PATCH(req, { params }) {
     }
 
     const prevStatus = rfq.status;
+    const clientName = rfq.client_name;
+    const clientEmail = rfq.client_email;
+    const rfqNumber = rfq.rfq_number || rfqId;
 
     /* 2️⃣ Reduce stock ONLY if moving to Accepted */
     if (prevStatus !== "Accepted" && status === "Accepted") {
@@ -83,6 +87,18 @@ export async function PATCH(req, { params }) {
     );
 
     await connection.commit();
+
+    /* 4️⃣ Send email notification if status is Under Review, Accepted, or Rejected */
+    const emailStatuses = ["Under Review", "Accepted", "Rejected"];
+    if (emailStatuses.includes(status) && clientEmail) {
+      try {
+        await sendRFQStatusEmail(clientEmail, clientName, rfqNumber, status);
+        console.log(`Email sent to ${clientEmail} for RFQ ${rfqNumber} status: ${status}`);
+      } catch (emailErr) {
+        console.error("Failed to send email notification:", emailErr);
+        // Don't fail the request if email fails, just log the error
+      }
+    }
 
     return Response.json(
       { message: "RFQ status updated successfully" },
