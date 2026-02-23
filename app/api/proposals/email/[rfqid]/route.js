@@ -44,7 +44,9 @@ const transporter = nodemailer.createTransport({
     pass: process.env.MAIL_PASS,
   },
 });
-
+console.log("MAIL_USER:", process.env.MAIL_USER);
+console.log("SENDING TO:", email);
+console.log("PROPOSAL EMAIL DB:", proposal.client_email);
     // Send email with PDF attachment
     await transporter.sendMail({
       from: `"Indihands" <${process.env.MAIL_USER}>`,

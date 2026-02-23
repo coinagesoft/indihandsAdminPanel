@@ -94,7 +94,7 @@ setTimeout(() => {
         const clientInfo = header.clientName 
           ? `${header.clientName} (${header.clientEmail || "no email"})`
           : header.clientEmail || "client";
-        alert(`✅ Proposal sent successfully to ${clientInfo}`);
+        alert(`✅ Proposal sent successfully `);
       }, 50);
 
     } finally {
