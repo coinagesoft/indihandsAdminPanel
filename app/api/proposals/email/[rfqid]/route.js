@@ -13,9 +13,11 @@ export async function POST(req, { params }) {
     // Get proposal details from database
     const [[proposal]] = await connection.query(
       `SELECT p.proposal_number, p.proposal_date, p.grand_total, p.rfq_id,
-              r.client_name, r.client_email
+              r.client_name, r.client_email,
+              c.company_name
        FROM proposals p
        LEFT JOIN rfqs r ON r.id = p.rfq_id
+       LEFT JOIN companies c ON c.id = p.company_id
        WHERE p.id = ?`,
       [rfqid]
     );
@@ -58,11 +60,12 @@ const transporter = nodemailer.createTransport({
     });
 
     // Send notification email to client
- // Send notification email to RFQ client
+// Send notification email to RFQ client
 try {
   const clientEmailForNotification = proposal.client_email;
   const clientNameForNotification =
     proposal.client_name || "Valued Customer";
+  const companyNameForNotification = proposal.company_name || "";
 
   if (clientEmailForNotification) {
     await sendProposalNotificationEmail(
@@ -70,7 +73,8 @@ try {
       clientNameForNotification,
       proposal.proposal_number,
       proposal.proposal_date,
-      proposal.grand_total
+      proposal.grand_total,
+      companyNameForNotification
     );
 
     console.log(
@@ -85,6 +89,14 @@ try {
 } catch (notifyErr) {
   console.error("Failed to send proposal notification:", notifyErr);
 }
+
+// Update proposal status to "Sent"
+await connection.query(
+  `UPDATE proposals SET status = 'Sent' WHERE id = ?`,
+  [rfqid]
+);
+
+console.log(`Proposal ${rfqid} status updated to Sent`);
 
     return Response.json({ message: "Proposal email sent" });
 
