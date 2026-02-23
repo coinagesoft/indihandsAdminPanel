@@ -90,8 +90,11 @@ const Page = () => {
         setProposalId(data.proposalId);
       }
 
-      setTimeout(() => {
-        alert("✅ Proposal sent");
+setTimeout(() => {
+        const clientInfo = header.clientName 
+          ? `${header.clientName} (${header.clientEmail || "no email"})`
+          : header.clientEmail || "client";
+        alert(`✅ Proposal sent successfully to ${clientInfo}`);
       }, 50);
 
     } finally {
@@ -121,10 +124,13 @@ const Page = () => {
         }),
       });
 
-      const data = await res.json();
+const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Email failed");
 
-      alert("✅ Proposal emailed to client");
+      const clientInfo = header.clientName 
+        ? `${header.clientName} (${header.clientEmail})`
+        : header.clientEmail;
+      alert(`✅ Proposal email sent successfully to ${clientInfo}`);
     } catch (e) {
       alert("❌ " + e.message);
     } finally {

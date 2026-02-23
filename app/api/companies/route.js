@@ -132,6 +132,13 @@ export async function POST(req) {
       { status: 201 }
     );
   } catch (err) {
+    // Handle duplicate entry error for short_name (ER_DUP_ENTRY, errno 1062)
+    if (err.code === 'ER_DUP_ENTRY' && err.errno === 1062) {
+      return Response.json(
+        { message: "Short name already exists" },
+        { status: 400 }
+      );
+    }
     console.error("POST /api/companies error:", err);
     return Response.json({ message: "Server error" }, { status: 500 });
   }

@@ -42,6 +42,15 @@ const RFQPage = () => {
     const data = await res.json();
     if (!res.ok) return alert("❌ " + data.message);
 
+    // Show alert based on email sent status
+    if (data.emailSent) {
+      alert(`✅ Status updated to "${status}" and email sent to client (${data.clientEmail})`);
+    } else if (data.emailError) {
+      alert(`⚠️ Status updated to "${status}" but failed to send email: ${data.emailError}`);
+    } else {
+      alert(`✅ Status updated to "${status}"`);
+    }
+
     setRfqs((prev) =>
       prev.map((r) => (r.id === rfqId ? { ...r, status } : r))
     );
