@@ -33,13 +33,15 @@ export async function POST(req, { params }) {
 
     const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
-    });
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+});
 
     // Send email with PDF attachment
     await transporter.sendMail({
@@ -56,23 +58,33 @@ export async function POST(req, { params }) {
     });
 
     // Send notification email to client
-    try {
-      const clientEmailForNotification = clientName ? email : (proposal.client_email || email);
-      const clientNameForNotification = clientName || proposal.client_name || "Valued Customer";
-      
-      await sendProposalNotificationEmail(
-        clientEmailForNotification,
-        clientNameForNotification,
-        proposal.proposal_number,
-        proposal.proposal_date,
-        proposal.grand_total
-      );
-      
-      console.log(`Proposal notification sent to ${clientEmailForNotification} for proposal ${proposal.proposal_number}`);
-    } catch (notifyErr) {
-      console.error("Failed to send proposal notification:", notifyErr);
-      // Don't fail the request if notification email fails
-    }
+ // Send notification email to RFQ client
+try {
+  const clientEmailForNotification = proposal.client_email;
+  const clientNameForNotification =
+    proposal.client_name || "Valued Customer";
+
+  if (clientEmailForNotification) {
+    await sendProposalNotificationEmail(
+      clientEmailForNotification,
+      clientNameForNotification,
+      proposal.proposal_number,
+      proposal.proposal_date,
+      proposal.grand_total
+    );
+
+    console.log(
+      `Proposal notification sent to ${clientEmailForNotification}`
+    );
+  } else {
+    console.warn(
+      "No RFQ client email found for proposal",
+      proposal.proposal_number
+    );
+  }
+} catch (notifyErr) {
+  console.error("Failed to send proposal notification:", notifyErr);
+}
 
     return Response.json({ message: "Proposal email sent" });
 
