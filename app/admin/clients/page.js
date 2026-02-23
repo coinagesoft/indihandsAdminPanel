@@ -83,7 +83,9 @@ const Page = () => {
 
     const data = await res.json();
     if (!res.ok) return alert("❌ " + data.message);
-
+if (!editingCompany.shortName?.trim()) {
+  return alert("❌ Company short name required");
+}
     alert("✅ Company updated");
     await fetchCompanies();
     setEditingCompany(EMPTY_COMPANY);
@@ -113,6 +115,9 @@ const Page = () => {
     const data = await res.json();
     if (!res.ok) return alert("❌ " + data.message);
 
+if (!newCompany.shortName?.trim()) {
+  return alert("❌ Company short name required");
+}
     alert("✅ Company created");
     await fetchCompanies();
 
