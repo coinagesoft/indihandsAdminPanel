@@ -82,26 +82,105 @@ export async function PATCH(req, { params }) {
 }
 
 
-/* ✅ delete company (will delete branches due to cascade) */
+/* ✅ delete company (with dependent cleanup) */
+/* ✅ FULL SAFE COMPANY DELETE */
 export async function DELETE(req, { params }) {
+  const connection = await db.getConnection();
+
   try {
-       const { id } = await params;
+    const { id } = await params;
     const companyId = Number(id);
 
     if (!companyId) {
       return Response.json({ message: "Invalid companyId" }, { status: 400 });
     }
 
-    // delete charges first (safe)
-    await db.query(`DELETE FROM company_charges WHERE company_id = ?`, [companyId]);
+    await connection.beginTransaction();
 
-    // delete company (branches cascade)
-    await db.query(`DELETE FROM companies WHERE id = ?`, [companyId]);
+    /* 1️⃣ branches */
+    const [branches] = await connection.query(
+      `SELECT id FROM company_branches WHERE company_id = ?`,
+      [companyId]
+    );
+    const branchIds = branches.map(b => b.id);
 
-    return Response.json({ message: "Company deleted" }, { status: 200 });
+    if (branchIds.length) {
+
+      /* 2️⃣ invoices + items */
+      const [invoices] = await connection.query(
+        `SELECT id FROM invoices WHERE buyer_branch_id IN (?)`,
+        [branchIds]
+      );
+      const invoiceIds = invoices.map(i => i.id);
+
+      if (invoiceIds.length) {
+        await connection.query(
+          `DELETE FROM invoice_items WHERE invoice_id IN (?)`,
+          [invoiceIds]
+        );
+        await connection.query(
+          `DELETE FROM invoices WHERE id IN (?)`,
+          [invoiceIds]
+        );
+      }
+
+      /* 3️⃣ proposals + items + charges */
+      const [proposals] = await connection.query(
+        `SELECT id FROM proposals WHERE branch_id IN (?)`,
+        [branchIds]
+      );
+      const proposalIds = proposals.map(p => p.id);
+
+      if (proposalIds.length) {
+        await connection.query(
+          `DELETE FROM proposal_items WHERE proposal_id IN (?)`,
+          [proposalIds]
+        );
+        await connection.query(
+          `DELETE FROM proposal_charges WHERE proposal_id IN (?)`,
+          [proposalIds]
+        );
+        await connection.query(
+          `DELETE FROM proposals WHERE id IN (?)`,
+          [proposalIds]
+        );
+      }
+
+      /* 4️⃣ rfqs */
+      await connection.query(
+        `DELETE FROM rfqs WHERE branch_id IN (?)`,
+        [branchIds]
+      );
+
+      /* 5️⃣ branches */
+      await connection.query(
+        `DELETE FROM company_branches WHERE company_id = ?`,
+        [companyId]
+      );
+    }
+
+    /* 6️⃣ company charges */
+    await connection.query(
+      `DELETE FROM company_charges WHERE company_id = ?`,
+      [companyId]
+    );
+
+    /* 7️⃣ company */
+    await connection.query(
+      `DELETE FROM companies WHERE id = ?`,
+      [companyId]
+    );
+
+    await connection.commit();
+
+    return Response.json({ message: "Company deleted successfully" });
+
   } catch (err) {
-    console.error("DELETE /api/companies/[id] error:", err);
-    return Response.json({ message: "Server error" }, { status: 500 });
+    await connection.rollback();
+    console.error("DELETE company error:", err);
+    return Response.json({ message: err.message }, { status: 500 });
+  } finally {
+    connection.release();
   }
 }
 
