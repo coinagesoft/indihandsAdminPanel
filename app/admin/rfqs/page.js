@@ -11,7 +11,7 @@ const RFQPage = () => {
   const [selectedBranch, setSelectedBranch] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState("all");
-
+  const [statusLoading, setStatusLoading] = useState(null);
   /* ---------------- API ---------------- */
 
   useEffect(() => {
@@ -32,7 +32,35 @@ const RFQPage = () => {
     }
   };
 
+  // const updateStatus = async (rfqId, status) => {
+  //   const res = await fetch(`/api/rfqs/${rfqId}`, {
+  //     method: "PATCH",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({ status }),
+  //   });
+
+  //   const data = await res.json();
+  //   if (!res.ok) return alert("❌ " + data.message);
+
+  //   // Show alert based on email sent status
+  //   if (data.emailSent) {
+  //     alert(`✅ Status updated to "${status}" and email sent to client (${data.clientEmail})`);
+  //   } else if (data.emailError) {
+  //     alert(`⚠️ Status updated to "${status}" but failed to send email: ${data.emailError}`);
+  //   } else {
+  //     alert(`✅ Status updated to "${status}"`);
+  //   }
+
+  //   setRfqs((prev) =>
+  //     prev.map((r) => (r.id === rfqId ? { ...r, status } : r))
+  //   );
+  // };
+
   const updateStatus = async (rfqId, status) => {
+  const key = `${rfqId}-${status}`;
+  setStatusLoading(key);
+
+  try {
     const res = await fetch(`/api/rfqs/${rfqId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -40,22 +68,26 @@ const RFQPage = () => {
     });
 
     const data = await res.json();
-    if (!res.ok) return alert("❌ " + data.message);
+    if (!res.ok) throw new Error(data.message || "Update failed");
 
-    // Show alert based on email sent status
     if (data.emailSent) {
-      alert(`✅ Status updated to "${status}" and email sent to client (${data.clientEmail})`);
+      alert(`✅ Status "${status}" & email sent)`);
     } else if (data.emailError) {
-      alert(`⚠️ Status updated to "${status}" but failed to send email: ${data.emailError}`);
+      alert(`⚠️ Status updated but email failed`);
     } else {
-      alert(`✅ Status updated to "${status}"`);
+      alert(`✅ Status updated`);
     }
 
-    setRfqs((prev) =>
-      prev.map((r) => (r.id === rfqId ? { ...r, status } : r))
+    setRfqs(prev =>
+      prev.map(r => (r.id === rfqId ? { ...r, status } : r))
     );
-  };
 
+  } catch (e) {
+    alert("❌ " + e.message);
+  } finally {
+    setStatusLoading(null);
+  }
+};
   /* ---------------- FILTER HELPERS ---------------- */
 
   const allProducts = useMemo(() => {
@@ -211,7 +243,6 @@ const RFQPage = () => {
                     <th>Product</th>
                      <th>HSN</th>
                     <th>Code</th>
-                    <th>Category</th>
                     <th>Qty</th>
                   </tr>
                 </thead>
@@ -221,7 +252,6 @@ const RFQPage = () => {
                       <td>{p.name}</td>
                        <td>{p.hsn || "-"}</td>
                       <td>{p.code}</td>
-                      <td>{p.category}</td>
                       <td>{p.quantity}</td>
                     </tr>
                   ))}
@@ -229,30 +259,60 @@ const RFQPage = () => {
               </table>
             </div>
 
-            {rfq.status !== "Accepted" && rfq.status !== "Rejected" && (
-              <div className="d-flex gap-2 mt-3">
-                {rfq.status === "Submitted" && (
-                  <button
-                    className="btn btn-warning btn-sm"
-                    onClick={() => updateStatus(rfq.id, "Under Review")}
-                  >
-                    Mark Under Review
-                  </button>
-                )}
-                <button
-                  className="btn btn-success btn-sm"
-                  onClick={() => updateStatus(rfq.id, "Accepted")}
-                >
-                  Accept
-                </button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => updateStatus(rfq.id, "Rejected")}
-                >
-                  Reject
-                </button>
-              </div>
-            )}
+          {rfq.status !== "Accepted" && rfq.status !== "Rejected" && (
+  <div className="d-flex gap-2 mt-3">
+
+    {/* UNDER REVIEW */}
+    {rfq.status === "Submitted" && (
+      <button
+        className="btn btn-warning btn-sm"
+        disabled={statusLoading === `${rfq.id}-Under Review`}
+        onClick={() => updateStatus(rfq.id, "Under Review")}
+      >
+        {statusLoading === `${rfq.id}-Under Review` ? (
+          <>
+            <span className="spinner-border spinner-border-sm me-1"></span>
+            Sending...
+          </>
+        ) : (
+          "Mark Under Review"
+        )}
+      </button>
+    )}
+
+    {/* ACCEPT */}
+    <button
+      className="btn btn-success btn-sm"
+      disabled={statusLoading === `${rfq.id}-Accepted`}
+      onClick={() => updateStatus(rfq.id, "Accepted")}
+    >
+      {statusLoading === `${rfq.id}-Accepted` ? (
+        <>
+          <span className="spinner-border spinner-border-sm me-1"></span>
+          Sending...
+        </>
+      ) : (
+        "Accept"
+      )}
+    </button>
+
+    {/* REJECT */}
+    <button
+      className="btn btn-danger btn-sm"
+      disabled={statusLoading === `${rfq.id}-Rejected`}
+      onClick={() => updateStatus(rfq.id, "Rejected")}
+    >
+      {statusLoading === `${rfq.id}-Rejected` ? (
+        <>
+          <span className="spinner-border spinner-border-sm me-1"></span>
+          Sending...
+        </>
+      ) : (
+        "Reject"
+      )}
+    </button>
+  </div>
+)}
           </div>
         </div>
       ))}
