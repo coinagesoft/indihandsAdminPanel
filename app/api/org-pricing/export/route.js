@@ -15,25 +15,26 @@ export async function GET(req) {
       params.push(companyId);
     }
 
-    const [rows] = await db.query(
-      `
-      SELECT
-        c.id AS companyId,
-        c.company_name AS companyName,
-        p.id AS productId,
-        p.product_name AS productName,
-        p.base_price AS basePrice,
-cpp.custom_price AS customPrice
-      FROM companies c
-      CROSS JOIN products p
-      LEFT JOIN company_product_pricing cpp
-        ON cpp.company_id = c.id
-       AND cpp.product_id = p.id
-      ${where}
-      ORDER BY c.company_name, p.product_name
-      `,
-      params
-    );
+ const [rows] = await db.query(
+  `
+SELECT
+  c.id AS companyId,
+  c.company_name AS companyName,
+  p.id AS productId,
+  p.product_name AS productName,
+  p.base_price AS basePrice,
+  cpp.custom_price AS customPrice,
+  COALESCE(cpp.custom_price, p.base_price) AS finalPrice
+FROM companies c
+CROSS JOIN products p
+LEFT JOIN company_product_pricing cpp
+  ON cpp.company_id = c.id
+ AND cpp.product_id = p.id
+${where}
+ORDER BY c.company_name, p.product_name;
+  `,
+  params
+);
 
     /* ========= PREP DATA ========= */
     const data = rows.map(r => ({
