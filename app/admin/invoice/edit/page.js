@@ -152,7 +152,7 @@ const Page = () => {
     const res = await fetch(`/api/rfqs/${rfqId}/details`);
     const data = await res.json();
     if (!res.ok) return alert("❌ " + data.message);
-
+ console.log("rfqid",data)
     const companyId = data.header.companyId;
 
     // company charges
@@ -387,9 +387,17 @@ const Page = () => {
                             ₹ {Number(item.rate || 0).toFixed(2)}
                           </td>
 
-                          <td className="text-end">
-                            {Number(item.discount || 0).toFixed(2)}%
-                          </td>
+                         <td className="text-end">
+ <input
+  type="number"
+  className="form-control form-control-sm text-end"
+  style={{ width: 70, marginLeft: "auto" }}
+  value={item.discount ?? ""}
+  onChange={(e) =>
+    handleItemChange(i, "discount", e.target.value === "" ? "" : Number(e.target.value))
+  }
+/>
+</td>
 
                           <td className="text-end">
                             ₹ {amount.toFixed(2)}

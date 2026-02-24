@@ -458,7 +458,7 @@ const data = await res.json();
                           <td>{item.uom}</td>
                           <td>{item.qty}</td>
                           <td>{item.rate}</td>
-                          <td>{item.discount}</td>
+                          <td>{item.discount}%</td>
                           <td>{amount.toFixed(2)}</td>
                           <td>{calcTax(amount, item.cgst).toFixed(2)}</td>
                           <td>{calcTax(amount, item.sgst).toFixed(2)}</td>
