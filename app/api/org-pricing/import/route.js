@@ -9,31 +9,43 @@ export async function POST(req) {
       return NextResponse.json({ message: "Invalid data" }, { status: 400 });
     }
 
-    const values = rows
-      .filter((r) => r.company_id && r.product_id && r.custom_price !== "")
-      .map((r) => [
-        r.company_id,
-        r.product_id,
-        Number(r.custom_price),
-      ]);
+const values = rows
+  .map((r) => {
+    const companyId = Number(r.company_id);
+    const productId = Number(r.product_id);
 
-    if (!values.length) {
-      return NextResponse.json(
-        { message: "No valid rows to import" },
-        { status: 400 }
-      );
+    let price = r.custom_price;
+
+    if (price === "" || price == null) {
+      price = null;
+    } else {
+      // ✅ remove currency + commas
+      price = String(price)
+        .replace(/₹/g, "")
+        .replace(/,/g, "")
+        .trim();
+
+      price = Number(price);
+
+      if (isNaN(price)) price = null;
     }
 
-    await db.query(
-      `
-      INSERT INTO company_product_pricing (company_id, product_id, custom_price)
-      VALUES ?
-      ON DUPLICATE KEY UPDATE
-        custom_price = VALUES(custom_price),
-        updated_at = CURRENT_TIMESTAMP
-      `,
-      [values]
-    );
+    if (!companyId || !productId) return null;
+
+    return [companyId, productId, price];
+  })
+  .filter(Boolean);
+
+   await db.query(
+  `
+  INSERT INTO company_product_pricing (company_id, product_id, custom_price)
+  VALUES ?
+  ON DUPLICATE KEY UPDATE
+    custom_price = VALUES(custom_price),
+    updated_at = CURRENT_TIMESTAMP
+  `,
+  [values]
+);
 
     return NextResponse.json({
       message: `Imported ${values.length} pricing records successfully`,

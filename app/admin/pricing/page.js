@@ -55,13 +55,13 @@ useEffect(() => {
 
       setOrgs(data.companies || []);
       setProducts(data.products || []);
-      setPricing(
-        (data.pricing || []).map((x) => ({
-          orgId: x.companyId,
-          productId: x.productId,
-          price: Number(x.price),
-        }))
-      );
+  setPricing(
+  (data.pricing || []).map((x) => ({
+    orgId: x.companyId,
+    productId: x.productId,
+    price: x.price == null ? "" : Number(x.price),
+  }))
+);
     } catch (err) {
       alert("❌ " + err.message);
     } finally {
@@ -155,11 +155,11 @@ useEffect(() => {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(ws);
 
-      const cleaned = json.map((r) => ({
-        company_id: r["Company ID"],
-        product_id: r["Product ID"],
-        custom_price: r["Custom Price"],
-      }));
+    const cleaned = json.map((r) => ({
+  company_id: r["Company ID"],
+  product_id: r["Product ID"],
+  custom_price: r["Custom Price (₹)"],  // ✅ correct
+}));
 
       const res = await fetch("/api/org-pricing/import", {
         method: "POST",
