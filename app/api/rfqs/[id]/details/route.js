@@ -50,48 +50,93 @@ const { id } = await params;
     // 1) rfq_products.quoted_price (if filled)
     // 2) company_product_pricing.custom_price (if exists)
     // 3) products.base_price
-    const [itemRows] = await db.query(
-      `
-      SELECT
-        rp.product_id AS productId,
-        p.product_name AS description,
-        p.sku AS code,
-         p.hsn,
-        rp.quantity AS qty,
-        rp.quoted_price AS quotedPrice,
-        cpp.custom_price AS customPrice,
-        p.base_price AS basePrice
-      FROM rfq_products rp
-      JOIN products p ON p.id = rp.product_id
-      LEFT JOIN company_product_pricing cpp
-        ON cpp.company_id = ? AND cpp.product_id = rp.product_id
-      WHERE rp.rfq_id = ?
-      ORDER BY rp.product_id ASC
-      `,
-      [header.companyId, rfqId]
-    );
+ // check proposal exists
+const [[proposalRow]] = await db.query(
+  `SELECT id FROM proposals WHERE rfq_id=? LIMIT 1`,
+  [rfqId]
+);
 
-    const items = itemRows.map((x) => {
-      const finalRate =
-        x.quotedPrice != null
-          ? Number(x.quotedPrice)
-          : x.customPrice != null
-          ? Number(x.customPrice)
-          : Number(x.basePrice);
+let items = [];
 
-      return {
-        productId: x.productId,
-        description: x.description,
-        hsn: x.hsn, // optional: if you don't have HSN table yet
-        uom: "No",
-        qty: Number(x.qty || 1),
-        rate: finalRate,
-        discount: 0,
-        cgst: 9,
-        sgst: 9,
-        igst: 0,
-      };
-    });
+if (proposalRow) {
+  // ✅ proposal items with discount
+  const [pItems] = await db.query(
+    `
+    SELECT
+      pi.product_id AS productId,
+      p.product_name AS description,
+      p.hsn,
+      pi.quantity AS qty,
+      pi.rate,
+      pi.discount,
+      pi.cgst_rate AS cgst,
+      pi.sgst_rate AS sgst,
+      pi.igst_rate AS igst
+    FROM proposal_items pi
+    JOIN products p ON p.id = pi.product_id
+    WHERE pi.proposal_id = ?
+    ORDER BY pi.id ASC
+    `,
+    [proposalRow.id]
+  );
+
+  items = pItems.map(x => ({
+    productId: x.productId,
+    description: x.description,
+    hsn: x.hsn,
+    uom: "No",
+    qty: Number(x.qty || 1),
+    rate: Number(x.rate || 0),
+    discount: Number(x.discount || 0),
+    cgst: Number(x.cgst || 0),
+    sgst: Number(x.sgst || 0),
+    igst: Number(x.igst || 0),
+  }));
+
+} else {
+  // RFQ default items
+  const [itemRows] = await db.query(
+    `
+    SELECT
+      rp.product_id AS productId,
+      p.product_name AS description,
+      p.hsn,
+      rp.quantity AS qty,
+      rp.quoted_price AS quotedPrice,
+      cpp.custom_price AS customPrice,
+      p.base_price AS basePrice
+    FROM rfq_products rp
+    JOIN products p ON p.id = rp.product_id
+    LEFT JOIN company_product_pricing cpp
+      ON cpp.company_id = ? AND cpp.product_id = rp.product_id
+    WHERE rp.rfq_id = ?
+    ORDER BY rp.product_id ASC
+    `,
+    [header.companyId, rfqId]
+  );
+
+  items = itemRows.map(x => {
+    const finalRate =
+      x.quotedPrice != null
+        ? Number(x.quotedPrice)
+        : x.customPrice != null
+        ? Number(x.customPrice)
+        : Number(x.basePrice);
+
+    return {
+      productId: x.productId,
+      description: x.description,
+      hsn: x.hsn,
+      uom: "No",
+      qty: Number(x.qty || 1),
+      rate: finalRate,
+      discount: 0,
+      cgst: 9,
+      sgst: 9,
+      igst: 0,
+    };
+  });
+}
 
     return Response.json(
       {
