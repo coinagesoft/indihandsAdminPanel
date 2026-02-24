@@ -71,7 +71,7 @@ const RFQPage = () => {
     if (!res.ok) throw new Error(data.message || "Update failed");
 
     if (data.emailSent) {
-      alert(`✅ Status "${status}" & email sent)`);
+      alert(`✅ Status "${status}" & email sent`);
     } else if (data.emailError) {
       alert(`⚠️ Status updated but email failed`);
     } else {
