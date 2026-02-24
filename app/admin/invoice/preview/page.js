@@ -56,6 +56,7 @@ const handleSaveProposal = async () => {
         sgst_rate: x.sgst,
         igst_rate: x.igst,
       })),
+       charges, 
     };
 
     /* 1️⃣ SAVE PROPOSAL */
