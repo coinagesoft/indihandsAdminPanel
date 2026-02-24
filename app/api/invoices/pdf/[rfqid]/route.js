@@ -387,11 +387,7 @@ body{
 <div class="hdr">
 
   <!-- LEFT MOTIF -->
-<img 
-  class="hdr-motif"
-  width="140"
-  src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771496761/motif_300x400_hahbf7.png"
->
+
 
 
   <!-- RIGHT BLOCK -->
@@ -572,20 +568,14 @@ Interest @24% Per Annum will be charged on overdue bills<br>
 Contact: ${sender.phone || ""} | ${sender.email || ""}
 </div>
 
-<div class="bank-right">
 
-  <div style="text-align:center; font-weight:600; margin-bottom:15px;">
+<div class="bank-right" style="position: relative; ">
+
+  <div style="text-align:center; font-weight:600;">
     For Manik Trifaley Design Studio Pvt Ltd
   </div>
 
-  <div style="text-align:center;">
-    <img 
-      src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771567348/stamp_wcltx2.jpg"
-      style="width:120px; display:block; margin:0 auto 8px auto;"
-    />
-  </div>
-
-  <div style="text-align:center;">
+  <div style="text-align:center; position: absolute; bottom: 10px; width: 100%;">
     Authorised Signatory & Stamp
   </div>
 
@@ -595,18 +585,7 @@ Contact: ${sender.phone || ""} | ${sender.email || ""}
 
 </div>
 
-<div class="footer-wrap">
 
-  <div class="thankyou">
-    We look forward to your positive response.
-  </div>
-
-  <div class="footer">
-    <span>CIN: U47735PN2025PTC244212</span>
-    <span>Wonders by Hands</span>
-  </div>
-
-</div>
 
 </div>
 </body>
