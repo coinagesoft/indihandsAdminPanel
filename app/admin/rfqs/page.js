@@ -244,6 +244,8 @@ const RFQPage = () => {
                      <th>HSN</th>
                     <th>Code</th>
                     <th>Qty</th>
+                    <th>Rate</th>
+                    <th>Total Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -251,8 +253,10 @@ const RFQPage = () => {
                     <tr key={p.id}>
                       <td>{p.name}</td>
                        <td>{p.hsn || "-"}</td>
-                      <td>{p.code}</td>
+                      <td>{p.code || "-"}</td>
                       <td>{p.quantity}</td>
+                      <td>{p.rate}</td>
+                      <td>{p.totalAmount}</td>
                     </tr>
                   ))}
                 </tbody>

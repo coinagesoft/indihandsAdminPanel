@@ -46,6 +46,7 @@ export async function GET() {
         p.product_name AS name,
         p.sku AS code,
         p.hsn,
+        rp.quoted_price,
         rp.quantity
       FROM rfq_products rp
       JOIN products p ON p.id = rp.product_id
@@ -87,7 +88,9 @@ export async function GET() {
           name: p.name,
           hsn: p.hsn,
           code: p.code,
+          rate:p.quoted_price,
           quantity: p.quantity,
+          totalAmount:p.quoted_price * p.quantity,
         })),
     }));
 

@@ -688,12 +688,13 @@ const computedItems = items.map(i => {
   const qty = +i.qty || 0;
   const rate = +i.rate || 0;
   const disc = +i.discount || 0;
-
-  const taxable = qty * rate - (qty * rate * disc) / 100;
-
+const baseAmount = qty * rate;
+const taxable = baseAmount; 
   let cg = 0, sg = 0, ig = 0;
-
-  const igstRate =
+const unitDiscount = disc
+  ? (rate / (1 - disc / 100)) - rate
+  : 0;
+    const igstRate =
     (+i.igst_rate || 0) ||
     ((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
 
@@ -715,6 +716,8 @@ const computedItems = items.map(i => {
     rate,
     discount: disc,
     amount: taxable,
+    baseAmount,
+    unitDiscount,
     cgst: cg,
     sgst: sg,
     igst: ig,

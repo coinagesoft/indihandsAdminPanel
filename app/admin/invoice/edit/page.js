@@ -152,7 +152,7 @@ const Page = () => {
     const res = await fetch(`/api/rfqs/${rfqId}/details`);
     const data = await res.json();
     if (!res.ok) return alert("❌ " + data.message);
- console.log("rfqid",data)
+    console.log("rfqid", data)
     const companyId = data.header.companyId;
 
     // company charges
@@ -220,13 +220,11 @@ const Page = () => {
 
   /* ================= CALCULATIONS ================= */
   const calcAmount = (item) => {
-    const base = item.qty * item.rate;
-    const discount = (base * item.discount) / 100;
-    return base - discount;
+    return item.qty * item.rate;
   };
 
-
-  const calcTax = (amount, percent) => (amount * percent) / 100;
+  const calcTax = (amount, percent) =>
+    (amount * (percent || 0)) / 100;
 
   const totals = items.reduce(
     (acc, item) => {
@@ -340,7 +338,7 @@ const Page = () => {
                     <col style={{ minWidth: "100px" }} />
                     <col style={{ minWidth: "120px" }} />
                     <col style={{ minWidth: "120px" }} />
-                    <col style={{ minWidth: "120px" }} />
+                    <col style={{ minWidth: "140px" }} />
 
                   </colgroup>
 
@@ -352,6 +350,7 @@ const Page = () => {
                       <th className="text-center">Qty</th>
                       <th className="text-end">Rate</th>
                       <th className="text-end">Disc %</th>
+                      <th className="text-end">Disc Amt</th>
                       <th className="text-end">Amount</th>
                       <th className="text-end">Tax</th>
                       <th className="text-end">Total</th>
@@ -384,31 +383,25 @@ const Page = () => {
                           </td>
 
                           <td className="text-end">
-                            ₹ {Number(item.rate || 0).toFixed(2)}
+                             {Number(item.rate || 0).toFixed(2)}
                           </td>
 
-                         <td className="text-end">
- <input
-  type="number"
-  className="form-control form-control-sm text-end"
-  style={{ width: 70, marginLeft: "auto" }}
-  value={item.discount ?? ""}
-  onChange={(e) =>
-    handleItemChange(i, "discount", e.target.value === "" ? "" : Number(e.target.value))
-  }
-/>
-</td>
-
+                          <td className="text-end" style={{ width: 70 }}>
+                           {item.discount}%
+                          </td>
+                          <td  className="text-end" style={{ width: 70 }}>
+                             {(((item.basePrice - item.rate))).toFixed(2)}
+                          </td>
                           <td className="text-end">
-                            ₹ {amount.toFixed(2)}
+                             {amount.toFixed(2)}
                           </td>
 
                           <td className="text-end">
-                            ₹ {tax.toFixed(2)}
+                             {tax.toFixed(2)}
                           </td>
 
-                          <td className="text-end fw-semibold">
-                            ₹ {total.toFixed(2)}
+                          <td colSpan={2} className="text-end fw-semibold">
+                              {total.toFixed(2)}
                           </td>
                         </tr>
                       );

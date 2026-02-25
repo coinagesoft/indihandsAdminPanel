@@ -101,9 +101,8 @@ const igstRate = x.igst > 0 ? (x.igstRate || 0) : 0;
 <td class="tr">${x.qty}</td>
 <td class="tr">${x.rate.toFixed(2)}</td>
 <td class="tr">${x.discount.toFixed(2)}%</td>
-<td class="tr">${(x.qty * x.rate * x.discount / 100).toFixed(2)}</td>
-<td class="tr">${x.amount.toFixed(2)}</td>
-<td class="tr">${x.amount.toFixed(2)}</td>
+<td class="tr">${x.unitDiscount.toFixed(2)}</td>
+<td class="tr">${x.baseAmount.toFixed(2)}</td>
 
 <td class="tr">${sgstRate}</td>
 <td class="tr">${x.sgst.toFixed(2)}</td>
@@ -129,7 +128,6 @@ const chargeRows = computedCharges.map(c => {
 <td class="tdl">${c.label}</td>
 <td></td><td></td><td></td><td></td><td></td>
 
-<td class="tr">${c.amount.toFixed(2)}</td>
 <td class="tr">${c.amount.toFixed(2)}</td>
 
 <td class="tr">${sgstRate}</td>
@@ -471,7 +469,6 @@ State: ${clientStateName} | State Code: ${clientStateCode}</div>
 <th>Disc</th>
 <th>Disc Amt</th>
 <th>Amt</th>
-<th>Taxable</th>
 <th>SGST</th>
 <th>Amt</th>
 <th>CGST</th>
@@ -486,12 +483,11 @@ ${itemRows}
 ${chargeRows}
 <tr class="tbold">
 <td colspan="7">Total</td>
-<td>${subtotal.toFixed(2)}</td>
-<td>${subtotal.toFixed(2)}</td>
-<td></td><td>${cgstTotal.toFixed(2)}</td>
-<td></td><td>${sgstTotal.toFixed(2)}</td>
-<td></td><td>${igstTotal.toFixed(2)}</td>
-<td>${grandTotal.toFixed(2)}</td>
+<td class="tr">${subtotal.toFixed(2)}</td>
+<td class="tr"></td><td>${cgstTotal.toFixed(2)}</td>
+<td class="tr"></td><td>${sgstTotal.toFixed(2)}</td>
+<td class="tr"></td><td>${igstTotal.toFixed(2)}</td>
+<td class="tr">${grandTotal.toFixed(2)}</td>
 </tr>
 </tbody>
 </table>
@@ -514,7 +510,6 @@ Total quotation amount in words<br><br>
 <tr><td>GST on Reverse Charge</td><td>0</td></tr>
 </table>
 </div>
-
 </div>
 
 <div class="bank-row">
@@ -687,12 +682,13 @@ const computedItems = items.map(i => {
   const qty = +i.qty || 0;
   const rate = +i.rate || 0;
   const disc = +i.discount || 0;
-
-  const taxable = qty * rate - (qty * rate * disc) / 100;
-
+const baseAmount = qty * rate;
+const taxable = baseAmount; 
   let cg = 0, sg = 0, ig = 0;
-
-  const igstRate =
+const unitDiscount = disc
+  ? (rate / (1 - disc / 100)) - rate
+  : 0;
+    const igstRate =
     (+i.igst_rate || 0) ||
     ((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
 
@@ -714,6 +710,8 @@ const computedItems = items.map(i => {
     rate,
     discount: disc,
     amount: taxable,
+    baseAmount,
+    unitDiscount,
     cgst: cg,
     sgst: sg,
     igst: ig,
@@ -765,7 +763,7 @@ const computedItems = items.map(i => {
         <td>${x.hsn}</td>
         <td>${x.qty}</td>
         <td>${x.rate.toFixed(2)}</td>
-        <td>${x.discount}%</td>
+<td >${x.unitDiscount.toFixed(2)}</td>
         <td>${x.amount.toFixed(2)}</td>
         <td>${x.cgst.toFixed(2)}</td>
         <td>${x.sgst.toFixed(2)}</td>

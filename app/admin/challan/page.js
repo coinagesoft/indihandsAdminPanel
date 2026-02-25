@@ -5,7 +5,7 @@ export default function CreateInvoice() {
   const [proposals, setProposals] = useState([]);
   const [proposalId, setProposalId] = useState("");
   const [proposal, setProposal] = useState(null);
-const [invoiceId, setInvoiceId] = useState(null);
+  const [invoiceId, setInvoiceId] = useState(null);
   const today = new Date().toISOString().slice(0, 10);
 
   const emptyForm = {
@@ -29,11 +29,11 @@ const [invoiceId, setInvoiceId] = useState(null);
       .then(r => r.json())
       .then(setProposals);
   }, []);
-const downloadInvoice = () => {
-  if (!invoiceId) return;
+  const downloadInvoice = () => {
+    if (!invoiceId) return;
 
-  window.open(`/api/invoices/pdf/${proposalId}`, "_blank");
-};
+    window.open(`/api/invoices/pdf/${proposalId}`, "_blank");
+  };
   /* ========= LOAD PROPOSAL + EXISTING INVOICE ========= */
   useEffect(() => {
     if (!proposalId) {
@@ -48,29 +48,29 @@ const downloadInvoice = () => {
       .then(setProposal);
 
     /* existing invoice */
-  fetch(`/api/challan/invoice-by-proposal/${proposalId}`)
-  .then(r => r.json())
-  .then(inv => {
-    if (inv && inv.id) {
-      setInvoiceId(inv.id);   // ⭐ add
+    fetch(`/api/challan/invoice-by-proposal/${proposalId}`)
+      .then(r => r.json())
+      .then(inv => {
+        if (inv && inv.id) {
+          setInvoiceId(inv.id);   // ⭐ add
 
-      setForm({
-        invoice_date: inv.invoice_date?.slice(0, 10) || today,
-        supply_date: inv.supply_date?.slice(0, 10) || "",
-        place_of_supply: inv.place_of_supply || "",
-        po_number: inv.po_number || "",
-        po_date: inv.po_date?.slice(0, 10) || "",
-        transport_mode: inv.transport_mode || "",
-        vehicle_number: inv.vehicle_number || "",
-        challan_number: inv.challan_number || "",
-        challan_date: inv.challan_date?.slice(0, 10) || today,
-        reverse_charge: !!inv.reverse_charge
-      });
-    } else {
-      setInvoiceId(null);     // ⭐ add
-      setForm(emptyForm);
-    }
-  })
+          setForm({
+            invoice_date: inv.invoice_date?.slice(0, 10) || today,
+            supply_date: inv.supply_date?.slice(0, 10) || "",
+            place_of_supply: inv.place_of_supply || "",
+            po_number: inv.po_number || "",
+            po_date: inv.po_date?.slice(0, 10) || "",
+            transport_mode: inv.transport_mode || "",
+            vehicle_number: inv.vehicle_number || "",
+            challan_number: inv.challan_number || "",
+            challan_date: inv.challan_date?.slice(0, 10) || today,
+            reverse_charge: !!inv.reverse_charge
+          });
+        } else {
+          setInvoiceId(null);     // ⭐ add
+          setForm(emptyForm);
+        }
+      })
       .catch(() => setForm(emptyForm));
 
   }, [proposalId]);
@@ -142,52 +142,42 @@ const downloadInvoice = () => {
         </div>
 
         {/* SUMMARY */}
-{proposal && (
-  <div className="border rounded p-3 mb-4 bg-light">
+        {proposal && (
+          <div className="border rounded p-3 mb-4 bg-light">
 
-    {/* header row */}
-    <div className="d-flex justify-content-between align-items-center mb-3">
-      <div className="fw-semibold text-orange">
-        Proposal Details
-      </div>
+            {/* header row */}
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <div className="fw-semibold text-orange">
+                Proposal Details
+              </div>
 
-      {invoiceId && (
-        <button
-          type="button"
-          className="btn btn-orange btn-sm d-flex align-items-center gap-1"
-          onClick={downloadInvoice}
-        >
-          <i className="bi bi-download"></i>
-          Download Invoice
-        </button>
-      )}
-    </div>
+            </div>
 
-    {/* data */}
-    <div className="row small">
-      <div className="col-md-6">
-        <div className="text-muted">Company</div>
-        <div className="fw-semibold">{proposal.company_name}</div>
-      </div>
+            {/* data */}
+            <div className="row small">
+              <div className="col-md-6">
+                <div className="text-muted">Company</div>
+                <div className="fw-semibold">{proposal.company_name}</div>
+              </div>
 
-      <div className="col-md-6">
-        <div className="text-muted">Branch</div>
-        <div className="fw-semibold">{proposal.branch_name}</div>
-      </div>
+              <div className="col-md-6">
+                <div className="text-muted">Branch</div>
+                <div className="fw-semibold">{proposal.branch_name}</div>
+              </div>
 
-      <div className="col-md-6">
-        <div className="text-muted">Client</div>
-        <div className="fw-semibold">{proposal.client_name}</div>
-      </div>
+              <div className="col-md-6">
+                <div className="text-muted">Client</div>
+                <div className="fw-semibold">{proposal.client_name}</div>
+              </div>
 
-      <div className="col-md-6">
-        <div className="text-muted">Client Email</div>
-        <div className="fw-semibold">{proposal.client_email}</div>
-      </div>
-    </div>
+              <div className="col-md-6">
+                <div className="text-muted">Client Email</div>
+                <div className="fw-semibold">{proposal.client_email}</div>
+              </div>
+            </div>
 
-  </div>
-)}
+          </div>
+        )}
 
         <h6 className="text-orange mb-3">Invoice Details</h6>
 
@@ -195,56 +185,76 @@ const downloadInvoice = () => {
 
           <div className="col-md-6">
             <label className="form-label">Invoice Date</label>
-            <input type="date" name="invoice_date" className="form-control" value={form.invoice_date} onChange={handleChange}/>
+            <input type="date" name="invoice_date" className="form-control" value={form.invoice_date} onChange={handleChange} />
           </div>
 
           <div className="col-md-6">
             <label className="form-label">Supply Date</label>
-            <input type="date" name="supply_date" className="form-control" value={form.supply_date} onChange={handleChange}/>
+            <input type="date" name="supply_date" className="form-control" value={form.supply_date} onChange={handleChange} />
           </div>
 
           <div className="col-md-6">
             <label className="form-label">Place of Supply</label>
-            <input name="place_of_supply" className="form-control" value={form.place_of_supply} onChange={handleChange}/>
+            <input name="place_of_supply" className="form-control" value={form.place_of_supply} onChange={handleChange} />
           </div>
 
           <div className="col-md-6">
             <label className="form-label">Purchase Order No:</label>
-            <input name="po_number" className="form-control" value={form.po_number} onChange={handleChange}/>
+            <input name="po_number" className="form-control" value={form.po_number} onChange={handleChange} />
           </div>
 
           <div className="col-md-6">
             <label className="form-label">Purchase Order Date</label>
-            <input type="date" name="po_date" className="form-control" value={form.po_date} onChange={handleChange}/>
+            <input type="date" name="po_date" className="form-control" value={form.po_date} onChange={handleChange} />
           </div>
 
           <div className="col-md-6">
             <label className="form-label">Transport Mode</label>
-            <input name="transport_mode" className="form-control" value={form.transport_mode} onChange={handleChange}/>
+            <input name="transport_mode" className="form-control" value={form.transport_mode} onChange={handleChange} />
           </div>
 
           <div className="col-md-6">
             <label className="form-label">Vehicle Number</label>
-            <input name="vehicle_number" className="form-control" value={form.vehicle_number} onChange={handleChange}/>
+            <input name="vehicle_number" className="form-control" value={form.vehicle_number} onChange={handleChange} />
           </div>
 
           <div className="col-md-6">
             <label className="form-label">Challan Date</label>
-            <input type="date" className="form-control" value={form.challan_date} readOnly/>
+            <input type="date" className="form-control" value={form.challan_date} readOnly />
           </div>
 
           <div className="col-md-6 d-flex align-items-center mt-4">
-            <input type="checkbox" name="reverse_charge" className="form-check-input me-2" checked={form.reverse_charge} onChange={handleChange}/>
+            <input type="checkbox" name="reverse_charge" className="form-check-input me-2" checked={form.reverse_charge} onChange={handleChange} />
             <label className="form-check-label">Reverse Charge</label>
           </div>
 
         </div>
+      
+        <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
 
-        <div className="mt-4">
-          <button onClick={saveInvoice} className="btn btn-orange px-4" disabled={!proposalId}>
+          {/* Download */}
+          <button
+            type="button"
+            className={`btn d-flex align-items-center gap-2 ${invoiceId ? "btn-success" : "btn-outline-secondary"
+              }`}
+            onClick={downloadInvoice}
+            disabled={!invoiceId}
+          >
+            <i className="bi bi-download"></i>
+            Download Invoice
+          </button>
+
+          {/* Save */}
+          <button
+            onClick={saveInvoice}
+            className="btn btn-orange px-4"
+            disabled={!proposalId}
+          >
             Save Invoice
           </button>
+
         </div>
+  
 
       </div>
     </div>
