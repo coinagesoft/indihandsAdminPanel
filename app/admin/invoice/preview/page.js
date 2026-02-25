@@ -30,93 +30,93 @@ const Page = () => {
   const [charges, setCharges] = useState([]);
 
   /* ================= HANDLERS ================= */
-const handleSaveProposal = async () => {
-  if (!selectedRfq) return alert("❌ Please select RFQ first");
-  if (!header.companyId || !header.branchId) return alert("❌ companyId / branchId missing");
+  const handleSaveProposal = async () => {
+    if (!selectedRfq) return alert("❌ Please select RFQ first");
+    if (!header.companyId || !header.branchId) return alert("❌ companyId / branchId missing");
 
-  if (saving) return;
+    if (saving) return;
 
-  try {
-    setSaving(true);
+    try {
+      setSaving(true);
 
-    const payload = {
-      rfqId: Number(selectedRfq),
-      companyId: header.companyId,
-      branchId: header.branchId,
-      place: header.place,
-      proposal_date: header.date,
-      billing_address: header.billingAddress,
-      shipping_address: header.shippingAddress,
-      items: items.map((x) => ({
-        productId: x.productId,
-        quantity: x.qty,
-        rate: x.rate,
-        discount: x.discount,
-        cgst_rate: x.cgst,
-        sgst_rate: x.sgst,
-        igst_rate: x.igst,
-      })),
-       charges, 
-    };
+      const payload = {
+        rfqId: Number(selectedRfq),
+        companyId: header.companyId,
+        branchId: header.branchId,
+        place: header.place,
+        proposal_date: header.date,
+        billing_address: header.billingAddress,
+        shipping_address: header.shippingAddress,
+        items: items.map((x) => ({
+          productId: x.productId,
+          quantity: x.qty,
+          rate: x.rate,
+          discount: x.discount,
+          cgst_rate: x.cgst,
+          sgst_rate: x.sgst,
+          igst_rate: x.igst,
+        })),
+        charges,
+      };
 
-    /* 1️⃣ SAVE PROPOSAL */
-    const res = await fetch("/api/proposals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      /* 1️⃣ SAVE PROPOSAL */
+      const res = await fetch("/api/proposals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Proposal save failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Proposal save failed");
 
-    const newProposalId = data.proposalId;
-    if (data.proposal_number) {
-      setHeader(prev => ({ ...prev, quotationNo: data.proposal_number }));
-    }
-    if (newProposalId) {
-      setProposalId(newProposalId);
-    }
-
-    /* 2️⃣ SEND EMAIL */
-    let mailSent = false;
-    if (header.clientEmail && newProposalId) {
-      try {
-        const mailRes = await fetch(`/api/proposals/email/${newProposalId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "proposal",
-            email: header.clientEmail,
-          }),
-        });
-
-        const mailData = await mailRes.json();
-        mailSent = mailRes.ok;
-        console.log("MAIL RESULT:", mailData);
-      } catch (mailErr) {
-        console.error("MAIL ERROR:", mailErr);
+      const newProposalId = data.proposalId;
+      if (data.proposal_number) {
+        setHeader(prev => ({ ...prev, quotationNo: data.proposal_number }));
       }
+      if (newProposalId) {
+        setProposalId(newProposalId);
+      }
+
+      /* 2️⃣ SEND EMAIL */
+      let mailSent = false;
+      if (header.clientEmail && newProposalId) {
+        try {
+          const mailRes = await fetch(`/api/proposals/email/${newProposalId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "proposal",
+              email: header.clientEmail,
+            }),
+          });
+
+          const mailData = await mailRes.json();
+          mailSent = mailRes.ok;
+          console.log("MAIL RESULT:", mailData);
+        } catch (mailErr) {
+          console.error("MAIL ERROR:", mailErr);
+        }
+      }
+
+      /* 3️⃣ ALERT STATUS */
+      const clientInfo = header.clientName
+        ? `${header.clientName} (${header.clientEmail || "no email"})`
+        : header.clientEmail || "client";
+
+      if (mailSent) {
+        alert(`✅ Proposal saved & emailed to ${clientInfo}`);
+      } else if (header.clientEmail) {
+        alert(`⚠️ Proposal saved but email failed for ${clientInfo}`);
+      } else {
+        alert(`✅ Proposal saved (no client email)`);
+      }
+
+    } catch (e) {
+      alert("❌ " + e.message);
+    } finally {
+      setSaving(false);
     }
-
-    /* 3️⃣ ALERT STATUS */
-    const clientInfo = header.clientName
-      ? `${header.clientName} (${header.clientEmail || "no email"})`
-      : header.clientEmail || "client";
-
-    if (mailSent) {
-      alert(`✅ Proposal saved & emailed to ${clientInfo}`);
-    } else if (header.clientEmail) {
-      alert(`⚠️ Proposal saved but email failed for ${clientInfo}`);
-    } else {
-      alert(`✅ Proposal saved (no client email)`);
-    }
-
-  } catch (e) {
-    alert("❌ " + e.message);
-  } finally {
-    setSaving(false);
-  }
-};
+  };
   const handleDownloadPdf = () => {
     if (!selectedRfq) return alert("❌ Select RFQ first");
     if (!proposalId) return alert("❌ Please send proposal first");
@@ -140,10 +140,10 @@ const handleSaveProposal = async () => {
         }),
       });
 
-const data = await res.json();
+      const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Email failed");
 
-      const clientInfo = header.clientName 
+      const clientInfo = header.clientName
         ? `${header.clientName} (${header.clientEmail})`
         : header.clientEmail;
       alert(`✅ Proposal email sent successfully to ${clientInfo}`);
@@ -242,12 +242,11 @@ const data = await res.json();
 
 
   const calcAmount = (item) => {
-    const base = item.qty * item.rate;
-    const discount = (base * item.discount) / 100;
-    return base - discount;
+    return item.qty * item.rate;
   };
 
-  const calcTax = (amount, percent) => (amount * percent) / 100;
+  const calcTax = (amount, percent) =>
+    (amount * (percent || 0)) / 100;
 
   const totals = items.reduce(
     (acc, item) => {
@@ -416,6 +415,7 @@ const data = await res.json();
                     <col style={{ minWidth: "100px" }} />
                     <col style={{ minWidth: "60px" }} />
                     <col style={{ minWidth: "60px" }} />
+                    <col style={{ minWidth: "60px" }} />
                     <col style={{ minWidth: "100px" }} />
                     <col style={{ minWidth: "80px" }} />
                     <col style={{ minWidth: "120px" }} />
@@ -434,7 +434,8 @@ const data = await res.json();
                       <th>UOM</th>
                       <th>Qty</th>
                       <th>Rate</th>
-                      <th>Discount</th>
+                      <th>Discount %</th>
+                      <th>Discount Amt.</th>
                       <th>Amount</th>
                       <th>CGST</th>
                       <th>SGST</th>
@@ -460,11 +461,14 @@ const data = await res.json();
                           <td>{item.qty}</td>
                           <td>{item.rate}</td>
                           <td>{item.discount}%</td>
+                          <td>
+                             {(( (item.basePrice - item.rate))).toFixed(2)}
+                          </td>
                           <td>{amount.toFixed(2)}</td>
                           <td>{calcTax(amount, item.cgst).toFixed(2)}</td>
                           <td>{calcTax(amount, item.sgst).toFixed(2)}</td>
                           <td>{calcTax(amount, item.igst).toFixed(2)}</td>
-                          <td>{(amount + tax).toFixed(2)}</td>
+                          <td >{(amount + tax).toFixed(2)}</td>
                         </tr>
                       );
                     })}
@@ -598,7 +602,7 @@ const data = await res.json();
               >
                 Download Proposal
               </button>
-{/* 
+              {/* 
               EMAIL PROPOSAL
               <button
                 className="btn w-100 mb-2"
