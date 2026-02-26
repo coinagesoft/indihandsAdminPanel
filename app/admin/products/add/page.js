@@ -8,7 +8,7 @@ const Page = () => {
   const [excelFile, setExcelFile] = useState(null);
   const [status, setStatus] = useState("Available");
   const [stockQty, setStockQty] = useState(0);
-
+  const [publishing, setPublishing] = useState(false);
   const handleFeaturedChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -77,73 +77,85 @@ const Page = () => {
   };
 
   // Publish single product
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const form = e.target;
 
-    // 🔐 INVENTORY vs STATUS VALIDATION
+    if (publishing) return;   // 🛑 prevent double click
+    setPublishing(true);      // 🔄 start loader
 
-    // ✅ Read values FIRST
-    const status = form.status.value;
-    const stockQty = Number(form.stockQty.value);
+    try {
+      const form = e.target;
 
-    // 🔐 INVENTORY vs STATUS VALIDATION
+      const status = form.status.value;
+      const stockQty = Number(form.stockQty.value);
 
-    // Case 1: Out of Stock but inventory > 0
-    if (status === "Out of Stock" && stockQty > 0) {
-      alert("❌ If status is Out of Stock, inventory must be 0");
-      return;
+      if (status === "Out of Stock" && stockQty > 0) {
+        alert("❌ If status is Out of Stock, inventory must be 0");
+        return;
+      }
+
+      if (status === "Available" && stockQty === 0) {
+        alert("❌ If status is Available, inventory must be greater than 0");
+        return;
+      }
+
+      let featuredImageUrl = null;
+      if (form.featuredImage.files[0]) {
+        featuredImageUrl = await uploadToCloudinary(form.featuredImage.files[0]);
+      }
+
+      const galleryUrls = [];
+      for (const file of Array.from(form.galleryImages.files)) {
+        const url = await uploadToCloudinary(file);
+        galleryUrls.push(url);
+      }
+
+      const body = {
+        product_name: form.productName.value.trim(),
+        sku: form.sku.value.trim(),
+        barcode: form.barcode.value.trim(),
+        description: form.description.value.trim(),
+        hsn: form.hsn.value.trim(),
+        size: form.size.value.trim(),
+        weight: form.weight.value.trim(),
+        stock: Number(form.stockQty.value),
+        price: Number(form.basePrice.value),
+
+        status: form.status.value,
+
+        featuredImage: featuredImageUrl,
+        images: galleryUrls,
+      };
+
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert("❌ " + (data?.message || data?.error || "Failed to create product"));
+        return;
+      }
+
+      alert("✅ Product created");
+
+      e.target.reset();
+      setFeaturedPreview(null);
+      setGalleryPreviews([]);
+      setStockQty(0);
+      setStatus("Available");
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to publish");
+    } finally {
+      setPublishing(false);  // ✅ enable button again
     }
-
-    // Case 2: Available but inventory is 0
-    if (status === "Available" && stockQty === 0) {
-      alert("❌ If status is Available, inventory must be greater than 0");
-      return;
-    }
-
-    let featuredImageUrl = null;
-    if (form.featuredImage.files[0]) {
-      featuredImageUrl = await uploadToCloudinary(form.featuredImage.files[0]);
-    }
-
-    const galleryUrls = [];
-    for (const file of Array.from(form.galleryImages.files)) {
-      const url = await uploadToCloudinary(file);
-      galleryUrls.push(url);
-    }
-
-    const body = {
-      product_name: form.productName.value.trim(),
-      sku: form.sku.value.trim(),
-      barcode: form.barcode.value.trim(),           
-      description: form.description.value.trim(),   
-      hsn: form.hsn.value.trim(),
-      size: form.size.value.trim(),     
-      weight: form.weight.value.trim(),                 
-      stock: Number(form.stockQty.value),
-      price: Number(form.basePrice.value),
-
-      status: form.status.value,                   
-
-      featuredImage: featuredImageUrl,
-      images: galleryUrls,
-    };
-
-
-    const res = await fetch("/api/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert("❌ " + (data?.message || data?.error || "Failed to create product"));
-      return;
-    }
-
-    alert("✅ Product created");
   };
 
 
@@ -210,7 +222,19 @@ const Page = () => {
 
     reader.readAsBinaryString(excelFile);
   };
+  const handleDiscard = () => {
+    // reset form fields
+    const form = document.querySelector("form");
+    form?.reset();
 
+    // reset states
+    setFeaturedPreview(null);
+    setGalleryPreviews([]);
+    setStockQty(0);
+    setStatus("Available");
+    setExcelFile(null);
+    setProducts([]);
+  };
 
 
   return (
@@ -226,11 +250,19 @@ const Page = () => {
             <p className="mb-0">Create product for RFQ & proposal flow</p>
           </div>
           <div className="d-flex gap-3">
-            <button type="button" className="btn btn-outline-secondary">
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={handleDiscard}
+            >
               Discard
             </button>
-            <button type="submit" className="btn btn-publish">
-              Publish Product
+            <button
+              type="submit"
+              className="btn btn-publish"
+              disabled={publishing}
+            >
+              {publishing ? "Publishing..." : "Publish Product"}
             </button>
           </div>
         </div>
@@ -485,9 +517,9 @@ const Page = () => {
                 <h5 className="mb-0">Organize</h5>
               </div>
               <div className="card-body">
-               
 
-             
+
+
                 <div className="form-floating form-floating-outline">
                   <select
                     className="form-select"
