@@ -69,14 +69,19 @@ export async function PATCH(req, { params }) {
           );
         }
 
-        await connection.query(
-          `
-          UPDATE products
-          SET stock_qty = stock_qty - ?
-          WHERE id = ?
-          `,
-          [item.quantity, item.product_id]
-        );
+    await connection.query(
+  `
+  UPDATE products
+  SET 
+    stock_qty = stock_qty - ?,
+    status = CASE 
+               WHEN stock_qty - ? <= 0 THEN 'Out of Stock'
+               ELSE 'Available'
+             END
+  WHERE id = ?
+  `,
+  [item.quantity, item.quantity, item.product_id]
+);
       }
     }
 

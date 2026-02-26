@@ -286,40 +286,7 @@ export async function POST(req) {
 }
 
 
-// export async function GET() {
-//   try {
-//     const [rows] = await db.query(`
-//       SELECT
-//         p.id,
-//         p.proposal_number,
-//         p.proposal_date,
-//         p.grand_total,
-//         p.status,
 
-//         p.company_id,
-//         p.branch_id,
-//         p.rfq_id,
-
-//         r.rfq_number,
-//         r.client_name,
-//         r.client_email,
-
-//         c.company_name,
-//         cb.branch_name
-
-//       FROM proposals p
-//       LEFT JOIN rfqs r ON r.id = p.rfq_id
-//       LEFT JOIN companies c ON c.id = p.company_id
-//       LEFT JOIN company_branches cb ON cb.id = p.branch_id
-//       ORDER BY p.id DESC
-//     `);
-
-//     return Response.json(rows);
-//   } catch (err) {
-//     console.error("admin proposals error:", err);
-//     return Response.json({ error: "DB error" }, { status: 500 });
-//   }
-// }
 
 export async function GET() {
   try {
@@ -387,3 +354,4 @@ export async function GET() {
     return Response.json({ error: "DB error" }, { status: 500 });
   }
 }
+
