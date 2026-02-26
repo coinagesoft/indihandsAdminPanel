@@ -14,8 +14,8 @@ const Page = () => {
   const [catalogName, setCatalogName] = useState("");
   const [catalogDesc, setCatalogDesc] = useState("");
   const [catalogImagePreview, setCatalogImagePreview] = useState(null);
-const [catPage, setCatPage] = useState(1);
-const catItemsPerPage = 5;
+  const [catPage, setCatPage] = useState(1);
+  const catItemsPerPage = 5;
 
   const [allProducts, setAllProducts] = useState([]);          // modal
   const [catalogProducts, setCatalogProducts] = useState([]);  // table 
@@ -45,37 +45,37 @@ const catItemsPerPage = 5;
     setCatalogImageFile(file);
     setCatalogImagePreview(URL.createObjectURL(file));
   };
-const uploadCatalogToCloudinary = async (file) => {
-  try {
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", "catalogs"); // must be unsigned
+  const uploadCatalogToCloudinary = async (file) => {
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", "catalogs"); // must be unsigned
 
-    const res = await fetch(
-      "https://api.cloudinary.com/v1_1/dxb1whlam/image/upload",
-      { method: "POST", body: fd }
-    );
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dxb1whlam/image/upload",
+        { method: "POST", body: fd }
+      );
 
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData?.error?.message || "Upload failed");
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData?.error?.message || "Upload failed");
+      }
+
+      const data = await res.json();
+      return data.secure_url;
+    } catch (err) {
+      console.error("Cloudinary upload failed:", err);
+      throw err;
     }
-
-    const data = await res.json();
-    return data.secure_url;
-  } catch (err) {
-    console.error("Cloudinary upload failed:", err);
-    throw err;
-  }
-};
+  };
 
 
   useEffect(() => {
-  if (selectedCatalog?.id) {
-    setCatPage(1); // ✅ reset page
-    fetchCatalogProducts(selectedCatalog.id);
-  }
-}, [selectedCatalog]);
+    if (selectedCatalog?.id) {
+      setCatPage(1); // ✅ reset page
+      fetchCatalogProducts(selectedCatalog.id);
+    }
+  }, [selectedCatalog]);
 
   const saveCatalog = async () => {
     try {
@@ -143,13 +143,13 @@ const uploadCatalogToCloudinary = async (file) => {
       prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
     );
   };
- const fetchCatalogProducts = async (catalogId) => {
-  console.log("id",catalogId)
-  const res = await fetch(`/api/catalogs/${catalogId}/products`);
-  const data = await res.json();
-  console.log("catpro",data)
-  setCatalogProducts(data.products || []);
-};
+  const fetchCatalogProducts = async (catalogId) => {
+    console.log("id", catalogId)
+    const res = await fetch(`/api/catalogs/${catalogId}/products`);
+    const data = await res.json();
+    console.log("catpro", data)
+    setCatalogProducts(data.products || []);
+  };
   const addSelectedProductsToCatalog = async () => {
     try {
       if (!selectedCatalog?.id) return alert("Select catalog first");
@@ -171,7 +171,7 @@ const uploadCatalogToCloudinary = async (file) => {
       setSelectedProductsToAdd([]);
 
       // ✅ refresh products list (if your product list shows catalog mapping)
- await fetchCatalogProducts(selectedCatalog.id);
+      await fetchCatalogProducts(selectedCatalog.id);
     } catch (err) {
       console.error("Add products to catalog error:", err);
       alert("❌ " + err.message);
@@ -222,7 +222,7 @@ const uploadCatalogToCloudinary = async (file) => {
         desc: c.description || "",
         image: c.featured_image || "",
       }));
-   console.log("cat",data)
+      console.log("cat", data)
       setCatalogs(formatted);
 
       if (formatted.length > 0) {
@@ -260,19 +260,19 @@ const uploadCatalogToCloudinary = async (file) => {
   };
 
 
-const deleteCatalog = async (catalogId) => {
-  if (!confirm("Are you sure?")) return;
+  const deleteCatalog = async (catalogId) => {
+    if (!confirm("Are you sure?")) return;
 
-  const res = await fetch(`/api/catalogs/${catalogId}`, {
-    method: "DELETE",
-  });
+    const res = await fetch(`/api/catalogs/${catalogId}`, {
+      method: "DELETE",
+    });
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
 
-  alert("✅ Catalog deleted");
-  fetchCatalogs();
-};
+    alert("✅ Catalog deleted");
+    fetchCatalogs();
+  };
 
 
 
@@ -283,128 +283,128 @@ const deleteCatalog = async (catalogId) => {
 
   const totalCatPages = Math.ceil(catalogProducts.length / catItemsPerPage);
 
-const paginatedCatalogProducts = catalogProducts.slice(
-  (catPage - 1) * catItemsPerPage,
-  catPage * catItemsPerPage
-);
+  const paginatedCatalogProducts = catalogProducts.slice(
+    (catPage - 1) * catItemsPerPage,
+    catPage * catItemsPerPage
+  );
 
   /* ===================== UI ===================== */
   return (
     <div className="container-xxl flex-grow-1 container-p-y">
       {/* ===================== CATALOGS ===================== */}
-{/* ===================== CATALOGS ===================== */}
-<div className="card mb-4">
-  <div className="card-header d-flex justify-content-between align-items-center">
-    <h5 className="mb-0">Catalogs</h5>
-    <button
-      className="btn btn-orange btn-sm"
-      onClick={() => {
-        setEditingCatalog(null);
-        setCatalogName("");
-        setCatalogDesc("");
-        setCatalogImagePreview(null);
-        setIsCatalogModalOpen(true);
-      }}
-    >
-      Add Catalog
-    </button>
-  </div>
+      {/* ===================== CATALOGS ===================== */}
+      <div className="card mb-4">
+        <div className="card-header d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">Catalogs</h5>
+          <button
+            className="btn btn-orange btn-sm"
+            onClick={() => {
+              setEditingCatalog(null);
+              setCatalogName("");
+              setCatalogDesc("");
+              setCatalogImagePreview(null);
+              setIsCatalogModalOpen(true);
+            }}
+          >
+            Add Catalog
+          </button>
+        </div>
 
-  <div className="card-body">
-    <div
-      className="d-flex gap-3 overflow-auto"
-      style={{
-        paddingBottom: "10px",
-        scrollbarWidth: "thin",
-      }}
-    >
-      {catalogs.map((c) => (
-     <div
-  key={c.id}
-  className={`card catalog-card shadow-sm ${selectedCatalog?.id === c.id ? "border-primary" : ""}`}
-  onClick={() => setSelectedCatalog(c)}
-  style={{
-    minWidth: "220px",
-    cursor: "pointer",
-    borderRadius: "12px",
-    flex: "0 0 auto",
-    transition: "transform 0.2s, box-shadow 0.2s",
-  }}
->
-  {/* Image */}
-<div
- 
-  style={{
-    width: "100%",
-    height: "180px",   // ✅ fixed equal height
-    position: "relative",
-    overflow: "hidden",
-    borderTopLeftRadius: "12px",
-    borderTopRightRadius: "12px",
-    background: "#f6f6f6",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center"
-  }}
+        <div className="card-body">
+          <div
+            className="d-flex gap-3 overflow-auto"
+            style={{
+              paddingBottom: "10px",
+              scrollbarWidth: "thin",
+            }}
+          >
+            {catalogs.map((c) => (
+              <div
+                key={c.id}
+                className={`card catalog-card shadow-sm ${selectedCatalog?.id === c.id ? "border-primary" : ""}`}
+                onClick={() => setSelectedCatalog(c)}
+                style={{
+                  minWidth: "220px",
+                  cursor: "pointer",
+                  borderRadius: "12px",
+                  flex: "0 0 auto",
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                }}
+              >
+                {/* Image */}
+                <div
 
->
-  {c.image ? (
-   <img
-  src={c.image}
-  alt={c.name}
-  style={{
-    maxWidth: "100%",
-    maxHeight: "100%",
-    objectFit: "contain"
-  }}
-/>
-  ) : (
-    <div
-      className="bg-light d-flex justify-content-center align-items-center text-muted"
-      style={{ position: "absolute", inset: 0 }}
-    >
-      No Image
-    </div>
-  )}
-</div>
+                  style={{
+                    width: "100%",
+                    height: "180px",   // ✅ fixed equal height
+                    position: "relative",
+                    overflow: "hidden",
+                    borderTopLeftRadius: "12px",
+                    borderTopRightRadius: "12px",
+                    background: "#f6f6f6",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
 
-
+                >
+                  {c.image ? (
+                    <img
+                      src={c.image}
+                      alt={c.name}
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: "100%",
+                        objectFit: "contain"
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="bg-light d-flex justify-content-center align-items-center text-muted"
+                      style={{ position: "absolute", inset: 0 }}
+                    >
+                      No Image
+                    </div>
+                  )}
+                </div>
 
 
 
-  {/* Title & Description */}
-  <div className="card-body text-center py-3">
-    <h6 className="mb-1 fw-bold">{c.name}</h6>
-    <small className="text-muted">{c.desc}</small>
-  </div>
 
-  {/* Footer Buttons */}
-  <div className="card-footer text-center d-flex gap-2 justify-content-center py-2">
-    <button
-      className="btn btn-sm btn-outline-orange"
-      onClick={(e) => {
-        e.stopPropagation();
-        openEditCatalogModal(c);
-      }}
-    >
-      Edit
-    </button>
-    <button
-      className="btn btn-sm btn-outline-danger"
-      onClick={(e) => {
-        e.stopPropagation();
-        deleteCatalog(c.id);
-      }}
-    >
-      Delete
-    </button>
-  </div>
-</div>
 
-      ))}
-    </div>
-  </div>
-</div>
+                {/* Title & Description */}
+                <div className="card-body text-center py-3">
+                  <h6 className="mb-1 fw-bold">{c.name}</h6>
+                  <small className="text-muted">{c.desc}</small>
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="card-footer text-center d-flex gap-2 justify-content-center py-2">
+                  <button
+                    className="btn btn-sm btn-outline-orange"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditCatalogModal(c);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteCatalog(c.id);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+
+            ))}
+          </div>
+        </div>
+      </div>
 
 
 
@@ -458,36 +458,35 @@ const paginatedCatalogProducts = catalogProducts.slice(
         </div>
 
         {totalCatPages > 1 && (
-  <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap">
-    <button
-      className="btn btn-outline-secondary btn-sm"
-      disabled={catPage === 1}
-      onClick={() => setCatPage((prev) => prev - 1)}
-    >
-      Prev
-    </button>
+          <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap">
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              disabled={catPage === 1}
+              onClick={() => setCatPage((prev) => prev - 1)}
+            >
+              Prev
+            </button>
 
-    {Array.from({ length: totalCatPages }, (_, i) => (
-      <button
-        key={i}
-        className={`btn btn-sm ${
-          catPage === i + 1 ? "btn-primary" : "btn-outline-primary"
-        }`}
-        onClick={() => setCatPage(i + 1)}
-      >
-        {i + 1}
-      </button>
-    ))}
+            {Array.from({ length: totalCatPages }, (_, i) => (
+              <button
+                key={i}
+                className={`btn btn-sm ${catPage === i + 1 ? "btn-primary" : "btn-outline-primary"
+                  }`}
+                onClick={() => setCatPage(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
 
-    <button
-      className="btn btn-outline-secondary btn-sm"
-      disabled={catPage === totalCatPages}
-      onClick={() => setCatPage((prev) => prev + 1)}
-    >
-      Next
-    </button>
-  </div>
-)}
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              disabled={catPage === totalCatPages}
+              onClick={() => setCatPage((prev) => prev + 1)}
+            >
+              Next
+            </button>
+          </div>
+        )}
 
       </div>
 
@@ -527,11 +526,20 @@ const paginatedCatalogProducts = catalogProducts.slice(
                         .map((p) => (
                           <tr key={p.id}>
                             <td>
-                              <input
-                                type="checkbox"
-                                checked={selectedProductsToAdd.includes(p.id)}
-                                onChange={() => toggleProductSelection(p.id)}
-                              />
+                              <td className="text-center">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input border-1"
+                                  style={{
+                                    width: "20px",
+                                    height: "20px",
+                                    transform: "scale(1.4)",
+                                    cursor: "pointer"
+                                  }}
+                                  checked={selectedProductsToAdd.includes(p.id)}
+                                  onChange={() => toggleProductSelection(p.id)}
+                                />
+                              </td>
                             </td>
 
                             <td className="text-truncate" style={{ maxWidth: "200px" }}>

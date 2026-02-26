@@ -89,6 +89,7 @@ const Page = () => {
     setEditingCompany(EMPTY_COMPANY);
     const modal = bootstrap.Modal.getInstance(companyModalRef.current);
     modal.hide();
+    
   };
 
 
@@ -150,7 +151,8 @@ if (!newCompany.shortName?.trim()) {
 
     await fetchCompanies();
     setNewBranch(EMPTY_BRANCH);
-    new bootstrap.Modal(branchCreateModalRef.current).hide();
+    const modal = bootstrap.Modal.getInstance(branchCreateModalRef.current);
+modal?.hide();
   };
 
 
@@ -169,7 +171,9 @@ if (!newCompany.shortName?.trim()) {
     alert("✅ Branch updated");
     await fetchCompanies();
     setEditingBranch({ ...editingBranch, password: "" }); // ✅ ADD
-    new bootstrap.Modal(branchEditModalRef.current).hide();
+        const modal = bootstrap.Modal.getInstance(branchEditModalRef.current);
+modal?.hide();
+    
   };
 
 
@@ -383,9 +387,20 @@ if (!newCompany.shortName?.trim()) {
       {/* ===================== CREATE COMPANY MODAL ===================== */}
       <div className="modal fade" ref={companyModalRef}>
         <div className="modal-dialog">
-          <div className="modal-content p-4">
-            <h5>{editingCompany?.id ? "Edit Company" : "Create Company"}</h5>
+          <div className="modal-content">
+       {/* ✅ HEADER */}
+      <div className="modal-header py-2">
+        <h5 className="modal-title">
+          {editingCompany?.id ? "Edit Company" : "Create Company"}
+        </h5>
+        <button
+          type="button"
+          className="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
 
+       <div className="modal-body pt-3">
             <form onSubmit={editingCompany?.id ? handleCompanyUpdate : handleCompanyCreate}>
               <input
                 className="form-control mb-2"
@@ -494,6 +509,7 @@ if (!newCompany.shortName?.trim()) {
               </button>
 
             </form>
+            </div>
           </div>
         </div>
       </div>

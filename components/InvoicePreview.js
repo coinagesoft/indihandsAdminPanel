@@ -163,23 +163,11 @@ const Page = ({ onBack, rfqId }) => {
     }
   };
 
+useEffect(() => {
+  if (!rfqId || acceptedRfqs.length === 0) return;
 
-  const handleDownloadInvoice = () => {
-    if (!selectedRfq) return alert("❌ Select RFQ first");
-    if (!proposalId) return alert("❌ Please send proposal first");
-
-    window.open(`/api/invoices/pdf/${proposalId}`, "_blank");
-  };
-
-
-
-  const handleRfqSelect = async (e) => {
-    const newId = Number(e.target.value);
-    setSelectedRfq(newId);
-
-    if (!newId) return;
-
-    const res = await fetch(`/api/rfqs/${newId}/details`);
+  const loadRfq = async () => {
+    const res = await fetch(`/api/rfqs/${rfqId}/details`);
     const data = await res.json();
     if (!res.ok) return;
 
@@ -187,7 +175,7 @@ const Page = ({ onBack, rfqId }) => {
 
     // charges
     let loadedCharges = [];
-    const proposalChargesRes = await fetch(`/api/proposals/${newId}/charges`);
+    const proposalChargesRes = await fetch(`/api/proposals/${rfqId}/charges`);
     const proposalChargesData = await proposalChargesRes.json();
 
     if (proposalChargesData.success && proposalChargesData.charges?.length) {
@@ -205,72 +193,94 @@ const Page = ({ onBack, rfqId }) => {
         taxPercent: Number(c.taxPercent || 0),
       }))
     );
-    const selected = acceptedRfqs.find((x) => x.id == rfqId);
 
-    setHeader({
-      quotationNo: selected?.proposalNumber || "",
-      date: new Date().toISOString().slice(0, 10),
-      clientName: data.header.clientName,
-      clientPhone: data.header.clientPhone,
-      clientEmail: data.header.clientEmail,
-      company: data.header.company,
-      gstin: data.header.gstin,
-      billingAddress: data.header.billing_address,
-      shippingAddress: data.header.shipping_address,
-      companyId,
-      branchId: data.header.branchId,
-    });
+    // ✅ CORRECT QUOTATION SOURCE
+    const selected = acceptedRfqs.find(x => x.id == rfqId);
+  setHeader({
+    quotationNo: selected?.proposalNumber || "",
+    date: new Date().toISOString().slice(0, 10),
+    clientName: data.header.clientName,
+    clientPhone: data.header.clientPhone,
+    clientEmail: data.header.clientEmail,
+    company: data.header.company,
+    gstin: data.header.gstin,
+    billingAddress: data.header.billing_address,
+    shippingAddress: data.header.shipping_address,
+    companyId,
+    branchId: data.header.branchId,
+  });
+    setProposalId(selected?.proposalId || null);
 
     setItems(data.items || []);
   };
 
- useEffect(() => {
-    if (!rfqId) return;
+  loadRfq();
+}, [rfqId, acceptedRfqs]);   // ✅ IMPORTANT
 
-    const loadRfq = async () => {
-      const res = await fetch(`/api/rfqs/${rfqId}/details`);
-      const data = await res.json();
-      if (!res.ok) return;
+  const handleDownloadInvoice = () => {
+    if (!selectedRfq) return alert("❌ Select RFQ first");
+    if (!proposalId) return alert("❌ Please send proposal first");
 
-      const companyId = data.header.companyId;
+    window.open(`/api/invoices/pdf/${proposalId}`, "_blank");
+  };
 
-      // charges
-      let loadedCharges = [];
-      const proposalChargesRes = await fetch(`/api/proposals/${rfqId}/charges`);
-      const proposalChargesData = await proposalChargesRes.json();
 
-      if (proposalChargesData.success && proposalChargesData.charges?.length) {
-        loadedCharges = proposalChargesData.charges;
-      } else {
-        const companyRes = await fetch(`/api/companies/${companyId}/charges`);
-        const companyData = await companyRes.json();
-        loadedCharges = companyData.charges || [];
-      }
 
-      setCharges(
-        loadedCharges.map(c => ({
-          label: c.label,
-          amount: Number(c.amount),
-          taxPercent: Number(c.taxPercent || 0),
-        }))
-      );
+const handleRfqSelect = async (e) => {
+  const newId = Number(e.target.value);
+  setSelectedRfq(newId);
 
-      setHeader({
-        quotationNo: data.header.proposalNumber || "",
-        date: new Date().toISOString().slice(0, 10),
-        clientName: data.header.clientName,
-        clientEmail: data.header.clientEmail,
-        company: data.header.company,
-        gstin: data.header.gstin,
-        billingAddress: data.header.billing_address,
-        shippingAddress: data.header.shipping_address,
-      });
+  if (!newId) return;
 
-      setItems(data.items || []);
-    };
+  const res = await fetch(`/api/rfqs/${newId}/details`);
+  const data = await res.json();
+  if (!res.ok) return;
 
-    loadRfq();
-  }, [rfqId]);
+  const companyId = data.header.companyId;
+
+  // charges
+  let loadedCharges = [];
+  const proposalChargesRes = await fetch(`/api/proposals/${newId}/charges`);
+  const proposalChargesData = await proposalChargesRes.json();
+
+  if (proposalChargesData.success && proposalChargesData.charges?.length) {
+    loadedCharges = proposalChargesData.charges;
+  } else {
+    const companyRes = await fetch(`/api/companies/${companyId}/charges`);
+    const companyData = await companyRes.json();
+    loadedCharges = companyData.charges || [];
+  }
+
+  setCharges(
+    loadedCharges.map(c => ({
+      label: c.label,
+      amount: Number(c.amount),
+      taxPercent: Number(c.taxPercent || 0),
+    }))
+  );
+
+  const selected = acceptedRfqs.find(x => x.id == newId);
+ console.log("selected page ",selected)
+  setHeader({
+    quotationNo: selected?.proposalNumber || "",
+    date: new Date().toISOString().slice(0, 10),
+    clientName: data.header.clientName,
+    clientPhone: data.header.clientPhone,
+    clientEmail: data.header.clientEmail,
+    company: data.header.company,
+    gstin: data.header.gstin,
+    billingAddress: data.header.billing_address,
+    shippingAddress: data.header.shipping_address,
+    companyId,
+    branchId: data.header.branchId,
+  });
+
+  setProposalId(selected?.proposalId || null); 
+
+  setItems(data.items || []);
+};
+
+
   const calcAmount = (item) => {
     return item.qty * item.rate;
   };
@@ -322,11 +332,7 @@ const Page = ({ onBack, rfqId }) => {
     if (!res.ok) return alert("❌ " + data.message);
     setAcceptedRfqs(data.rfqs || []);
   };
-  useEffect(() => {
-    if (selectedRfq) {
-      handleRfqSelect({ target: { value: selectedRfq } });
-    }
-  }, [selectedRfq]);
+
   /* ================= UI ================= */
   return (
 
@@ -334,9 +340,7 @@ const Page = ({ onBack, rfqId }) => {
 
 
       <div className="row invoice-edit">
-
-        <div className="col-lg-9 col-12 mb-lg-0 mb-6">
-          <div className="mb-4">
+   <div className="mb-4">
             <label className="form-label">Select Accepted RFQ</label>
             <select
               className="form-select"
@@ -352,6 +356,8 @@ const Page = ({ onBack, rfqId }) => {
 
             </select>
           </div>
+        <div className="col-lg-9 col-12 mb-lg-0 mb-6">
+       
           <div className="card invoice-preview-card p-sm-12 p-6">
 
             {/* ================= SELLER HEADER (GREY ROW) ================= */}
@@ -605,9 +611,8 @@ const Page = ({ onBack, rfqId }) => {
         </div>
 
         {/* Actions */}
-        <div className="col-lg-3 col-12 invoice-actions">
-          <div className="card border-0 shadow-sm">
-            <div className="card-body p-3">
+         <div className="col-lg-3 ">
+              <div className="card shadow-sm p-3">
               <button
                 className="btn mb-3 w-100"
                 style={{
@@ -648,7 +653,7 @@ const Page = ({ onBack, rfqId }) => {
                 onClick={handleDownloadPdf}
                 disabled={!proposalId}
               >
-                Download Proposal
+                Download PDF
               </button>
               {/* 
               EMAIL PROPOSAL
@@ -683,7 +688,6 @@ const Page = ({ onBack, rfqId }) => {
 
             </div>
           </div>
-        </div>
 
 
       </div>

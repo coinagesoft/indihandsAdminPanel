@@ -7,49 +7,49 @@ import { useRouter } from "next/navigation";
 const Header = () => {
   const router = useRouter();
 
-  
+
   const handleLogout = () => {
     // Clear auth-related storage
     localStorage.removeItem("token");
     localStorage.removeItem("user");
- 
+
 
     // Redirect to login page
     router.replace("/login"); // or "/admin/login"
   };
   return (
-     <nav className="layout-navbar navbar navbar-expand-xl align-items-center bg-navbar-theme" id="layout-navbar">
-          <div className="container-xxl">
-            <div className="navbar-brand app-brand demo d-none d-xl-flex py-0 me-6">
-              <img
-      src="/materialize/assets/img/favicon/favicon.png"  // <-- put your PNG file path here
-      alt="Logo"
-      style={{ height: 60, width: "auto" }} // adjust height/width as needed
-      className="me-2"
-    />
+    <nav className="layout-navbar navbar navbar-expand-xl align-items-center bg-navbar-theme" id="layout-navbar">
+      <div className="container-xxl">
+        <div className="navbar-brand app-brand demo d-none d-xl-flex py-0 me-6">
+          <img
+            src="/materialize/assets/img/favicon/favicon.png"  // <-- put your PNG file path here
+            alt="Logo"
+            style={{ height: 60, width: "auto" }} // adjust height/width as needed
+            className="me-2"
+          />
 
-              <a href="#" onClick={(e) => e.preventDefault()} className="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
-                <i className="ri-close-fill align-middle"></i>
+          <a href="#" onClick={(e) => e.preventDefault()} className="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
+            <i className="ri-close-fill align-middle"></i>
+          </a>
+        </div>
+
+        <div className="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+          <a className="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+            <i className="ri-menu-fill ri-22px"></i>
+          </a>
+        </div>
+
+        <div className="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+          <ul className="navbar-nav flex-row align-items-center ms-auto">
+            <li className="nav-item navbar-search-wrapper me-1 me-xl-0">
+              <a
+                className="nav-link btn btn-text-secondary rounded-pill search-toggler fw-normal"
+                href="javascript:void(0);">
+                <i className="ri-search-line ri-22px scaleX-n1-rtl"></i>
               </a>
-            </div>
+            </li>
 
-            <div className="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
-              <a className="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
-                <i className="ri-menu-fill ri-22px"></i>
-              </a>
-            </div>
-
-            <div className="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-              <ul className="navbar-nav flex-row align-items-center ms-auto">
-                <li className="nav-item navbar-search-wrapper me-1 me-xl-0">
-                  <a
-                    className="nav-link btn btn-text-secondary rounded-pill search-toggler fw-normal"
-                    href="javascript:void(0);">
-                    <i className="ri-search-line ri-22px scaleX-n1-rtl"></i>
-                  </a>
-                </li>
-
-                {/* <li className="nav-item dropdown-language dropdown">
+            {/* <li className="nav-item dropdown-language dropdown">
                   <a
                     className="nav-link btn btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow"
                     href="javascript:void(0);"
@@ -79,7 +79,7 @@ const Header = () => {
                     </li>
                   </ul>
                 </li> */}
-                {/* <li className="nav-item dropdown-style-switcher dropdown me-1 me-xl-0">
+            {/* <li className="nav-item dropdown-style-switcher dropdown me-1 me-xl-0">
                   <a
                     className="nav-link btn btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow"
                     href="javascript:void(0);"
@@ -105,7 +105,7 @@ const Header = () => {
                   </ul>
                 </li> */}
 
-                {/* <li className="nav-item dropdown-shortcuts navbar-dropdown dropdown me-1 me-xl-0">
+            {/* <li className="nav-item dropdown-shortcuts navbar-dropdown dropdown me-1 me-xl-0">
                   <a
                     className="nav-link btn btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow"
                     href="javascript:void(0);"
@@ -197,7 +197,7 @@ const Header = () => {
                   </div>
                 </li> */}
 
-                {/* <li className="nav-item dropdown-notifications navbar-dropdown dropdown me-4 me-xl-1">
+            {/* <li className="nav-item dropdown-notifications navbar-dropdown dropdown me-4 me-xl-1">
                   <a
                     className="nav-link btn btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow"
                     href="javascript:void(0);"
@@ -447,85 +447,85 @@ const Header = () => {
                   </ul>
                 </li> */}
 
-                <li className="nav-item navbar-dropdown dropdown-user dropdown">
-                  <a className="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                    <div className="avatar avatar-online">
-                      <img src="/materialize/assets/img/avatars/1.png" alt=''className="rounded-circle" />
+            <li className="nav-item navbar-dropdown dropdown-user dropdown">
+              <a className="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                <div className="avatar avatar-online">
+                  <img src="/materialize/assets/img/avatars/1.png" alt='' className="rounded-circle" />
+                </div>
+              </a>
+              <ul className="dropdown-menu dropdown-menu-end">
+                <li>
+                  <a className="dropdown-item" href="pages-account-settings-account.html">
+                    <div className="d-flex">
+                      <div className="flex-shrink-0 me-2">
+                        <div className="avatar avatar-online">
+                          <img src="/materialize/assets/img/avatars/1.png" alt='' className="rounded-circle" />
+                        </div>
+                      </div>
+                      <div className="flex-grow-1">
+                        <span className="fw-medium d-block small">John Doe</span>
+                        <small className="text-muted">Admin</small>
+                      </div>
                     </div>
                   </a>
-                  <ul className="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <a className="dropdown-item" href="pages-account-settings-account.html">
-                        <div className="d-flex">
-                          <div className="flex-shrink-0 me-2">
-                            <div className="avatar avatar-online">
-                              <img src="/materialize/assets/img/avatars/1.png" alt=''className="rounded-circle" />
-                            </div>
-                          </div>
-                          <div className="flex-grow-1">
-                            <span className="fw-medium d-block small">John Doe</span>
-                            <small className="text-muted">Admin</small>
-                          </div>
-                        </div>
-                      </a>
-                    </li>
-                    <li>
-                      <div className="dropdown-divider"></div>
-                    </li>
-                    {/* <li>
+                </li>
+                <li>
+                  <div className="dropdown-divider"></div>
+                </li>
+                {/* <li>
                       <a className="dropdown-item" href="pages-profile-user.html">
                         <i className="ri-user-3-line ri-22px me-3"></i><span className="align-middle">My Profile</span>
                       </a>
                     </li> */}
                 <li>
-      <Link href="/admin/settings" className="dropdown-item">
-        <i className="ri-settings-4-line ri-22px me-3"></i>
-        <span className="align-middle">Settings</span>
-      </Link>
-    </li>
+                  <Link href="/admin/settings" className="dropdown-item">
+                    <i className="ri-settings-4-line ri-22px me-3"></i>
+                    <span className="align-middle">Settings</span>
+                  </Link>
+                </li>
 
-    <li>
-      <Link href="/admin/pricing" className="dropdown-item">
-        <i className="ri-money-dollar-circle-line ri-22px me-3"></i>
-        <span className="align-middle">Pricing</span>
-      </Link>
-    </li>
-                    {/* <li>
+                <li>
+                  <Link href="/admin/pricing" className="dropdown-item">
+                    <i className="ri-money-dollar-circle-line ri-22px me-3"></i>
+                    <span className="align-middle">Pricing</span>
+                  </Link>
+                </li>
+                {/* <li>
                       <a className="dropdown-item" href="pages-faq.html">
                         <i className="ri-question-line ri-22px me-3"></i><span className="align-middle">FAQ</span>
                       </a>
                     </li> */}
-                    <li>
-                      <div className="d-grid px-4 pt-2 pb-1">
-                       <button
-  onClick={handleLogout}
-  className="btn btn-sm btn-danger d-flex w-100"
-  type="button"
->
-  <small className="align-middle">Logout</small>
-  <i className="ri-logout-box-r-line ms-2 ri-16px"></i>
-</button>
+                <li>
+                  <div className="d-grid px-4 pt-2 pb-1">
+                    <button
+                      onClick={handleLogout}
+                      className="btn btn-sm btn-danger d-flex w-100"
+                      type="button"
+                    >
+                      <small className="align-middle">Logout</small>
+                      <i className="ri-logout-box-r-line ms-2 ri-16px"></i>
+                    </button>
 
-                      </div>
-                    </li>
-                  </ul>
+                  </div>
                 </li>
               </ul>
-            </div>
+            </li>
+          </ul>
+        </div>
 
-            <div className="navbar-search-wrapper search-input-wrapper container-xxl d-none">
-            <input
-  type="text"
-  className="form-control search-input border-0"
-  placeholder="Search..."
-  aria-label="Search..."
-  suppressHydrationWarning
-/>
+        <div className="navbar-search-wrapper search-input-wrapper container-xxl d-none">
+          <input
+            type="text"
+            className="form-control search-input border-0"
+            placeholder="Search..."
+            aria-label="Search..."
+            suppressHydrationWarning
+          />
 
-              <i className="ri-close-fill search-toggler cursor-pointer"></i>
-            </div>
-          </div>
-        </nav>
+          <i className="ri-close-fill search-toggler cursor-pointer"></i>
+        </div>
+      </div>
+    </nav>
   )
 }
 

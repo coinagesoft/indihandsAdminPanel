@@ -235,8 +235,7 @@ export default function CreateInvoice() {
           {/* Download */}
           <button
             type="button"
-            className={`btn d-flex align-items-center gap-2 ${invoiceId ? "btn-success" : "btn-outline-secondary"
-              }`}
+           className={`btn d-flex align-items-center gap-2 ${invoiceId ? "btn-orange" : "btn-outline-secondary"}`}
             onClick={downloadInvoice}
             disabled={!invoiceId}
           >
