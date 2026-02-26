@@ -110,7 +110,7 @@ if (proposalRow) {
       rp.quantity AS qty,
       rp.quoted_price AS quotedPrice,
       cpp.custom_price AS customPrice,
-     p.base_price AS basePrice,  
+     p.base_price AS basePrice 
     FROM rfq_products rp
     JOIN products p ON p.id = rp.product_id
     LEFT JOIN company_product_pricing cpp
