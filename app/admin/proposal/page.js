@@ -58,7 +58,6 @@ export default function ProposalStatusPage() {
     if (s === "Approved") return "bg-success";
     if (s === "Rejected") return "bg-danger";
     if (s === "Sent") return "bg-info";
-    if (s === "Pending") return "bg-warning text-dark";
     return "bg-secondary";
   };
 
@@ -118,7 +117,6 @@ export default function ProposalStatusPage() {
               onChange={e => setStatus(e.target.value)}
             >
               <option value="">All Status</option>
-              <option>Pending</option>
               <option>Sent</option>
               <option>Approved</option>
               <option>Rejected</option>
