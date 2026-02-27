@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import  ProtectedRoute from '../../../components/ProtectedRoute'
 import {
   Chart as ChartJS,
   LineElement,
@@ -9,7 +10,6 @@ import {
   Tooltip,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip);
 
 const Page = () => {
@@ -131,6 +131,9 @@ const res = await fetch("/api/dashboard/recent-proposals", {
   };
 
   return (
+    <ProtectedRoute>
+
+  
     <div className="container-xxl flex-grow-1 container-p-y">
       <div className="row g-6 mb-6">
         {/* BUSINESS OVERVIEW */}
@@ -305,7 +308,7 @@ const res = await fetch("/api/dashboard/recent-proposals", {
 
       </div>
       <div className="content-backdrop fade"></div>
-    </div>
+    </div>  </ProtectedRoute>
   );
 };
 

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-
+import  ProtectedRoute from '../../../../components/ProtectedRoute'
+import { showSuccess, showError } from "../../../../lib/toast";
+import ConfirmDialog from "../../../../components/ConfirmDialog";
 const Page = () => {
   const [products, setProducts] = useState([]);
 
@@ -13,7 +15,9 @@ const Page = () => {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-
+const [confirmOpen, setConfirmOpen] = useState(false);
+const [confirmMsg, setConfirmMsg] = useState("");
+const [confirmAction, setConfirmAction] = useState(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [showGalleryModal, setShowGalleryModal] = useState(false);
@@ -113,13 +117,13 @@ const Page = () => {
 
       // Out of Stock but stock > 0 ❌
       if (statusVal === "Out of Stock" && stockQty > 0) {
-        alert("❌ Stock must be 0 when status is Out of Stock");
+        showError("Stock must be 0 when status is Out of Stock");
         return;
       }
 
       // Available but stock = 0 ❌
       if (statusVal === "Available" && stockQty === 0) {
-        alert("❌ Stock must be greater than 0 when status is Available");
+        showError("Stock must be greater than 0 when status is Available");
         return;
       }
 
@@ -178,7 +182,7 @@ const Page = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Update failed");
 
-      alert("✅ Product updated successfully!");
+      showSuccess("Product updated successfully!");
 
       // ✅ refresh list
       const params = new URLSearchParams({
@@ -196,7 +200,7 @@ const Page = () => {
       closeEditModal();
     } catch (err) {
       console.error("Update product error:", err);
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     }
   };
 
@@ -205,10 +209,28 @@ const Page = () => {
 
 
   // --- Existing Delete Handlers ---
-  const openDeleteModal = (product) => {
-    setDeleteProduct(product);
-    setIsDeleteModalOpen(true);
-  };
+const openDeleteModal = (product) => {
+  setConfirmMsg(`Delete product "${product.name}" ?`);
+  setConfirmAction(() => async () => {
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Delete failed");
+
+      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+
+      showSuccess("Product deleted successfully");
+    } catch (err) {
+      console.error("Delete product error:", err);
+      showError(err.message);
+    }
+  });
+
+  setConfirmOpen(true);
+};
   const closeDeleteModal = () => {
     setDeleteProduct(null);
     setIsDeleteModalOpen(false);
@@ -235,7 +257,7 @@ const Page = () => {
       closeDeleteModal();
     } catch (err) {
       console.error("Delete product error:", err);
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     }
   };
 
@@ -248,7 +270,7 @@ const Page = () => {
 
       if (!res.ok) throw new Error(data.message || "Failed to fetch product catalogs");
 
-      setAlreadyAssignedCatalogs(data.catalogIds || []); // ✅ fixed list (hide)
+      setAlreadyAssignedCatalogs(data.catalogIds || []); 
 
       setSelectedProduct({
         ...product,
@@ -259,7 +281,7 @@ const Page = () => {
       setNewCatalogName("");
     } catch (err) {
       console.error("openAssignModal error:", err);
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     }
   };
 
@@ -312,14 +334,14 @@ const Page = () => {
         });
       }
 
-      alert("✅ Product assigned to catalogs");
+      showSuccess("Product assigned to catalogs");
 
       closeAssignModal();
       await fetchCatalogs(); // optional
 
     } catch (err) {
       console.error("Assign product error:", err);
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     }
   };
 
@@ -340,7 +362,7 @@ const Page = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Catalog create failed");
 
-      alert("✅ Catalog created");
+      showSuccess("Catalog created");
 
       setNewCatalogName("");
 
@@ -348,7 +370,7 @@ const Page = () => {
       await fetchCatalogs();
     } catch (err) {
       console.error("Create catalog error:", err);
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     }
   };
 
@@ -394,6 +416,7 @@ const Page = () => {
 
 
   return (
+     <ProtectedRoute>
     <div className="container-xxl flex-grow-1 container-p-y">
       {/* Filters */}
       {loading && (
@@ -406,7 +429,7 @@ const Page = () => {
         <div className="card-body">
           <div className="text-end">
             <button
-              className="btn btn-success btn-sm mb-3"
+              className="btn btn-orange btn-sm mb-3"
               onClick={() => {
                 const params = new URLSearchParams({
                   search,
@@ -560,7 +583,6 @@ const Page = () => {
             <h5 className="mb-3">Assign Product to Catalog</h5>
 
             {/* Existing Catalogs */}
-            {/* Existing Catalogs */}
             <div className="d-flex flex-column gap-2">
 
               {catalogs
@@ -593,12 +615,12 @@ const Page = () => {
                 value={newCatalogName}
                 onChange={(e) => setNewCatalogName(e.target.value)}
               />
-              <button className="btn btn-outline-primary" onClick={createNewCatalog}>Add</button>
+              <button className="btn btn-outline-orange" onClick={createNewCatalog}>Add</button>
             </div>
 
             <div className="d-flex justify-content-end gap-2 mt-3">
               <button className="btn btn-secondary" onClick={closeAssignModal}>Cancel</button>
-              <button className="btn btn-success" onClick={saveCatalogAssignment}>Save</button>
+              <button className="btn btn-orange" onClick={saveCatalogAssignment}>Save</button>
             </div>
           </div>
         )}
@@ -856,7 +878,7 @@ const Page = () => {
                         ))}
 
                         <button
-                          className="btn btn-sm btn-outline-primary"
+                          className="btn btn-sm btn-outline-orange"
                           onClick={() =>
                             setSelectedProduct({
                               ...selectedProduct,
@@ -877,7 +899,7 @@ const Page = () => {
                     <button className="btn btn-sm btn-secondary" onClick={closeEditModal}>
                       Cancel
                     </button>
-                    <button className="btn btn-sm btn-primary" onClick={saveChanges}>
+                    <button className="btn btn-sm btn-orange" onClick={saveChanges}>
                       Save Changes
                     </button>
                   </div>
@@ -928,6 +950,19 @@ const Page = () => {
 
       </div>
     </div>
+    <ConfirmDialog
+  open={confirmOpen}
+  title="Delete Product"
+  message={confirmMsg}
+  confirmText="Delete"
+  cancelText="Cancel"
+  onCancel={() => setConfirmOpen(false)}
+  onConfirm={async () => {
+    setConfirmOpen(false);
+    if (confirmAction) await confirmAction();
+  }}
+/>
+    </ProtectedRoute>
   );
 };
 

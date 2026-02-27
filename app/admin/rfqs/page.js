@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
+import  ProtectedRoute from '../../../components/ProtectedRoute'
+import { showSuccess, showError } from "../../../lib/toast";
 
 const RFQ_STATUSES = ["Submitted", "Under Review", "Accepted", "Rejected"];
 
 const RFQPage = () => {
   const [organizations, setOrganizations] = useState([]);
   const [rfqs, setRfqs] = useState([]);
-
   const [selectedOrg, setSelectedOrg] = useState("all");
   const [selectedBranch, setSelectedBranch] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -28,7 +29,7 @@ const RFQPage = () => {
       setOrganizations(data.organizations || []);
       setRfqs(data.rfqs || []);
     } catch (err) {
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     }
   };
 
@@ -71,11 +72,11 @@ const RFQPage = () => {
     if (!res.ok) throw new Error(data.message || "Update failed");
 
     if (data.emailSent) {
-      alert(`✅ Status "${status}" & email sent`);
+      showSuccess(` Status "${status}" & email sent`);
     } else if (data.emailError) {
-      alert(`⚠️ Status updated but email failed`);
+      showError(` Status updated but email failed`);
     } else {
-      alert(`✅ Status updated`);
+      showSuccess(`Status updated`);
     }
 
     setRfqs(prev =>
@@ -83,7 +84,7 @@ const RFQPage = () => {
     );
 
   } catch (e) {
-    alert("❌ " + e.message);
+    showError("❌ " + e.message);
   } finally {
     setStatusLoading(null);
   }
@@ -138,6 +139,7 @@ const RFQPage = () => {
   /* ---------------- UI ---------------- */
 
   return (
+    <ProtectedRoute>
     <div className="container-xxl container-p-y">
       <h4 className="mb-4 text-primary">RFQ Management</h4>
 
@@ -276,7 +278,7 @@ const RFQPage = () => {
         {statusLoading === `${rfq.id}-Under Review` ? (
           <>
             <span className="spinner-border spinner-border-sm me-1"></span>
-            Sending...
+            updating status...
           </>
         ) : (
           "Mark Under Review"
@@ -293,7 +295,7 @@ const RFQPage = () => {
       {statusLoading === `${rfq.id}-Accepted` ? (
         <>
           <span className="spinner-border spinner-border-sm me-1"></span>
-          Sending...
+            updating status...
         </>
       ) : (
         "Accept"
@@ -309,7 +311,7 @@ const RFQPage = () => {
       {statusLoading === `${rfq.id}-Rejected` ? (
         <>
           <span className="spinner-border spinner-border-sm me-1"></span>
-          Sending...
+             updating status...
         </>
       ) : (
         "Reject"
@@ -321,6 +323,7 @@ const RFQPage = () => {
         </div>
       ))}
     </div>
+    </ProtectedRoute>
   );
 };
 
