@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import  ProtectedRoute from '../../../components/ProtectedRoute'
 
 export default function ProposalStatusPage() {
 
@@ -64,6 +65,7 @@ export default function ProposalStatusPage() {
   if (loading) return <div className="p-4">Loading…</div>;
 
   return (
+    <ProtectedRoute>
     <div className="container-xxl container-p-y ">
 
      <h4 className="mb-4 text-primary">Proposal History</h4>
@@ -116,7 +118,6 @@ export default function ProposalStatusPage() {
               onChange={e => setStatus(e.target.value)}
             >
               <option value="">All Status</option>
-              <option>Draft</option>
               <option>Pending</option>
               <option>Sent</option>
               <option>Approved</option>
@@ -199,5 +200,6 @@ export default function ProposalStatusPage() {
       </div>
 
     </div>
+    </ProtectedRoute>
   );
 }

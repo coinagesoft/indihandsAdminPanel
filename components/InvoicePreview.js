@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { showSuccess, showError } from "../lib/toast";
+import { useConfirm } from "./ConfirmDialog";
 
 const Page = ({ onBack, rfqId }) => {
 
@@ -8,8 +10,6 @@ const Page = ({ onBack, rfqId }) => {
   const [sendingProposal, setSendingProposal] = useState(false);
   const [sendingInvoice, setSendingInvoice] = useState(false);
   const [proposalId, setProposalId] = useState(null);
-
-
   const [items, setItems] = useState([]);
   const [saving, setSaving] = useState(false);
   const [charges, setCharges] = useState([]);
@@ -32,8 +32,8 @@ const Page = ({ onBack, rfqId }) => {
 
   /* ================= HANDLERS ================= */
   const handleSaveProposal = async () => {
-    if (!selectedRfq) return alert("❌ Please select RFQ first");
-    if (!header.companyId || !header.branchId) return alert("❌ companyId / branchId missing");
+    if (!selectedRfq) return showError("Please select RFQ first");
+    if (!header.companyId || !header.branchId) return showError("companyId / branchId missing");
 
     if (saving) return;
 
@@ -105,15 +105,15 @@ const Page = ({ onBack, rfqId }) => {
         : header.clientEmail || "client";
 
       if (mailSent) {
-        alert(`✅ Proposal saved & emailed to ${clientInfo}`);
+        showSuccess(` Proposal saved & emailed to ${clientInfo}`);
       } else if (header.clientEmail) {
-        alert(`⚠️ Proposal saved but email failed for ${clientInfo}`);
+        showError(` Proposal saved but email failed for ${clientInfo}`);
       } else {
-        alert(`✅ Proposal saved (no client email)`);
+        showSuccess(`Proposal saved (no client email)`);
       }
 
     } catch (e) {
-      alert("❌ " + e.message);
+      showError("❌ " + e.message);
     } finally {
       setSaving(false);
     }
@@ -121,8 +121,8 @@ const Page = ({ onBack, rfqId }) => {
 
 
   const handleDownloadPdf = () => {
-    if (!selectedRfq) return alert("❌ Select RFQ first");
-    if (!proposalId) return alert("❌ Please send proposal first");
+    if (!selectedRfq) return showError("Select RFQ first");
+    if (!proposalId) return showError(" Please send proposal first");
 
     window.open(`/api/proposals/pdf/${proposalId}`, "_blank");
   };
@@ -134,8 +134,8 @@ const Page = ({ onBack, rfqId }) => {
   }, [rfqId]);
 
   const handleEmailProposal = async () => {
-    if (!selectedRfq) return alert("❌ Select RFQ first");
-    if (!header.clientEmail) return alert("❌ Client email missing");
+    if (!selectedRfq) return showError("❌ Select RFQ first");
+    if (!header.clientEmail) return showError("❌ Client email missing");
 
     try {
       setSendingProposal(true);
@@ -155,9 +155,9 @@ const Page = ({ onBack, rfqId }) => {
       const clientInfo = header.clientName
         ? `${header.clientName} (${header.clientEmail})`
         : header.clientEmail;
-      alert(`✅ Proposal email sent successfully to ${clientInfo}`);
+      showSuccess(`Proposal email sent successfully to ${clientInfo}`);
     } catch (e) {
-      alert("❌ " + e.message);
+      showError("❌ " + e.message);
     } finally {
       setSendingProposal(false);
     }
@@ -218,8 +218,8 @@ useEffect(() => {
 }, [rfqId, acceptedRfqs]);   // ✅ IMPORTANT
 
   const handleDownloadInvoice = () => {
-    if (!selectedRfq) return alert("❌ Select RFQ first");
-    if (!proposalId) return alert("❌ Please send proposal first");
+    if (!selectedRfq) return showError("Select RFQ first");
+    if (!proposalId) return showError("Please send proposal first");
 
     window.open(`/api/invoices/pdf/${proposalId}`, "_blank");
   };
@@ -329,7 +329,7 @@ const handleRfqSelect = async (e) => {
     const res = await fetch("/api/proposals/accepted-rfqs");
     const data = await res.json();
     console.log("data", data)
-    if (!res.ok) return alert("❌ " + data.message);
+    if (!res.ok) return showError("❌ " + data.message);
     setAcceptedRfqs(data.rfqs || []);
   };
 
@@ -638,7 +638,7 @@ const handleRfqSelect = async (e) => {
                 onClick={handleSaveProposal}
                 disabled={saving}
               >
-                {saving ? "Saving..." : "Send Proposal"}
+                {saving ? "Sending..." : "Send Proposal"}
               </button>
 
               {/* DOWNLOAD PROPOSAL PDF */}

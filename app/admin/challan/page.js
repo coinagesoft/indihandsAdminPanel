@@ -1,5 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
+import  ProtectedRoute from '../../../components/ProtectedRoute'
+import { showSuccess, showError } from "../../../lib/toast";
+import ConfirmDialog from "../../../components/ConfirmDialog";
 
 export default function CreateInvoice() {
   const [proposals, setProposals] = useState([]);
@@ -25,7 +28,7 @@ export default function CreateInvoice() {
 
   /* ========= LOAD PROPOSALS ========= */
   useEffect(() => {
-    fetch("/api/proposals")
+    fetch("/api/invoices")
       .then(r => r.json())
       .then(setProposals);
   }, []);
@@ -96,7 +99,7 @@ export default function CreateInvoice() {
   /* ========= SAVE ========= */
   const saveInvoice = async () => {
     if (!proposalId) {
-      alert("Select proposal first");
+      showError("Select proposal first");
       return;
     }
 
@@ -107,18 +110,19 @@ export default function CreateInvoice() {
     });
 
     if (res.ok) {
-      alert("✅ Invoice saved");
+      showSuccess("Invoice saved");
 
       // RESET
       setProposalId("");
       setProposal(null);
       setForm(emptyForm);
     } else {
-      alert("❌ Error saving invoice");
+      showError("Error saving invoice");
     }
   };
 
   return (
+    <ProtectedRoute>
     <div className="container-xxl py-4">
       <h4 className="text-primary mb-4">Create Invoice</h4>
 
@@ -257,5 +261,6 @@ export default function CreateInvoice() {
 
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

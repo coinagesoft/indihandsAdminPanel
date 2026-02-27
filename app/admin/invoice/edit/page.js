@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from "react";
 
 import PreviewPage from '../../../../components/InvoicePreview.js'
-
+import  ProtectedRoute from '../../../../components/ProtectedRoute.js'
+import { showSuccess, showError } from "../../../../lib/toast.js";
+import { useConfirm } from "../../../../components/ConfirmDialog.js";
 const Page = () => {
   /* ================= HEADER ================= */
   const [header, setHeader] = useState({
@@ -55,9 +57,9 @@ const readonlyFields = [
   };
 
   const handleSaveProposal = async () => {
-    if (!selectedRfq) return alert("❌ Please select RFQ first");
+    if (!selectedRfq) return showError("Please select RFQ first");
     if (!header.companyId || !header.branchId)
-      return alert("❌ companyId / branchId missing");
+      return showError("companyId / branchId missing");
 
 
     try {
@@ -99,14 +101,14 @@ const readonlyFields = [
           ...prev,
           quotationNo: data.proposal_number,
         }));
-        return alert(
-          "⚠️ Proposal already exists. Proposal No: " +
+        return showError(
+          "Proposal already exists. Proposal No: " +
           data.proposal_number
         );
       }
 
       if (!res.ok) {
-        return alert("❌ " + (data.message || "Server error"));
+        return showError("❌ " + (data.message || "Server error"));
       }
 
       // ✅ DB generated quotation no
@@ -115,10 +117,10 @@ const readonlyFields = [
         quotationNo: data.proposal_number,
       }));
 
-      alert("✅ Proposal saved successfully");
+      showSuccess("Proposal saved successfully");
     } catch (err) {
       console.error("Save proposal error:", err);
-      alert("❌ Internal server error");
+      showError("❌ Internal server error");
     } finally {
       setSaving(false);
     }
@@ -126,8 +128,8 @@ const readonlyFields = [
 
 
   const handleDownloadPdf = () => {
-    if (!selectedRfq) return alert("❌ Select RFQ first");
-    if (!proposalId) return alert("❌ Please send proposal first");
+    if (!selectedRfq) return showError("❌ Select RFQ first");
+    if (!proposalId) return showError("❌ Please send proposal first");
 
     window.open(`/api/proposals/pdf/${proposalId}`, "_blank");
   };
@@ -164,7 +166,7 @@ const readonlyFields = [
 
     const res = await fetch(`/api/rfqs/${rfqId}/details`);
     const data = await res.json();
-    if (!res.ok) return alert("❌ " + data.message);
+    if (!res.ok) return showError("❌ " + data.message);
     console.log("rfqid", data)
     const companyId = data.header.companyId;
 
@@ -281,7 +283,7 @@ const readonlyFields = [
   const fetchAcceptedRfqs = async () => {
     const res = await fetch("/api/proposals/accepted-rfqs");
     const data = await res.json();
-    if (!res.ok) return alert("❌ " + data.message);
+    if (!res.ok) return showError("❌ " + data.message);
 
     setAcceptedRfqs(data.rfqs || []);
   };
@@ -290,6 +292,7 @@ const readonlyFields = [
 
   /* ================= UI ================= */
   return (
+    <ProtectedRoute>
     <div className="container-xxl flex-grow-1 container-p-y">
 
 
@@ -611,6 +614,7 @@ const readonlyFields = [
         </>
       )}
     </div>
+    </ProtectedRoute>
   );
 };
 

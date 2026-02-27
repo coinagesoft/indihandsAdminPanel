@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-
+import  ProtectedRoute from '../../../components/ProtectedRoute'
+import { showSuccess, showError } from "../../../lib/toast";
+import ConfirmDialog from "../../../components/ConfirmDialog";
 /* ===================== SAFE EMPTY MODELS ===================== */
 const EMPTY_BRANCH = {
   id: null,
@@ -35,7 +37,9 @@ const Page = () => {
   const [newBranch, setNewBranch] = useState(EMPTY_BRANCH);
   const [editingBranch, setEditingBranch] = useState(EMPTY_BRANCH);
   const [editingCompany, setEditingCompany] = useState(EMPTY_COMPANY);
-
+const [confirmOpen, setConfirmOpen] = useState(false);
+const [confirmMsg, setConfirmMsg] = useState("");
+const [confirmAction, setConfirmAction] = useState(null);
   const companyModalRef = useRef(null);
   const branchCreateModalRef = useRef(null);
   const branchEditModalRef = useRef(null);
@@ -82,9 +86,9 @@ const Page = () => {
     });
 
     const data = await res.json();
-    if (!res.ok) return alert("❌ " + data.message);
+    if (!res.ok) return showError("❌ " + data.message);
 
-    alert("✅ Company updated");
+    showSuccess(" Company updated");
     await fetchCompanies();
     setEditingCompany(EMPTY_COMPANY);
     const modal = bootstrap.Modal.getInstance(companyModalRef.current);
@@ -112,12 +116,12 @@ const Page = () => {
 
 
     const data = await res.json();
-    if (!res.ok) return alert("❌ " + data.message);
+    if (!res.ok) return showError("❌ " + data.message);
     
 if (!newCompany.shortName?.trim()) {
-  return alert("❌ Company short name required");
+  return showError("❌ Company short name required");
 }
-    alert("✅ Company created");
+    showSuccess("Company created");
     await fetchCompanies();
 
     const modal = bootstrap.Modal.getInstance(companyModalRef.current);
@@ -135,7 +139,7 @@ if (!newCompany.shortName?.trim()) {
     });
 
     const data = await res.json();
-    if (!res.ok) return alert("❌ " + data.message);
+    if (!res.ok) return showError("❌ " + data.message);
 
     // const resetRes = await fetch("/api/auth/request-reset", {
     //   method: "POST",
@@ -144,9 +148,9 @@ if (!newCompany.shortName?.trim()) {
     // });
 
     if (!data.ok) {
-      alert("✅ Branch created  ");
+      showSuccess(" Branch created  ");
     } else {
-      alert("✅ Branch created ");
+      showSuccess(" Branch created ");
     }
 
     await fetchCompanies();
@@ -166,9 +170,9 @@ modal?.hide();
     });
 
     const data = await res.json();
-    if (!res.ok) return alert("❌ " + data.message);
+    if (!res.ok) return showError("❌ " + data.message);
 
-    alert("✅ Branch updated");
+    showSuccess(" Branch updated");
     await fetchCompanies();
     setEditingBranch({ ...editingBranch, password: "" }); // ✅ ADD
         const modal = bootstrap.Modal.getInstance(branchEditModalRef.current);
@@ -197,6 +201,7 @@ modal?.hide();
 
   /* ===================== UI ===================== */
   return (
+    <ProtectedRoute>
     <div className="container-xxl py-4">
       <h4 className="mb-4 text-primary">Company & Branch Management</h4>
 
@@ -294,21 +299,22 @@ modal?.hide();
                 <button
                   className="btn btn-sm btn-outline-danger"
                   disabled={!selectedCompany?.id}
-                  onClick={async () => {
-                    if (!selectedCompany?.id) return;
+                onClick={() => {
+  setConfirmMsg("Delete company and all branches?");
+  setConfirmAction(() => async () => {
+    const res = await fetch(`/api/companies/${selectedCompany.id}`, {
+      method: "DELETE",
+    });
 
-                    if (!confirm("⚠️ Delete company & branches?")) return;
+    const data = await res.json();
+    if (!res.ok) return showError(data.message);
 
-                    const res = await fetch(`/api/companies/${selectedCompany.id}`, {
-                      method: "DELETE",
-                    });
+    showSuccess("Company deleted");
+    await fetchCompanies();
+  });
 
-                    const data = await res.json();
-                    if (!res.ok) return alert("❌ " + data.message);
-
-                    alert("✅ Company deleted");
-                    await fetchCompanies();
-                  }}
+  setConfirmOpen(true);
+}}
                 >
                   Delete Company
                 </button>
@@ -358,20 +364,22 @@ modal?.hide();
 
                   <button
                     className="btn btn-sm btn-outline-danger"
-                    onClick={async () => {
-                      const ok = confirm("⚠️ Are you sure you want to delete this branch?");
-                      if (!ok) return;
+                   onClick={() => {
+  setConfirmMsg("Are you sure you want to delete this branch?");
+  setConfirmAction(() => async () => {
+    const res = await fetch(`/api/branches/${b.id}`, {
+      method: "DELETE",
+    });
 
-                      const res = await fetch(`/api/branches/${b.id}`, {
-                        method: "DELETE",
-                      });
+    const data = await res.json();
+    if (!res.ok) return showError(data.message);
 
-                      const data = await res.json();
-                      if (!res.ok) return alert("❌ " + data.message);
+    showSuccess("Branch deleted");
+    await fetchCompanies();
+  });
 
-                      alert("✅ Branch deleted");
-                      await fetchCompanies();
-                    }}
+  setConfirmOpen(true);
+}}
                   >
                     Delete Branch
                   </button>
@@ -889,6 +897,19 @@ modal?.hide();
 
 
     </div>
+    <ConfirmDialog
+  open={confirmOpen}
+  title="Confirm Action"
+  message={confirmMsg}
+  confirmText="Yes"
+  cancelText="Cancel"
+  onCancel={() => setConfirmOpen(false)}
+  onConfirm={async () => {
+    setConfirmOpen(false);
+    if (confirmAction) await confirmAction();
+  }}
+/>
+    </ProtectedRoute>
   );
 };
 

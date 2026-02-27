@@ -4,7 +4,7 @@ import Script from 'next/script';
 import './globals.css';
 import Header from '../components/layout/Header';
 import Sidebar from '../components/layout/Sidebar';
-
+import { Toaster } from "react-hot-toast";
 export default function RootLayout({ children }) {
 
   
@@ -116,7 +116,30 @@ export default function RootLayout({ children }) {
       
               <div className="">{children}</div>
      
-
+    <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              borderRadius: "10px",
+              background: "#fff",
+              color: "#333",
+              border: "1px solid #eee",
+              fontSize: "14px",
+            },
+            success: {
+              iconTheme: {
+                primary: "#ff7a00",
+                secondary: "#fff",
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: "#dc3545",
+                secondary: "#fff",
+              },
+            },
+          }}
+        />
 
 
     {/* 1️⃣ Core helpers (MUST be first) */}

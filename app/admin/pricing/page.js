@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-
+import  ProtectedRoute from '../../../components/ProtectedRoute'
+import ConfirmDialog from "../../../components/ConfirmDialog";
+import { showSuccess, showError } from "../../../lib/toast";
 const OrgPricingPage = () => {
   // ✅ API state
   const [orgs, setOrgs] = useState([]);
@@ -14,7 +16,9 @@ const OrgPricingPage = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [savingOrgId, setSavingOrgId] = useState(null);
-
+const [confirmOpen, setConfirmOpen] = useState(false);
+const [confirmMsg, setConfirmMsg] = useState("");
+const [confirmAction, setConfirmAction] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 5;
 
@@ -50,7 +54,7 @@ useEffect(() => {
       const data = await res.json();
 
       if (!res.ok) {
-        return alert("❌ " + (data.message || "Failed to load pricing data"));
+        return showError("❌ " + (data.message || "Failed to load pricing data"));
       }
 
       setOrgs(data.companies || []);
@@ -63,7 +67,7 @@ useEffect(() => {
   }))
 );
     } catch (err) {
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     } finally {
       setLoading(false);
     }
@@ -97,17 +101,19 @@ useEffect(() => {
   };
 
   // ✅ Save one org pricing
-  const handleSaveOrgPricing = async (orgId) => {
+const handleSaveOrgPricing = (orgId) => {
+  setConfirmMsg("Save pricing changes for this organization?");
+
+  setConfirmAction(() => async () => {
     try {
       setSavingOrgId(orgId);
 
       const orgPricing = pricing
-      .filter((p) => p.orgId === orgId)
-.map((p) => ({
-  productId: p.productId,
-  price: p.price === "" ? null : Number(p.price),
-}));
-
+        .filter((p) => p.orgId === orgId)
+        .map((p) => ({
+          productId: p.productId,
+          price: p.price === "" ? null : Number(p.price),
+        }));
 
       const res = await fetch(`/api/org-pricing/${orgId}`, {
         method: "POST",
@@ -116,16 +122,19 @@ useEffect(() => {
       });
 
       const data = await res.json();
-      if (!res.ok) return alert("❌ " + (data.message || "Save failed"));
+      if (!res.ok) throw new Error(data.message || "Save failed");
 
-      alert("✅ Pricing saved successfully");
+      showSuccess("Pricing saved successfully");
       fetchData();
     } catch (err) {
-      alert("❌ " + err.message);
+      showError(err.message);
     } finally {
       setSavingOrgId(null);
     }
-  };
+  });
+
+  setConfirmOpen(true);
+};
 
   // ✅ Filters
   const filteredOrgs =
@@ -168,9 +177,9 @@ useEffect(() => {
       });
 
       const data = await res.json();
-      if (!res.ok) return alert("❌ " + data.message);
+      if (!res.ok) return showError("❌ " + data.message);
 
-      alert(data.message);
+      showSuccess(data.message);
       fetchData();
     };
 
@@ -179,10 +188,11 @@ useEffect(() => {
 
 
   return (
+    <ProtectedRoute>
     <div className="container-xxl container-p-y">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4 className="mb-0 text-orange">Organization-Specific Pricing</h4>
-        <button className="btn btn-sm btn-outline-primary" onClick={fetchData} disabled={loading}>
+        <button className="btn btn-sm btn-outline-orange" onClick={fetchData} disabled={loading}>
           {loading ? "Loading..." : "Refresh"}
         </button>
       </div>
@@ -190,7 +200,7 @@ useEffect(() => {
       <div className="d-flex justify-content-between align-center">
         {/* Filters */}
       <button
-  className="btn btn-success btn-sm mb-5"
+  className="btn btn-orange btn-sm mb-5"
   onClick={() => {
     const url =
       selectedOrg === "all"
@@ -204,7 +214,7 @@ useEffect(() => {
 </button>
 
         <div className="mb-3">
-          <label htmlFor="importPricing" className="btn btn-sm btn-primary me-2">
+          <label htmlFor="importPricing" className="btn btn-sm btn-orange me-2">
             Import Pricing Excel
           </label>
           <input
@@ -380,6 +390,19 @@ useEffect(() => {
         </div>
       ))}
     </div>
+    <ConfirmDialog
+  open={confirmOpen}
+  title="Confirm Action"
+  message={confirmMsg}
+  confirmText="Confirm"
+  cancelText="Cancel"
+  onCancel={() => setConfirmOpen(false)}
+  onConfirm={async () => {
+    setConfirmOpen(false);
+    if (confirmAction) await confirmAction();
+  }}
+/>
+    </ProtectedRoute>
   );
 };
 

@@ -1,5 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import  ProtectedRoute from '../../../components/ProtectedRoute'
+import { showSuccess, showError } from "../../../lib/toast";
 
 const EMPTY_COMPANY = {
   companyName: "",
@@ -53,7 +55,7 @@ const SettingsPage = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        return alert("❌ " + (data.message || "Failed to load settings"));
+        return showError("❌ " + (data.message || "Failed to load settings"));
       }
 
       setUsers(data.users || []);
@@ -88,7 +90,7 @@ setCompanyInfo({
         brandingCharges: Number(data.pricingDefaults?.branding_charges || 0),
       });
     } catch (err) {
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     } finally {
       setLoading(false);
     }
@@ -112,13 +114,13 @@ setCompanyInfo({
       });
 
       const data = await res.json();
-      if (!res.ok) return alert("❌ " + (data.message || "Failed"));
+      if (!res.ok) return showError("❌ " + (data.message || "Failed"));
 
       setUsers((prev) =>
         prev.map((u) => (u.id === user.id ? { ...u, active: !u.active } : u))
       );
     } catch (err) {
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     }
   };
 
@@ -132,12 +134,12 @@ setCompanyInfo({
       });
 
       const data = await res.json();
-      if (!res.ok) return alert("❌ " + (data.message || "Delete failed"));
+      if (!res.ok) return showError("❌ " + (data.message || "Delete failed"));
 
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
-      alert("✅ User deleted");
+      showSuccess(" User deleted");
     } catch (err) {
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     }
   };
 
@@ -157,13 +159,13 @@ setCompanyInfo({
       });
 
       const data = await res.json();
-      if (!res.ok) return alert("❌ " + (data.message || "Update failed"));
+      if (!res.ok) return showError("❌ " + (data.message || "Update failed"));
 
       setUsers((prev) => prev.map((u) => (u.id === editUser.id ? editUser : u)));
       setEditUser(null);
-      alert("✅ User updated");
+      showSuccess("User updated");
     } catch (err) {
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     }
   };
 
@@ -182,18 +184,19 @@ setCompanyInfo({
       });
 
       const data = await res.json();
-      if (!res.ok) return alert("❌ " + (data.message || "Save failed"));
+      if (!res.ok) return showError("❌ " + (data.message || "Save failed"));
 
-      alert("✅ Settings saved successfully!");
+      showSuccess("Settings saved successfully!");
       fetchSettings();
     } catch (err) {
-      alert("❌ " + err.message);
+      showError("❌ " + err.message);
     } finally {
       setSaving(false);
     }
   };
 
   return (
+    <ProtectedRoute>
     <div className="container-xxl flex-grow-1 container-p-y">
       <div className="d-flex justify-content-between align-items-center mb-3">
  <h4 className="mb-4 text-primary">Admin Settings</h4>
@@ -392,7 +395,7 @@ setCompanyInfo({
                           <div className="d-flex gap-2">
                             <button
                               type="button"
-                              className="btn btn-sm btn-outline-primary"
+                              className="btn btn-sm btn-outline-orange"
                               onClick={() => setEditUser({ ...user })}
                             >
                               Edit
@@ -502,7 +505,7 @@ setCompanyInfo({
 
       {/* ✅ Save Button */}
       <div className="mt-4 text-end">
-        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+        <button className="btn btn-orange mb-5" onClick={handleSave} disabled={saving}>
           {saving ? "Saving..." : "Save All Settings"}
         </button>
       </div>
@@ -560,7 +563,7 @@ setCompanyInfo({
                   <button className="btn btn-secondary" onClick={() => setEditUser(null)}>
                     Cancel
                   </button>
-                  <button className="btn btn-primary" onClick={saveUserEdit}>
+                  <button className="btn btn-orange" onClick={saveUserEdit}>
                     Save
                   </button>
                 </div>
@@ -570,6 +573,7 @@ setCompanyInfo({
         </>
       )}
     </div>
+    </ProtectedRoute>
   );
 };
 

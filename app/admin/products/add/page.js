@@ -1,5 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import ProtectedRoute from '../../../../components/ProtectedRoute'
+import ConfirmDialog from "../../../../components/ConfirmDialog";
+import { showSuccess, showError } from "../../../../lib/toast";
 
 const Page = () => {
   const [featuredPreview, setFeaturedPreview] = useState(null);
@@ -9,6 +12,9 @@ const Page = () => {
   const [status, setStatus] = useState("Available");
   const [stockQty, setStockQty] = useState(0);
   const [publishing, setPublishing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMsg, setConfirmMsg] = useState("");
+  const [confirmAction, setConfirmAction] = useState(null);
   const handleFeaturedChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -82,8 +88,8 @@ const Page = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (publishing) return;   // 🛑 prevent double click
-    setPublishing(true);      // 🔄 start loader
+    if (publishing) return;
+    setPublishing(true);
 
     try {
       const form = e.target;
@@ -92,12 +98,12 @@ const Page = () => {
       const stockQty = Number(form.stockQty.value);
 
       if (status === "Out of Stock" && stockQty > 0) {
-        alert("❌ If status is Out of Stock, inventory must be 0");
+        showError("If status is Out of Stock, inventory must be 0");
         return;
       }
 
       if (status === "Available" && stockQty === 0) {
-        alert("❌ If status is Available, inventory must be greater than 0");
+        showError("❌ If status is Available, inventory must be greater than 0");
         return;
       }
 
@@ -138,11 +144,11 @@ const Page = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        alert("❌ " + (data?.message || data?.error || "Failed to create product"));
+        showError("❌ " + (data?.message || data?.error || "Failed to create product"));
         return;
       }
 
-      alert("✅ Product created");
+      showSuccess("Product created");
 
       e.target.reset();
       setFeaturedPreview(null);
@@ -152,7 +158,7 @@ const Page = () => {
 
     } catch (err) {
       console.error(err);
-      alert("❌ Failed to publish");
+      showError("❌ Failed to publish");
     } finally {
       setPublishing(false);  // ✅ enable button again
     }
@@ -173,7 +179,7 @@ const Page = () => {
 
 
   const handleExcelImport = async () => {
-    if (!excelFile) return alert("Please select an Excel file");
+    if (!excelFile) return showError("Please select an Excel file");
 
     const XLSX = await import("xlsx");
     const reader = new FileReader();
@@ -186,7 +192,7 @@ const Page = () => {
 
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-      if (jsonData.length === 0) return alert("Excel is empty");
+      if (jsonData.length === 0) return showError("Excel is empty");
 
       const mapped = jsonData.map((x, index) => ({
         productName: x["Product Name"]?.toString().trim() || "",
@@ -216,8 +222,8 @@ const Page = () => {
       const result = await res.json();
 
       console.log("excel data", result)
-      if (!res.ok) return alert("❌ " + result.message);
-      alert(result.message);
+      if (!res.ok) return showError("❌ " + result.message);
+      showError(result.message);
     };
 
     reader.readAsBinaryString(excelFile);
@@ -238,331 +244,346 @@ const Page = () => {
 
 
   return (
-    <form
-      className="container-xxl flex-grow-1 container-p-y"
-      onSubmit={handleSubmit}
-    >
-      <div className="app-ecommerce">
-        {/* Header */}
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6 row-gap-4">
-          <div>
-            <h4 className="mb-1">Add New Product</h4>
-            <p className="mb-0">Create product for RFQ & proposal flow</p>
+    <ProtectedRoute>
+      <form
+        className="container-xxl flex-grow-1 container-p-y"
+        onSubmit={handleSubmit}
+      >
+        <div className="app-ecommerce">
+          {/* Header */}
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6 row-gap-4">
+            <div>
+              <h4 className="mb-1">Add New Product</h4>
+              <p className="mb-0">Create product for RFQ & proposal flow</p>
+            </div>
+            <div className="d-flex gap-3">
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={handleDiscard}
+              >
+                Discard
+              </button>
+              <button
+                type="submit"
+                className="btn btn-orange "
+                disabled={publishing}
+              >
+                {publishing ? "Publishing..." : "Publish Product"}
+              </button>
+            </div>
           </div>
-          <div className="d-flex gap-3">
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={handleDiscard}
-            >
-              Discard
-            </button>
-            <button
-              type="submit"
-              className="btn btn-publish"
-              disabled={publishing}
-            >
-              {publishing ? "Publishing..." : "Publish Product"}
-            </button>
-          </div>
-        </div>
 
-        {/* Excel Import Section */}
-        <div className="card mb-6">
-          <div className="card-header">
-            <h5 className="mb-0">Import Products from Excel</h5>
-          </div>
-          <div className="card-body">
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              className="form-control mb-3"
-              onChange={handleExcelChange}
-            />
-            <button
-              type="button"
-              className="btn  btn-orange"
-              onClick={handleExcelImport}
-            >
-              Publish Excel Products
-            </button>
-          </div>
-        </div>
-
-        {/* Show Imported Products */}
-        {products.length > 0 && (
+          {/* Excel Import Section */}
           <div className="card mb-6">
-            <div className="card-header">Imported Products</div>
-            <div className="table-responsive">
-              <table className="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Product Name</th>
-                    <th>SKU</th>
-                    <th>HSN</th>
-                    <th>Size</th>
-                    <th>Weight</th>
-                    <th>Stock</th>
-                    <th>Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((p, idx) => (
-                    <tr key={idx}>
-                      <td>{p.productName}</td>
-                      <td>{p.sku}</td>
-                      <td>{p.hsn}</td>
-                      <td>{p.size || "-"}</td>
-                      <td>{p.weight || "-"}</td>
-                      <td>{p.stockQty}</td>
-                      <td>₹{p.basePrice}</td>
+            <div className="card-header">
+              <h5 className="mb-0">Import Products from Excel</h5>
+            </div>
+            <div className="card-body">
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                className="form-control mb-3"
+                onChange={handleExcelChange}
+              />
+              <button
+                type="button"
+                className="btn  btn-orange"
+                onClick={handleExcelImport}
+              >
+                Publish Excel Products
+              </button>
+            </div>
+          </div>
+
+          {/* Show Imported Products */}
+          {products.length > 0 && (
+            <div className="card mb-6">
+              <div className="card-header">Imported Products</div>
+              <div className="table-responsive">
+                <table className="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Product Name</th>
+                      <th>SKU</th>
+                      <th>HSN</th>
+                      <th>Size</th>
+                      <th>Weight</th>
+                      <th>Stock</th>
+                      <th>Price</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Original Form Sections */}
-        <div className="row">
-          {/* LEFT */}
-          <div className="col-12 col-lg-8">
-            {/* Product Information */}
-            <div className="card mb-6">
-              <div className="card-header">
-                <h5 className="mb-0">Product Information</h5>
-              </div>
-              <div className="card-body">
-                <div className="form-floating form-floating-outline mb-5">
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="productName"
-                    placeholder="Product Name"
-                    required
-                  />
-                  <label>Product Name</label>
-                </div>
-
-                <div className="row gx-5">
-                  <div className="col">
-                    <div className="form-floating form-floating-outline">
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="sku"
-                        placeholder="SKU"
-                      />
-                      <label>SKU</label>
-                    </div>
-                  </div>
-                  <div className="col">
-                    <div className="form-floating form-floating-outline">
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="barcode"
-                        placeholder="Barcode (Optional)"
-                      />
-                      <label>Barcode</label>
-                    </div>
-                  </div>
-                </div>
-                <div className="form-floating form-floating-outline mt-4">
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="hsn"
-                    placeholder="HSN Code"
-                  />
-                  <label>HSN Code</label>
-                </div>
-                <div className="row gx-5 mt-4">
-                  <div className="col">
-                    <div className="form-floating form-floating-outline">
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="size"
-                        placeholder="Size (e.g. 12x10 inch, Large)"
-                      />
-                      <label>Size</label>
-                    </div>
-                  </div>
-
-                  <div className="col">
-                    <div className="form-floating form-floating-outline">
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="weight"
-                        placeholder="Weight (e.g. 1.5 kg, 800 g)"
-                      />
-                      <label>Weight</label>
-                    </div>
-                  </div>
-                </div>
-
-
-
-                <div className="mt-5">
-                  <p>Description (Optional)</p>
-                  <textarea
-                    className="form-control"
-                    rows={4}
-                    name="description"
-                    placeholder="Product description"
-                  />
-                </div>
+                  </thead>
+                  <tbody>
+                    {products.map((p, idx) => (
+                      <tr key={idx}>
+                        <td>{p.productName}</td>
+                        <td>{p.sku}</td>
+                        <td>{p.hsn}</td>
+                        <td>{p.size || "-"}</td>
+                        <td>{p.weight || "-"}</td>
+                        <td>{p.stockQty}</td>
+                        <td>₹{p.basePrice}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
+          )}
 
-            {/* Product Images */}
-            <div className="card mb-6">
-              <div className="card-header">
-                <h5 className="mb-0">Product Images</h5>
-              </div>
-              <div className="card-body">
-                {/* Featured Image */}
-                <div className="mb-4">
-                  <label className="form-label">Featured Image</label>
-                  <input
-                    type="file"
-                    className="form-control"
-                    name="featuredImage"
-                    accept="image/*"
-                    onChange={handleFeaturedChange}
-                  />
-                  {featuredPreview && (
-                    <img
-                      src={featuredPreview}
-                      alt="Featured Preview"
-                      className="mt-2"
-                      style={{
-                        width: "120px",
-                        height: "120px",
-                        objectFit: "cover",
-                        borderRadius: "4px",
-                      }}
+          {/* Original Form Sections */}
+          <div className="row">
+            {/* LEFT */}
+            <div className="col-12 col-lg-8">
+              {/* Product Information */}
+              <div className="card mb-6">
+                <div className="card-header">
+                  <h5 className="mb-0">Product Information</h5>
+                </div>
+                <div className="card-body">
+                  <div className="form-floating form-floating-outline mb-5">
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="productName"
+                      placeholder="Product Name"
+                      required
                     />
-                  )}
-                </div>
+                    <label>Product Name</label>
+                  </div>
 
-                {/* Gallery Images */}
-                <div className="border rounded p-4 text-center">
-                  <p className="mb-1 fw-medium">Additional Images</p>
-                  <small className="text-muted">Multiple images allowed</small>
-                  <input
-                    type="file"
-                    className="form-control mt-3"
-                    name="galleryImages"
-                    multiple
-                    accept="image/*"
-                    onChange={handleGalleryChange}
-                  />
-                  {galleryPreviews.length > 0 && (
-                    <div className="d-flex flex-wrap mt-3 gap-2 justify-content-center">
-                      {galleryPreviews.map((src, idx) => (
-                        <img
-                          key={idx}
-                          src={src}
-                          alt={`Gallery Preview ${idx + 1}`}
-                          style={{
-                            width: "100px",
-                            height: "100px",
-                            objectFit: "cover",
-                            borderRadius: "4px",
-                          }}
+                  <div className="row gx-5">
+                    <div className="col">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="sku"
+                          placeholder="SKU"
                         />
-                      ))}
+                        <label>SKU</label>
+                      </div>
                     </div>
-                  )}
+                    <div className="col">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="barcode"
+                          placeholder="Barcode (Optional)"
+                        />
+                        <label>Barcode</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="form-floating form-floating-outline mt-4">
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="hsn"
+                      placeholder="HSN Code"
+                    />
+                    <label>HSN Code</label>
+                  </div>
+                  <div className="row gx-5 mt-4">
+                    <div className="col">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="size"
+                          placeholder="Size (e.g. 12x10 inch, Large)"
+                        />
+                        <label>Size</label>
+                      </div>
+                    </div>
+
+                    <div className="col">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="weight"
+                          placeholder="Weight (e.g. 1.5 kg, 800 g)"
+                        />
+                        <label>Weight</label>
+                      </div>
+                    </div>
+                  </div>
+
+
+
+                  <div className="mt-5">
+                    <p>Description (Optional)</p>
+                    <textarea
+                      className="form-control"
+                      rows={4}
+                      name="description"
+                      placeholder="Product description"
+                    />
+                  </div>
                 </div>
               </div>
+
+              {/* Product Images */}
+              <div className="card mb-6">
+                <div className="card-header">
+                  <h5 className="mb-0">Product Images</h5>
+                </div>
+                <div className="card-body">
+                  {/* Featured Image */}
+                  <div className="mb-4">
+                    <label className="form-label">Featured Image</label>
+                    <input
+                      type="file"
+                      className="form-control"
+                      name="featuredImage"
+                      accept="image/*"
+                      onChange={handleFeaturedChange}
+                    />
+                    {featuredPreview && (
+                      <img
+                        src={featuredPreview}
+                        alt="Featured Preview"
+                        className="mt-2"
+                        style={{
+                          width: "120px",
+                          height: "120px",
+                          objectFit: "cover",
+                          borderRadius: "4px",
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Gallery Images */}
+                  <div className="border rounded p-4 text-center">
+                    <p className="mb-1 fw-medium">Additional Images</p>
+                    <small className="text-muted">Multiple images allowed</small>
+                    <input
+                      type="file"
+                      className="form-control mt-3"
+                      name="galleryImages"
+                      multiple
+                      accept="image/*"
+                      onChange={handleGalleryChange}
+                    />
+                    {galleryPreviews.length > 0 && (
+                      <div className="d-flex flex-wrap mt-3 gap-2 justify-content-center">
+                        {galleryPreviews.map((src, idx) => (
+                          <img
+                            key={idx}
+                            src={src}
+                            alt={`Gallery Preview ${idx + 1}`}
+                            style={{
+                              width: "100px",
+                              height: "100px",
+                              objectFit: "cover",
+                              borderRadius: "4px",
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+
+
             </div>
 
-
-
-          </div>
-
-          {/* RIGHT */}
-          <div className="col-12 col-lg-4">
-            {/* Pricing */}
-            <div className="card mb-6">
-              <div className="card-header">
-                <h5 className="mb-0">Base Pricing</h5>
-              </div>
-              <div className="card-body">
-                <div className="form-floating form-floating-outline mb-3">
-                  <input
-                    type="number"
-                    min="0"
-                    className="form-control"
-                    name="basePrice"
-                    placeholder="Base Price"
-                    required
-                  />
-                  <label>Base Price (Admin)</label>
+            {/* RIGHT */}
+            <div className="col-12 col-lg-4">
+              {/* Pricing */}
+              <div className="card mb-6">
+                <div className="card-header">
+                  <h5 className="mb-0">Base Pricing</h5>
                 </div>
-                <small className="text-muted">
-                  Client pricing will be handled during RFQ.
-                </small>
-              </div>
-            </div>
-
-            {/* Organize */}
-            <div className="card mb-6">
-              <div className="card-header">
-                <h5 className="mb-0">Organize</h5>
-              </div>
-              <div className="card-body">
-
-
-
-                <div className="form-floating form-floating-outline">
-                  <select
-                    className="form-select"
-                    name="status"
-                    value={status}
-                    onChange={handleStatusChange}
-                  >
-                    <option value="Available">Available</option>
-                    <option value="Out of Stock">Out of Stock</option>
-                  </select>
-                  <label>Status</label>
+                <div className="card-body">
+                  <div className="form-floating form-floating-outline mb-3">
+                    <input
+                      type="number"
+                      min="0"
+                      className="form-control"
+                      name="basePrice"
+                      placeholder="Base Price"
+                      required
+                    />
+                    <label>Base Price (Admin)</label>
+                  </div>
+                  <small className="text-muted">
+                    Client pricing will be handled during RFQ.
+                  </small>
                 </div>
-
-
               </div>
 
-            </div>
-            {/* Inventory */}
-            <div className="card mb-6">
-              <div className="card-header"><h5 className="mb-0">Inventory</h5></div>
-              <div className="card-body">
-                <div className="form-floating form-floating-outline">
-                  <input
-                    type="number"
-                    min="0"
-                    className="form-control"
-                    name="stockQty"
-                    placeholder="Stock Quantity"
-                    value={stockQty}
-                    onChange={handleStockChange}
-                    disabled={status === "Out of Stock"}
-                    required
-                  />
-                  <label>Stock Quantity</label>
+              {/* Organize */}
+              <div className="card mb-6">
+                <div className="card-header">
+                  <h5 className="mb-0">Organize</h5>
+                </div>
+                <div className="card-body">
+
+
+
+                  <div className="form-floating form-floating-outline">
+                    <select
+                      className="form-select"
+                      name="status"
+                      value={status}
+                      onChange={handleStatusChange}
+                    >
+                      <option value="Available">Available</option>
+                      <option value="Out of Stock">Out of Stock</option>
+                    </select>
+                    <label>Status</label>
+                  </div>
+
+
                 </div>
 
-                <small className="text-muted d-block mt-2">Stock status will be managed automatically.</small>
+              </div>
+              {/* Inventory */}
+              <div className="card mb-6">
+                <div className="card-header"><h5 className="mb-0">Inventory</h5></div>
+                <div className="card-body">
+                  <div className="form-floating form-floating-outline">
+                    <input
+                      type="number"
+                      min="0"
+                      className="form-control"
+                      name="stockQty"
+                      placeholder="Stock Quantity"
+                      value={stockQty}
+                      onChange={handleStockChange}
+                      disabled={status === "Out of Stock"}
+                      required
+                    />
+                    <label>Stock Quantity</label>
+                  </div>
+
+                  <small className="text-muted d-block mt-2">Stock status will be managed automatically.</small>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </form>
+      </form>
+
+      <ConfirmDialog
+  open={confirmOpen}
+  title="Confirm Action"
+  message={confirmMsg}
+  confirmText="Yes"
+  cancelText="Cancel"
+  onCancel={() => setConfirmOpen(false)}
+  onConfirm={async () => {
+    setConfirmOpen(false);
+    if (confirmAction) await confirmAction();
+  }}
+/>
+    </ProtectedRoute>
   );
 };
 
