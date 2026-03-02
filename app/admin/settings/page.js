@@ -430,6 +430,7 @@ setCompanyInfo({
                 <label className="form-label">SGST Rate (%)</label>
                 <input
                   type="number"
+                  min="0"
                   className="form-control"
                   value={pricingDefaults.sgstRate}
                   onChange={(e) =>
@@ -445,6 +446,7 @@ setCompanyInfo({
                 <label className="form-label">CGST Rate (%)</label>
                 <input
                   type="number"
+                   min="0"
                   className="form-control"
                   value={pricingDefaults.cgstRate}
                   onChange={(e) =>
@@ -460,6 +462,7 @@ setCompanyInfo({
                 <label className="form-label">IGST Rate (%)</label>
                 <input
                   type="number"
+                   min="0"
                   className="form-control"
                   value={pricingDefaults.igstRate}
                   onChange={(e) =>
