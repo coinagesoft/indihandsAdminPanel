@@ -72,14 +72,16 @@ const Page = () => {
   };
 
   const handleStockChange = (e) => {
-    const qty = Number(e.target.value);
-    setStockQty(qty);
+    const val = e.target.value;
 
-    if (qty === 0) {
-      setStatus("Out of Stock");
-    } else {
-      setStatus("Available");
+    // allow empty while typing
+    if (val === "") {
+      setStockQty("");
+      return;
     }
+
+    const qty = Number(val);
+    setStockQty(qty);
   };
 
   // Publish single product
@@ -95,17 +97,19 @@ const Page = () => {
       const form = e.target;
 
       const status = form.status.value;
-      const stockQty = Number(form.stockQty.value);
 
-      if (status === "Out of Stock" && stockQty > 0) {
-        showError("If status is Out of Stock, inventory must be 0");
-        return;
-      }
+   const rawStock = form.stockQty.value;
+const stockQty = rawStock === "" ? null : Number(rawStock);
 
-      if (status === "Available" && stockQty === 0) {
-        showError("❌ If status is Available, inventory must be greater than 0");
-        return;
-      }
+if (status === "Available" && (!stockQty || stockQty <= 0)) {
+  showError("If status is Available, inventory must be greater than 0");
+  return;
+}
+
+if (status === "Out of Stock" && stockQty > 0) {
+  showError("If status is Out of Stock, inventory must be 0");
+  return;
+}
 
       let featuredImageUrl = null;
       if (form.featuredImage.files[0]) {
@@ -557,6 +561,13 @@ const Page = () => {
                       placeholder="Stock Quantity"
                       value={stockQty}
                       onChange={handleStockChange}
+                      onBlur={() => {
+                        if (stockQty === 0 || stockQty === "") {
+                          setStatus("Out of Stock");
+                        } else {
+                          setStatus("Available");
+                        }
+                      }}
                       disabled={status === "Out of Stock"}
                       required
                     />
@@ -572,17 +583,17 @@ const Page = () => {
       </form>
 
       <ConfirmDialog
-  open={confirmOpen}
-  title="Confirm Action"
-  message={confirmMsg}
-  confirmText="Yes"
-  cancelText="Cancel"
-  onCancel={() => setConfirmOpen(false)}
-  onConfirm={async () => {
-    setConfirmOpen(false);
-    if (confirmAction) await confirmAction();
-  }}
-/>
+        open={confirmOpen}
+        title="Confirm Action"
+        message={confirmMsg}
+        confirmText="Yes"
+        cancelText="Cancel"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={async () => {
+          setConfirmOpen(false);
+          if (confirmAction) await confirmAction();
+        }}
+      />
     </ProtectedRoute>
   );
 };

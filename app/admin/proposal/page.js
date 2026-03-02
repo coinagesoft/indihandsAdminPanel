@@ -14,7 +14,8 @@ export default function ProposalStatusPage() {
   const [companyId, setCompanyId] = useState("");
   const [branchId, setBranchId] = useState("");
   const [status, setStatus] = useState("");
-
+const [fromDate, setFromDate] = useState("");
+const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState(true);
 
   /* ================= LOAD ================= */
@@ -43,16 +44,28 @@ export default function ProposalStatusPage() {
   }, [companyId, companies]);
 
   /* ================= FILTER ================= */
-  useEffect(() => {
-    let data = [...list];
+useEffect(() => {
+  let data = [...list];
 
-    if (companyId) data = data.filter(x => x.company_id == companyId);
-    if (branchId) data = data.filter(x => x.branch_id == branchId);
-    if (status) data = data.filter(x => x.status === status);
+  if (companyId) data = data.filter(x => x.company_id == companyId);
+  if (branchId) data = data.filter(x => x.branch_id == branchId);
+  if (status) data = data.filter(x => x.status === status);
 
-    setFiltered(data);
-  }, [companyId, branchId, status, list]);
+  /* DATE FILTER */
+  if (fromDate) {
+    data = data.filter(x =>
+      x.proposal_date && x.proposal_date >= fromDate
+    );
+  }
 
+  if (toDate) {
+    data = data.filter(x =>
+      x.proposal_date && x.proposal_date <= toDate
+    );
+  }
+
+  setFiltered(data);
+}, [companyId, branchId, status, fromDate, toDate, list]);
   /* ================= BADGE ================= */
   const badge = (s) => {
     if (s === "Approved") return "bg-success";
@@ -70,63 +83,87 @@ export default function ProposalStatusPage() {
      <h4 className="mb-4 text-primary">Proposal History</h4>
 
       {/* ================= FILTER BAR ================= */}
-      <div className="card p-3 mb-3">
-        <div className="row g-2">
+   {/* ================= FILTER BAR ================= */}
+<div className="card p-3 mb-3">
+  <div className="row g-3 align-items-end">
 
-          {/* ORG */}
-          <div className="col-md-4">
-            <select
-              className="form-select"
-              value={companyId}
-              onChange={(e) => {
-                setCompanyId(e.target.value);
-                setBranchId("");
-              }}
-            >
-              <option value="">All Organizations</option>
-              {companies.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.companyName}
-                </option>
-              ))}
-            </select>
-          </div>
+    {/* ORG */}
+    <div className="col-md-3">
+      <label className="form-label mb-1">Organization</label>
+      <select
+        className="form-select"
+        value={companyId}
+        onChange={(e) => {
+          setCompanyId(e.target.value);
+          setBranchId("");
+        }}
+      >
+        <option value="">All Organizations</option>
+        {companies.map(c => (
+          <option key={c.id} value={c.id}>
+            {c.companyName}
+          </option>
+        ))}
+      </select>
+    </div>
 
-          {/* BRANCH */}
-          <div className="col-md-4">
-            <select
-              className="form-select"
-              value={branchId}
-              onChange={e => setBranchId(e.target.value)}
-              disabled={!companyId}
-            >
-              <option value="">All Branches</option>
-              {branches.map(b => (
-                <option key={b.id} value={b.id}>
-                  {b.branchName}
-                </option>
-              ))}
-            </select>
-          </div>
+    {/* BRANCH */}
+    <div className="col-md-2">
+      <label className="form-label mb-1">Branch</label>
+      <select
+        className="form-select"
+        value={branchId}
+        onChange={e => setBranchId(e.target.value)}
+        disabled={!companyId}
+      >
+        <option value="">All Branches</option>
+        {branches.map(b => (
+          <option key={b.id} value={b.id}>
+            {b.branchName}
+          </option>
+        ))}
+      </select>
+    </div>
 
-          {/* STATUS */}
-          <div className="col-md-4">
-            <select
-              className="form-select"
-              value={status}
-              onChange={e => setStatus(e.target.value)}
-            >
-              <option value="">All Status</option>
-              <option>Sent</option>
-              <option>Approved</option>
-              <option>Rejected</option>
-            </select>
-          </div>
+    {/* STATUS */}
+    <div className="col-md-3">
+      <label className="form-label mb-1">Status</label>
+      <select
+        className="form-select"
+        value={status}
+        onChange={e => setStatus(e.target.value)}
+      >
+        <option value="">All Status</option>
+        <option>Sent</option>
+        <option>Approved</option>
+        <option>Rejected</option>
+      </select>
+    </div>
 
-        
+    {/* FROM */}
+    <div className="col-md-2">
+      <label className="form-label mb-1">From</label>
+      <input
+        type="date"
+        className="form-control"
+        value={fromDate}
+        onChange={(e) => setFromDate(e.target.value)}
+      />
+    </div>
 
-        </div>
-      </div>
+    {/* TO */}
+    <div className="col-md-2">
+      <label className="form-label mb-1">To</label>
+      <input
+        type="date"
+        className="form-control"
+        value={toDate}
+        onChange={(e) => setToDate(e.target.value)}
+      />
+    </div>
+
+  </div>
+</div>
 
       {/* ================= TABLE ================= */}
       <div className="card ">
