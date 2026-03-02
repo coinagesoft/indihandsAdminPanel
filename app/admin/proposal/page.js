@@ -82,8 +82,6 @@ useEffect(() => {
 
      <h4 className="mb-4 text-primary">Proposal History</h4>
 
-      {/* ================= FILTER BAR ================= */}
-   {/* ================= FILTER BAR ================= */}
 <div className="card p-3 mb-3">
   <div className="row g-3 align-items-end">
 
@@ -134,6 +132,7 @@ useEffect(() => {
         onChange={e => setStatus(e.target.value)}
       >
         <option value="">All Status</option>
+         <option>Pending</option>
         <option>Sent</option>
         <option>Approved</option>
         <option>Rejected</option>
