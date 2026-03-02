@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import ProtectedRoute from '../../../../components/ProtectedRoute'
 import ConfirmDialog from "../../../../components/ConfirmDialog";
 import { showSuccess, showError } from "../../../../lib/toast";
+import { useFetchWithLoader } from "../../../../lib/fetchWithLoader";
 
 const Page = () => {
   const [catalogs, setCatalogs] = useState([]);
@@ -12,7 +13,8 @@ const Page = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmMsg, setConfirmMsg] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
-
+  const fetchWithLoader = useFetchWithLoader();
+  
   /* ===================== CATALOG MODAL STATE ===================== */
   const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false);
   const [editingCatalog, setEditingCatalog] = useState(null);
@@ -56,7 +58,7 @@ const Page = () => {
       fd.append("file", file);
       fd.append("upload_preset", "catalogs"); // must be unsigned
 
-      const res = await fetch(
+      const res = await fetchWithLoader(
         "https://api.cloudinary.com/v1_1/dxb1whlam/image/upload",
         { method: "POST", body: fd }
       );
@@ -103,14 +105,14 @@ const Page = () => {
 
       if (editingCatalog) {
         // ✅ PATCH
-        res = await fetch(`/api/products/${editingCatalog.id}/catalogs`, {
+        res = await fetchWithLoader(`/api/products/${editingCatalog.id}/catalogs`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
       } else {
         // ✅ POST
-        res = await fetch("/api/catalogs", {
+        res = await fetchWithLoader("/api/catalogs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -150,7 +152,7 @@ const Page = () => {
   };
   const fetchCatalogProducts = async (catalogId) => {
     console.log("id", catalogId)
-    const res = await fetch(`/api/catalogs/${catalogId}/products`);
+    const res = await fetchWithLoader(`/api/catalogs/${catalogId}/products`);
     const data = await res.json();
     console.log("catpro", data)
     setCatalogProducts(data.products || []);
@@ -160,7 +162,7 @@ const Page = () => {
       if (!selectedCatalog?.id) return showError("Select catalog first");
       if (selectedProductsToAdd.length === 0) return showError("Select products first");
 
-      const res = await fetch(`/api/catalogs/${selectedCatalog.id}/products`, {
+      const res = await fetchWithLoader(`/api/catalogs/${selectedCatalog.id}/products`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productIds: selectedProductsToAdd }),
@@ -197,7 +199,7 @@ const Page = () => {
     try {
       if (!selectedCatalog?.id) return;
 
-      const res = await fetch(`/api/catalogs/${selectedCatalog.id}/products`, {
+      const res = await fetchWithLoader(`/api/catalogs/${selectedCatalog.id}/products`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId }),
@@ -218,7 +220,7 @@ const Page = () => {
 
   const fetchCatalogs = async () => {
     try {
-      const res = await fetch("/api/catalogs");
+      const res = await fetchWithLoader("/api/catalogs");
       const data = await res.json();
 
       const formatted = (data.catalogs || []).map((c) => ({
@@ -251,7 +253,7 @@ const Page = () => {
         status: "All",
       });
 
-      const res = await fetch(`/api/products?${params.toString()}`);
+      const res = await fetchWithLoader(`/api/products?${params.toString()}`);
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || "Failed to fetch all products");
@@ -270,7 +272,7 @@ const deleteCatalog = (catalog) => {
 
   setConfirmAction(() => async () => {
     try {
-      const res = await fetch(`/api/catalogs/${catalog.id}`, {
+      const res = await fetchWithLoader(`/api/catalogs/${catalog.id}`, {
         method: "DELETE",
       });
 

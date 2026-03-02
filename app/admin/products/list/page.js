@@ -4,10 +4,11 @@ import React, { useState, useEffect } from "react";
 import  ProtectedRoute from '../../../../components/ProtectedRoute'
 import { showSuccess, showError } from "../../../../lib/toast";
 import ConfirmDialog from "../../../../components/ConfirmDialog";
+import { useFetchWithLoader } from "../../../../lib/fetchWithLoader";
+
 const Page = () => {
   const [products, setProducts] = useState([]);
-
-
+  const fetchWithLoader = useFetchWithLoader();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteProduct, setDeleteProduct] = useState(null);
@@ -36,7 +37,7 @@ const [confirmAction, setConfirmAction] = useState(null);
     fd.append("file", file);
     fd.append("upload_preset", "products"); // your preset name
 
-    const res = await fetch("https://api.cloudinary.com/v1_1/dxb1whlam/image/upload", {
+    const res = await fetchWithLoader("https://api.cloudinary.com/v1_1/dxb1whlam/image/upload", {
       method: "POST",
       body: fd,
     });
@@ -173,7 +174,7 @@ const [confirmAction, setConfirmAction] = useState(null);
         images: finalGallery, // ✅ always array
       };
 
-      const res = await fetch(`/api/products/${selectedProduct.id}`, {
+      const res = await fetchWithLoader(`/api/products/${selectedProduct.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -192,7 +193,7 @@ const [confirmAction, setConfirmAction] = useState(null);
         status,
       });
 
-      const listRes = await fetch(`/api/products?${params.toString()}`);
+      const listRes = await fetchWithLoader(`/api/products?${params.toString()}`);
       const listData = await listRes.json();
       setProducts(listData.products);
       setTotalPages(listData.pagination.totalPages);
@@ -213,7 +214,7 @@ const openDeleteModal = (product) => {
   setConfirmMsg(`Delete product "${product.name}" ?`);
   setConfirmAction(() => async () => {
     try {
-      const res = await fetch(`/api/products/${product.id}`, {
+      const res = await fetchWithLoader(`/api/products/${product.id}`, {
         method: "DELETE",
       });
 
@@ -241,7 +242,7 @@ const openDeleteModal = (product) => {
 
 
 
-      const res = await fetch(`/api/products/${deleteProduct.id}`, {
+      const res = await fetchWithLoader(`/api/products/${deleteProduct.id}`, {
         method: "DELETE",
       });
 
@@ -265,7 +266,7 @@ const openDeleteModal = (product) => {
 
   const openAssignModal = async (product) => {
     try {
-      const res = await fetch(`/api/products/${product.id}/catalogs`);
+      const res = await fetchWithLoader(`/api/products/${product.id}/catalogs`);
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || "Failed to fetch product catalogs");
@@ -306,7 +307,7 @@ const openDeleteModal = (product) => {
 
   const fetchCatalogs = async () => {
     try {
-      const res = await fetch("/api/catalogs");
+      const res = await fetchWithLoader("/api/catalogs");
       const data = await res.json();
 
       setCatalogs(data.catalogs || []);
@@ -327,7 +328,7 @@ const openDeleteModal = (product) => {
 
       // ✅ assign product to all selected catalogs
       for (const catalogId of selectedProduct.catalogs) {
-        await fetch(`/api/catalogs/${catalogId}/products`, {
+        await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ productIds: [selectedProduct.id] }),
@@ -349,7 +350,7 @@ const openDeleteModal = (product) => {
     try {
       if (!newCatalogName.trim()) return;
 
-      const res = await fetch("/api/catalogs", {
+      const res = await fetchWithLoader("/api/catalogs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -384,7 +385,6 @@ const openDeleteModal = (product) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        setLoading(true);
 
         const params = new URLSearchParams({
           page: currentPage,
@@ -393,14 +393,13 @@ const openDeleteModal = (product) => {
           status,
         });
 
-        const res = await fetch(`/api/products?${params.toString()}`);
+        const res = await fetchWithLoader(`/api/products?${params.toString()}`);
         const data = await res.json();
         setProducts(data.products);
         setTotalPages(data.pagination.totalPages);
       } catch (err) {
         console.error("Fetch products error", err);
       } finally {
-        setLoading(false);
       }
     };
 
@@ -418,12 +417,7 @@ const openDeleteModal = (product) => {
   return (
      <ProtectedRoute>
     <div className="container-xxl flex-grow-1 container-p-y">
-      {/* Filters */}
-      {loading && (
-        <div className="text-center py-5">
-          <span className="spinner-border text-primary"></span>
-        </div>
-      )}
+   
 
       <div className="card mb-4">
         <div className="card-body">

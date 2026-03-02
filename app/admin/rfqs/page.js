@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import  ProtectedRoute from '../../../components/ProtectedRoute'
 import { showSuccess, showError } from "../../../lib/toast";
+import { useFetchWithLoader } from "../../../lib/fetchWithLoader";
 
 const RFQ_STATUSES = ["Submitted", "Under Review", "Accepted", "Rejected"];
 
@@ -13,6 +14,8 @@ const RFQPage = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState("all");
   const [statusLoading, setStatusLoading] = useState(null);
+    const fetchWithLoader = useFetchWithLoader();
+
   /* ---------------- API ---------------- */
 
   useEffect(() => {
@@ -21,7 +24,7 @@ const RFQPage = () => {
 
   const fetchRfqs = async () => {
     try {
-      const res = await fetch("/api/rfqs");
+      const res = await fetchWithLoader("/api/rfqs");
       const data = await res.json();
  console.log("rfq",data)
       if (!res.ok) throw new Error(data.message || "Failed to load RFQs");
@@ -62,7 +65,7 @@ const RFQPage = () => {
   setStatusLoading(key);
 
   try {
-    const res = await fetch(`/api/rfqs/${rfqId}`, {
+    const res = await fetchWithLoader(`/api/rfqs/${rfqId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),

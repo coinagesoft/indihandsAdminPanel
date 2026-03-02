@@ -5,6 +5,8 @@ import PreviewPage from '../../../../components/InvoicePreview.js'
 import  ProtectedRoute from '../../../../components/ProtectedRoute.js'
 import { showSuccess, showError } from "../../../../lib/toast.js";
 import { useConfirm } from "../../../../components/ConfirmDialog.js";
+import { useFetchWithLoader } from "../../../../lib/fetchWithLoader.js";
+
 const Page = () => {
   /* ================= HEADER ================= */
   const [header, setHeader] = useState({
@@ -21,7 +23,7 @@ const Page = () => {
     companyId: null,
     branchId: null,
   });
-
+ const fetchWithLoader = useFetchWithLoader();
   const [selectedRfq, setSelectedRfq] = useState("");
   const [items, setItems] = useState([]);
   const [acceptedRfqs, setAcceptedRfqs] = useState([]);
@@ -87,7 +89,7 @@ const readonlyFields = [
 
       };
 
-      const res = await fetch("/api/proposals", {
+      const res = await fetchWithLoader("/api/proposals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -164,7 +166,7 @@ const readonlyFields = [
 
     if (!rfqId) return;
 
-    const res = await fetch(`/api/rfqs/${rfqId}/details`);
+    const res = await fetchWithLoader(`/api/rfqs/${rfqId}/details`);
     const data = await res.json();
     if (!res.ok) return showError("❌ " + data.message);
     console.log("rfqid", data)
@@ -173,7 +175,7 @@ const readonlyFields = [
     // company charges
     let loadedCharges = [];
 
-    const proposalChargesRes = await fetch(
+    const proposalChargesRes = await fetchWithLoader(
       `/api/proposals/${rfqId}/charges`
     );
     const proposalChargesData = await proposalChargesRes.json();
@@ -182,7 +184,7 @@ const readonlyFields = [
       loadedCharges = proposalChargesData.charges;
     } else {
       // 2️⃣ fallback → company default
-      const companyRes = await fetch(
+      const companyRes = await fetchWithLoader(
         `/api/companies/${companyId}/charges`
       );
       const companyData = await companyRes.json();
@@ -281,7 +283,7 @@ const readonlyFields = [
 
 
   const fetchAcceptedRfqs = async () => {
-    const res = await fetch("/api/proposals/accepted-rfqs");
+    const res = await fetchWithLoader("/api/proposals/accepted-rfqs");
     const data = await res.json();
     if (!res.ok) return showError("❌ " + data.message);
 

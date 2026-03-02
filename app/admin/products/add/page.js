@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import ProtectedRoute from '../../../../components/ProtectedRoute'
 import ConfirmDialog from "../../../../components/ConfirmDialog";
 import { showSuccess, showError } from "../../../../lib/toast";
+import { useFetchWithLoader } from "../../../../lib/fetchWithLoader";
 
 const Page = () => {
   const [featuredPreview, setFeaturedPreview] = useState(null);
@@ -15,6 +16,9 @@ const Page = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmMsg, setConfirmMsg] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
+  const fetchWithLoader = useFetchWithLoader();
+
+  
   const handleFeaturedChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -43,7 +47,7 @@ const Page = () => {
 
       console.log("➡️ Cloudinary request start...");
 
-      const res = await fetch("https://api.cloudinary.com/v1_1/dxb1whlam/image/upload", {
+      const res = await fetchWithLoader("https://api.cloudinary.com/v1_1/dxb1whlam/image/upload", {
         method: "POST",
         body: fd,
       });
@@ -139,7 +143,7 @@ if (status === "Out of Stock" && stockQty > 0) {
         images: galleryUrls,
       };
 
-      const res = await fetch("/api/products", {
+      const res = await fetchWithLoader("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -217,7 +221,7 @@ if (status === "Out of Stock" && stockQty > 0) {
 
       setProducts(mapped);
 
-      const res = await fetch("/api/products/bulk-import", {
+      const res = await fetchWithLoader("/api/products/bulk-import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ products: mapped }),

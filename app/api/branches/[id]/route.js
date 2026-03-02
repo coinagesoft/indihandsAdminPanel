@@ -131,31 +131,13 @@ export async function PATCH(req, { params }) {
 }
 
 
-/* ✅ Delete branch */
-// export async function DELETE(req, { params }) {
-//   try {
-//     const { id } = await params;
-//     const branchId = Number(id);
 
-//     if (!branchId) {
-//       return Response.json({ message: "Invalid branchId" }, { status: 400 });
-//     }
 
-//     await db.query(`DELETE FROM company_branches WHERE id=?`, [branchId]);
-
-//     return Response.json({ message: "Branch deleted" }, { status: 200 });
-//   } catch (err) {
-//     console.error("DELETE /api/branches/[id] error:", err);
-//     return Response.json({ message: "Server error" }, { status: 500 });
-//   }
-// }
-
-/* ✅ Delete branch with all related data (deep clean) */
 export async function DELETE(req, { params }) {
   const connection = await db.getConnection();
 
   try {
-    const { id } =await params;
+    const { id } = await params;
     const branchId = Number(id);
 
     if (!branchId) {
@@ -164,7 +146,7 @@ export async function DELETE(req, { params }) {
 
     await connection.beginTransaction();
 
-    /* 1️⃣ Delete invoice_items of invoices linked via proposals */
+    /* 1️⃣ Delete invoice_items via proposals */
     await connection.query(
       `DELETE ii FROM invoice_items ii
        JOIN invoices i ON ii.invoice_id = i.id
@@ -173,7 +155,7 @@ export async function DELETE(req, { params }) {
       [branchId]
     );
 
-    /* 2️⃣ Delete invoice_items of invoices where branch is buyer */
+    /* 2️⃣ Delete invoice_items where branch is buyer */
     await connection.query(
       `DELETE ii FROM invoice_items ii
        JOIN invoices i ON ii.invoice_id = i.id
@@ -201,13 +183,23 @@ export async function DELETE(req, { params }) {
       [branchId]
     );
 
-    /* 6️⃣ Delete pricing */
+    /* 6️⃣ Delete company product pricing via company */
     await connection.query(
-      `DELETE FROM company_product_pricing WHERE company_id = ?`,
+      `DELETE cpp FROM company_product_pricing cpp
+       JOIN company_branches b ON cpp.company_id = b.company_id
+       WHERE b.id = ?`,
       [branchId]
     );
 
-    /* 7️⃣ Delete branch */
+    /* 7️⃣ Delete users login mapped to this branch */
+    await connection.query(
+      `DELETE u FROM users u
+       JOIN company_branches b ON u.email = b.login_email
+       WHERE b.id = ?`,
+      [branchId]
+    );
+
+    /* 8️⃣ Delete branch (includes branch login fields) */
     const [result] = await connection.query(
       `DELETE FROM company_branches WHERE id = ?`,
       [branchId]
@@ -220,7 +212,7 @@ export async function DELETE(req, { params }) {
     }
 
     return Response.json(
-      { message: "Branch and all related data deleted" },
+      { message: "Branch, user login, and all related data deleted successfully" },
       { status: 200 }
     );
 

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { showSuccess, showError } from "../lib/toast";
 import { useConfirm } from "./ConfirmDialog";
+import { useFetchWithLoader } from "../lib/fetchWithLoader";
 
 const Page = ({ onBack, rfqId }) => {
 
@@ -27,6 +28,7 @@ const Page = ({ onBack, rfqId }) => {
     companyId: null,
     branchId: null,
   });
+  const fetchWithLoader = useFetchWithLoader();
 
 
 
@@ -61,7 +63,7 @@ const Page = ({ onBack, rfqId }) => {
       };
 
       /* 1️⃣ SAVE PROPOSAL */
-      const res = await fetch("/api/proposals", {
+      const res = await fetchWithLoader("/api/proposals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -82,7 +84,7 @@ const Page = ({ onBack, rfqId }) => {
       let mailSent = false;
       if (header.clientEmail && newProposalId) {
         try {
-          const mailRes = await fetch(`/api/proposals/email/${newProposalId}`, {
+          const mailRes = await fetchWithLoader(`/api/proposals/email/${newProposalId}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -140,7 +142,7 @@ const Page = ({ onBack, rfqId }) => {
     try {
       setSendingProposal(true);
 
-      const res = await fetch(`/api/proposals/email/${proposalId}`, {
+      const res = await fetchWithLoader(`/api/proposals/email/${proposalId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -167,7 +169,7 @@ useEffect(() => {
   if (!rfqId || acceptedRfqs.length === 0) return;
 
   const loadRfq = async () => {
-    const res = await fetch(`/api/rfqs/${rfqId}/details`);
+    const res = await fetchWithLoader(`/api/rfqs/${rfqId}/details`);
     const data = await res.json();
     if (!res.ok) return;
 
@@ -175,13 +177,13 @@ useEffect(() => {
 
     // charges
     let loadedCharges = [];
-    const proposalChargesRes = await fetch(`/api/proposals/${rfqId}/charges`);
+    const proposalChargesRes = await fetchWithLoader(`/api/proposals/${rfqId}/charges`);
     const proposalChargesData = await proposalChargesRes.json();
 
     if (proposalChargesData.success && proposalChargesData.charges?.length) {
       loadedCharges = proposalChargesData.charges;
     } else {
-      const companyRes = await fetch(`/api/companies/${companyId}/charges`);
+      const companyRes = await fetchWithLoader(`/api/companies/${companyId}/charges`);
       const companyData = await companyRes.json();
       loadedCharges = companyData.charges || [];
     }
@@ -232,7 +234,7 @@ const handleRfqSelect = async (e) => {
 
   if (!newId) return;
 
-  const res = await fetch(`/api/rfqs/${newId}/details`);
+  const res = await fetchWithLoader(`/api/rfqs/${newId}/details`);
   const data = await res.json();
   if (!res.ok) return;
 
@@ -240,13 +242,13 @@ const handleRfqSelect = async (e) => {
 
   // charges
   let loadedCharges = [];
-  const proposalChargesRes = await fetch(`/api/proposals/${newId}/charges`);
+  const proposalChargesRes = await fetchWithLoader(`/api/proposals/${newId}/charges`);
   const proposalChargesData = await proposalChargesRes.json();
 
   if (proposalChargesData.success && proposalChargesData.charges?.length) {
     loadedCharges = proposalChargesData.charges;
   } else {
-    const companyRes = await fetch(`/api/companies/${companyId}/charges`);
+    const companyRes = await fetchWithLoader(`/api/companies/${companyId}/charges`);
     const companyData = await companyRes.json();
     loadedCharges = companyData.charges || [];
   }
@@ -326,7 +328,7 @@ const handleRfqSelect = async (e) => {
   }, []);
 
   const fetchAcceptedRfqs = async () => {
-    const res = await fetch("/api/proposals/accepted-rfqs");
+    const res = await fetchWithLoader("/api/proposals/accepted-rfqs");
     const data = await res.json();
     console.log("data", data)
     if (!res.ok) return showError("❌ " + data.message);

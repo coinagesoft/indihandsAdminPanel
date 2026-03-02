@@ -74,6 +74,7 @@ li.list-group-item.bg-primary.text-white{
 .content-wrapper {
   height: calc(100vh - 64px); /* adjust if header height differs */
   overflow-y: auto;
+    position: relative;
 }
 .settings-tabs {
   display: flex;
@@ -303,11 +304,11 @@ li.list-group-item.bg-primary.text-white{
   gap: 10px;
 }
 .global-loader-overlay {
-  position: fixed;
+  position: absolute;  
   inset: 0;
   background: rgba(255,255,255,0.65);
   backdrop-filter: blur(2px);
-  z-index: 9999;
+  z-index: 10;          /* content-level */
   display: flex;
   align-items: center;
   justify-content: center;

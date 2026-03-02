@@ -114,9 +114,7 @@ export default function RootLayout({ children }) {
       <body >
 
 
-       <LoaderProvider>
               <div className="">{children}</div>  
-              </LoaderProvider>  
     <Toaster
     position="top-right"
           toastOptions={{
