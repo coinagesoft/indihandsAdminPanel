@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import  ProtectedRoute from '../../../components/ProtectedRoute'
+import { useFetchWithLoader } from "../../../lib/fetchWithLoader";
 import {
   Chart as ChartJS,
   LineElement,
@@ -16,7 +17,7 @@ const Page = () => {
   const [view, setView] = useState("weekly");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-
+  const fetchWithLoader = useFetchWithLoader();
   const [overview, setOverview] = useState({
     activeClients: 0,
     openRFQs: 0,
@@ -33,7 +34,7 @@ const Page = () => {
     try {
          const token = localStorage.getItem("token");
 
-      const res = await fetch("/api/dashboard/overview", {
+      const res = await fetchWithLoader("/api/dashboard/overview", {
   headers: {
     Authorization: `Bearer ${token}`,
   },
@@ -50,7 +51,7 @@ const Page = () => {
     try {
          const token = localStorage.getItem("token");
 
-      const res = await fetch(
+      const res = await fetchWithLoader(
         `/api/dashboard/chart?view=${view}&month=${selectedMonth}&year=${selectedYear}`
       , {
   headers: {
@@ -69,7 +70,7 @@ const Page = () => {
     try {
    const token = localStorage.getItem("token");
 
-const res = await fetch("/api/dashboard/recent-proposals", {
+const res = await fetchWithLoader("/api/dashboard/recent-proposals", {
   headers: {
     Authorization: `Bearer ${token}`,
   },

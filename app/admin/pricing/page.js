@@ -3,11 +3,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import  ProtectedRoute from '../../../components/ProtectedRoute'
 import ConfirmDialog from "../../../components/ConfirmDialog";
 import { showSuccess, showError } from "../../../lib/toast";
+import { useFetchWithLoader } from "../../../lib/fetchWithLoader";
+
 const OrgPricingPage = () => {
   // ✅ API state
   const [orgs, setOrgs] = useState([]);
   const [products, setProducts] = useState([]);
   const [pricing, setPricing] = useState([]);
+  const fetchWithLoader = useFetchWithLoader();
 
   // ✅ UI state
   const [selectedOrg, setSelectedOrg] = useState("all");
@@ -50,7 +53,7 @@ useEffect(() => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/org-pricing");
+      const res = await fetchWithLoader("/api/org-pricing");
       const data = await res.json();
 
       if (!res.ok) {
@@ -115,7 +118,7 @@ const handleSaveOrgPricing = (orgId) => {
           price: p.price === "" ? null : Number(p.price),
         }));
 
-      const res = await fetch(`/api/org-pricing/${orgId}`, {
+      const res = await fetchWithLoader(`/api/org-pricing/${orgId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pricing: orgPricing }),
@@ -170,7 +173,7 @@ const handleSaveOrgPricing = (orgId) => {
   custom_price: r["Custom Price (₹)"],  // ✅ correct
 }));
 
-      const res = await fetch("/api/org-pricing/import", {
+      const res = await fetchWithLoader("/api/org-pricing/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rows: cleaned }),
@@ -287,11 +290,11 @@ const handleSaveOrgPricing = (orgId) => {
       </div>
 
       {/* Loading State */}
-      {loading && (
+      {/* {loading && (
         <div className="alert alert-info">
           Loading pricing data...
         </div>
-      )}
+      )} */}
 
       {/* No Orgs */}
       {!loading && filteredOrgs.length === 0 && (

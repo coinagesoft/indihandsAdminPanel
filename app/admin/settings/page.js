@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import  ProtectedRoute from '../../../components/ProtectedRoute'
 import { showSuccess, showError } from "../../../lib/toast";
+import { useFetchWithLoader } from "../../../lib/fetchWithLoader"
 
 const EMPTY_COMPANY = {
   companyName: "",
@@ -35,6 +36,7 @@ const EMPTY_PRICING = {
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("general");
+    const fetchWithLoader = useFetchWithLoader();
 
   // ✅ API state
   const [users, setUsers] = useState([]);
@@ -51,7 +53,7 @@ const SettingsPage = () => {
     try {
       setLoading(true);
 
-      const res = await fetch("/api/settings");
+      const res = await fetchWithLoader("/api/settings");
       const data = await res.json();
 
       if (!res.ok) {
@@ -103,7 +105,7 @@ setCompanyInfo({
   // ✅ Toggle user active
   const handleUserToggle = async (user) => {
     try {
-      const res = await fetch(`/api/users/${user.id}`, {
+      const res = await fetchWithLoader(`/api/users/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -129,7 +131,7 @@ setCompanyInfo({
     if (!confirm(`Delete user ${user.email}?`)) return;
 
     try {
-      const res = await fetch(`/api/users/${user.id}`, {
+      const res = await fetchWithLoader(`/api/users/${user.id}`, {
         method: "DELETE",
       });
 
@@ -148,7 +150,7 @@ setCompanyInfo({
     try {
       if (!editUser?.id) return;
 
-      const res = await fetch(`/api/users/${editUser.id}`, {
+      const res = await fetchWithLoader(`/api/users/${editUser.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -174,7 +176,7 @@ setCompanyInfo({
     try {
       setSaving(true);
 
-      const res = await fetch("/api/settings", {
+      const res = await fetchWithLoader("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

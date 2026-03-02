@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import  ProtectedRoute from '../../../components/ProtectedRoute'
+import { useFetchWithLoader } from "../../../lib/fetchWithLoader";
 
 export default function ProposalStatusPage() {
 
   const [list, setList] = useState([]);
   const [filtered, setFiltered] = useState([]);
+  const fetchWithLoader = useFetchWithLoader();
 
   const [companies, setCompanies] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -21,8 +23,8 @@ const [toDate, setToDate] = useState("");
   /* ================= LOAD ================= */
   useEffect(() => {
     Promise.all([
-      fetch("/api/proposals").then(r => r.json()),
-      fetch("/api/companies").then(r => r.json())
+      fetchWithLoader("/api/proposals").then(r => r.json()),
+      fetchWithLoader("/api/companies").then(r => r.json())
     ])
       .then(([proposals, compData]) => {
         setList(proposals || []);
@@ -74,7 +76,7 @@ useEffect(() => {
     return "bg-secondary";
   };
 
-  if (loading) return <div className="p-4">Loading…</div>;
+  // if (loading) return <div className="p-4">Loading…</div>;
 
   return (
     <ProtectedRoute>

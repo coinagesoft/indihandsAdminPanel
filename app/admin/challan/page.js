@@ -3,13 +3,14 @@ import { useState, useEffect } from "react";
 import  ProtectedRoute from '../../../components/ProtectedRoute'
 import { showSuccess, showError } from "../../../lib/toast";
 import ConfirmDialog from "../../../components/ConfirmDialog";
-
+import { useFetchWithLoader } from "../../../lib/fetchWithLoader";
 export default function CreateInvoice() {
   const [proposals, setProposals] = useState([]);
   const [proposalId, setProposalId] = useState("");
   const [proposal, setProposal] = useState(null);
   const [invoiceId, setInvoiceId] = useState(null);
   const today = new Date().toISOString().slice(0, 10);
+  const fetchWithLoader = useFetchWithLoader();
 
   const emptyForm = {
     invoice_date: today,
@@ -28,7 +29,7 @@ export default function CreateInvoice() {
 
   /* ========= LOAD PROPOSALS ========= */
   useEffect(() => {
-    fetch("/api/invoices")
+    fetchWithLoader("/api/invoices")
       .then(r => r.json())
       .then(setProposals);
   }, []);
@@ -46,12 +47,12 @@ export default function CreateInvoice() {
     }
 
     /* proposal */
-    fetch(`/api/challan/proposal/${proposalId}`)
+    fetchWithLoader(`/api/challan/proposal/${proposalId}`)
       .then(r => r.json())
       .then(setProposal);
 
     /* existing invoice */
-    fetch(`/api/challan/invoice-by-proposal/${proposalId}`)
+    fetchWithLoader(`/api/challan/invoice-by-proposal/${proposalId}`)
       .then(r => r.json())
       .then(inv => {
         if (inv && inv.id) {
