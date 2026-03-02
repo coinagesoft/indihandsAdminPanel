@@ -72,7 +72,7 @@ li.list-group-item.bg-primary.text-white{
 }
 
 .content-wrapper {
-  height: calc(100vh - 64px); /* adjust if header height differs */
+  height: calc(100vh - 64px); 
   overflow-y: auto;
     position: relative;
 }

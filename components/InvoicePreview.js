@@ -63,7 +63,7 @@ const Page = ({ onBack, rfqId }) => {
       };
 
       /* 1️⃣ SAVE PROPOSAL */
-      const res = await fetchWithLoader("/api/proposals", {
+      const res = await fetch("/api/proposals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -84,7 +84,7 @@ const Page = ({ onBack, rfqId }) => {
       let mailSent = false;
       if (header.clientEmail && newProposalId) {
         try {
-          const mailRes = await fetchWithLoader(`/api/proposals/email/${newProposalId}`, {
+          const mailRes = await fetch(`/api/proposals/email/${newProposalId}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
