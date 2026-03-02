@@ -302,3 +302,69 @@ li.list-group-item.bg-primary.text-white{
   justify-content: flex-end;
   gap: 10px;
 }
+.global-loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(2px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.global-loader-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #eee;
+  border-top: 4px solid #F29E46;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* Arrow rotate rahu de */
+.menu-item.open > .menu-toggle::after {
+  transform: rotate(90deg);
+}
+.menu-item.not-active > .menu-link {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+
+/* OPEN STATE */
+.menu-item.open > .menu-sub {
+  max-height: 500px;   /* large enough value */
+  opacity: 1;
+}
+.menu-toggle::after {
+  transition: transform 0.3s ease;
+}
+
+.menu-item.open > .menu-toggle::after {
+  transform: rotate(90deg);
+}
+.menu-link {
+  transition: background-color 0.3s ease, color 0.3s ease, padding-left 0.3s ease;
+}
+
+
+
+.rotate-icon {
+  transform: rotate(180deg);
+  transition: transform 0.25s ease;
+}
+/* brand text normal */
+.brand-text-img {
+  height: 40px;
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+
+
+

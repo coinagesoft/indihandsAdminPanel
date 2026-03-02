@@ -5,6 +5,7 @@ import './globals.css';
 import Header from '../components/layout/Header';
 import Sidebar from '../components/layout/Sidebar';
 import { Toaster } from "react-hot-toast";
+import { LoaderProvider } from "../components/LoaderProvider";
 export default function RootLayout({ children }) {
 
   
@@ -108,16 +109,16 @@ export default function RootLayout({ children }) {
     rel="stylesheet"
     href="/materialize/assets/vendor/css/pages/page-pricing.css"
   />
-</head>
+     </head>
 
       <body >
 
 
-      
-              <div className="">{children}</div>
-     
+       <LoaderProvider>
+              <div className="">{children}</div>  
+              </LoaderProvider>  
     <Toaster
-          position="top-right"
+    position="top-right"
           toastOptions={{
             style: {
               borderRadius: "10px",
@@ -138,7 +139,9 @@ export default function RootLayout({ children }) {
                 secondary: "#fff",
               },
             },
-          }}
+      }}
+
+
         />
 
 
