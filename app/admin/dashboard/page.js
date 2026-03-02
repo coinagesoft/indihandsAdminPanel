@@ -51,7 +51,7 @@ const Page = () => {
     try {
          const token = localStorage.getItem("token");
 
-      const res = await fetchWithLoader(
+      const res = await fetch(
         `/api/dashboard/chart?view=${view}&month=${selectedMonth}&year=${selectedYear}`
       , {
   headers: {
