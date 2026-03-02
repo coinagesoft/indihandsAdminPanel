@@ -132,20 +132,103 @@ export async function PATCH(req, { params }) {
 
 
 /* ✅ Delete branch */
+// export async function DELETE(req, { params }) {
+//   try {
+//     const { id } = await params;
+//     const branchId = Number(id);
+
+//     if (!branchId) {
+//       return Response.json({ message: "Invalid branchId" }, { status: 400 });
+//     }
+
+//     await db.query(`DELETE FROM company_branches WHERE id=?`, [branchId]);
+
+//     return Response.json({ message: "Branch deleted" }, { status: 200 });
+//   } catch (err) {
+//     console.error("DELETE /api/branches/[id] error:", err);
+//     return Response.json({ message: "Server error" }, { status: 500 });
+//   }
+// }
+
+/* ✅ Delete branch with all related data (deep clean) */
 export async function DELETE(req, { params }) {
+  const connection = await db.getConnection();
+
   try {
-    const { id } = await params;
+    const { id } =await params;
     const branchId = Number(id);
 
     if (!branchId) {
       return Response.json({ message: "Invalid branchId" }, { status: 400 });
     }
 
-    await db.query(`DELETE FROM company_branches WHERE id=?`, [branchId]);
+    await connection.beginTransaction();
 
-    return Response.json({ message: "Branch deleted" }, { status: 200 });
+    /* 1️⃣ Delete invoice_items of invoices linked via proposals */
+    await connection.query(
+      `DELETE ii FROM invoice_items ii
+       JOIN invoices i ON ii.invoice_id = i.id
+       JOIN proposals p ON i.proposal_id = p.id
+       WHERE p.branch_id = ?`,
+      [branchId]
+    );
+
+    /* 2️⃣ Delete invoice_items of invoices where branch is buyer */
+    await connection.query(
+      `DELETE ii FROM invoice_items ii
+       JOIN invoices i ON ii.invoice_id = i.id
+       WHERE i.buyer_branch_id = ?`,
+      [branchId]
+    );
+
+    /* 3️⃣ Delete invoices via proposals */
+    await connection.query(
+      `DELETE i FROM invoices i
+       JOIN proposals p ON i.proposal_id = p.id
+       WHERE p.branch_id = ?`,
+      [branchId]
+    );
+
+    /* 4️⃣ Delete invoices where branch is buyer */
+    await connection.query(
+      `DELETE FROM invoices WHERE buyer_branch_id = ?`,
+      [branchId]
+    );
+
+    /* 5️⃣ Delete proposals */
+    await connection.query(
+      `DELETE FROM proposals WHERE branch_id = ?`,
+      [branchId]
+    );
+
+    /* 6️⃣ Delete pricing */
+    await connection.query(
+      `DELETE FROM company_product_pricing WHERE company_id = ?`,
+      [branchId]
+    );
+
+    /* 7️⃣ Delete branch */
+    const [result] = await connection.query(
+      `DELETE FROM company_branches WHERE id = ?`,
+      [branchId]
+    );
+
+    await connection.commit();
+
+    if (result.affectedRows === 0) {
+      return Response.json({ message: "Branch not found" }, { status: 404 });
+    }
+
+    return Response.json(
+      { message: "Branch and all related data deleted" },
+      { status: 200 }
+    );
+
   } catch (err) {
+    await connection.rollback();
     console.error("DELETE /api/branches/[id] error:", err);
     return Response.json({ message: "Server error" }, { status: 500 });
+  } finally {
+    connection.release();
   }
 }
