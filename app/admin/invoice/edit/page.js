@@ -43,10 +43,30 @@ const readonlyFields = [
     setHeader({ ...header, [e.target.name]: e.target.value });
   };
   const updateCharge = (index, field, value) => {
-    const updated = [...charges];
+  const updated = [...charges];
+
+  if (field === "amount" || field === "taxPercent") {
+    if (value === "") {
+      updated[index][field] = "";
+    } else {
+      let num = Number(value);
+
+      if (isNaN(num)) num = 0;
+
+      // 🚫 prevent negative
+      num = Math.max(0, num);
+
+      // optional: tax cap
+      if (field === "taxPercent") num = Math.min(100, num);
+
+      updated[index][field] = num;
+    }
+  } else {
     updated[index][field] = value;
-    setCharges(updated);
-  };
+  }
+
+  setCharges(updated);
+};
 
   const removeCharge = (index) => {
     setCharges(charges.filter((_, i) => i !== index));
@@ -478,6 +498,7 @@ const readonlyFields = [
                                 <td>
                                   <input
                                     type="number"
+                                    min="0"
                                     className="form-control form-control-sm"
                                     value={c.amount ?? ""}
                                     onChange={(e) =>
@@ -489,6 +510,7 @@ const readonlyFields = [
                                 <td>
                                   <input
                                     type="number"
+                                    min="0"
                                     className="form-control form-control-sm"
                                     value={c.taxPercent ?? ""}
                                     onChange={(e) =>
