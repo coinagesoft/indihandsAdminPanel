@@ -53,7 +53,7 @@ export default function LoginPage() {
   return (
     <div className="position-relative">
       <div className="authentication-wrapper authentication-basic container-p-y p-4 p-sm-0">
-        <div className=" py-6">
+        <div className=" ">
           <div className="card p-md-7 p-1">
             <div className="app-brand justify-content-center mt-5">
               <a
@@ -132,7 +132,7 @@ export default function LoginPage() {
                   </a> */}
                 </div>
 
-                <div className="mb-5">
+                <div className="">
                   <button className="btn btn-orange d-grid w-100" type="submit" disabled={loading}>
                     {loading ? "Signing in..." : "Sign in"}
                   </button>
@@ -149,24 +149,7 @@ export default function LoginPage() {
                 </span>
               </p> */}
 
-              <div className="divider my-5">
-                <div className="divider-text">or</div>
-              </div>
-
-              <div className="d-flex justify-content-center gap-2">
-                <a href="#" className="btn btn-icon rounded-circle btn-text-facebook">
-                  <i className="tf-icons ri-facebook-fill"></i>
-                </a>
-                <a href="#" className="btn btn-icon rounded-circle btn-text-twitter">
-                  <i className="tf-icons ri-twitter-fill"></i>
-                </a>
-                <a href="#" className="btn btn-icon rounded-circle btn-text-github">
-                  <i className="tf-icons ri-github-fill"></i>
-                </a>
-                <a href="#" className="btn btn-icon rounded-circle btn-text-google-plus">
-                  <i className="tf-icons ri-google-fill"></i>
-                </a>
-              </div>
+            
             </div>
           </div>
           {/* /Login Card */}

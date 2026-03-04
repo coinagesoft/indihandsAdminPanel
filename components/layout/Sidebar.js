@@ -66,6 +66,7 @@ const groupClass = (isOpen) =>
     }`}
     style={{ fontSize: 22 }}
   ></i>
+  
 </a>
 </div>
 
@@ -74,7 +75,6 @@ const groupClass = (isOpen) =>
       <div className="menu-inner-shadow"></div>
 
       <ul className="menu-inner py-1">
-        {/* DASHBOARD */}
         <li
           className={`menu-item ${
             pathname === "/admin/dashboard" ? "active" : ""
