@@ -56,7 +56,7 @@ export async function GET() {
         GROUP BY proposal_id
       ) ch ON ch.proposal_id = p.id
 
-        WHERE p.status = 'Approved' 
+WHERE p.status IN ('Sent','Approved')
       ORDER BY p.id DESC
     `);
 
