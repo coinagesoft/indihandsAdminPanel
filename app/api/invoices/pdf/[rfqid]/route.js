@@ -189,11 +189,13 @@ body{
   max-width:220px; /* control width */
 }
 
-.hdr-right img{
+
+   .hdr-right img{
   width:190px;
-  height:auto;
+  height:60px;   /* reserve space */
+  object-fit:contain;
   margin-bottom:6px;
-   margin-right:35px;
+  margin-right:35px;
 }
 
 .hdr-text{
@@ -392,9 +394,11 @@ body{
 
   <!-- RIGHT BLOCK -->
   <div class="hdr-right">
-    <img 
-      src="https://res.cloudinary.com/dxb1whlam/image/upload/v1771752355/manik_trifaley_logo_white_bgdbsp.png"
-    >
+     ${
+    sender.logo
+      ? `<img src="${sender.logo}">`
+      : `<div style="height:60px;"></div>`
+  }
 
   <div class="hdr-text">
   <b>Registered Office</b><br>
