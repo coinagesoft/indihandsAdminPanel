@@ -81,7 +81,7 @@ const Sidebar = () => {
         </Link>
 
         {/* TOGGLE */}
-        <a
+        {/* <a
           href="#"
           className="layout-menu-toggle menu-link text-large ms-auto"
           onClick={(e) => {
@@ -94,7 +94,7 @@ const Sidebar = () => {
               collapsed ? "rotate-icon" : ""
             }`}
           ></i>
-        </a>
+        </a> */}
       </div>
 
       <div className="menu-inner-shadow"></div>
