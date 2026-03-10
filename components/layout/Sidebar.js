@@ -63,12 +63,10 @@ const Sidebar = () => {
   };
 
   return (
-    <aside
-      id="layout-menu"
-      className={`layout-menu menu-vertical menu bg-menu-theme ${
-        collapsed ? "layout-menu-collapsed" : ""
-      }`}
-    >
+  <aside
+  id="layout-menu"
+  className="layout-menu menu-vertical menu bg-menu-theme"
+>
       {/* LOGO */}
       <div className="app-brand demo">
         <Link
