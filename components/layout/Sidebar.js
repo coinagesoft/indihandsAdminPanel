@@ -1,208 +1,157 @@
 "use client";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+
+const menuItems = [
+  {
+    title: "Dashboard",
+    icon: "ri-home-4-line",
+    path: "/admin/dashboard",
+  },
+  {
+    title: "Products & Catalog",
+    icon: "ri-shopping-bag-3-line",
+    children: [
+      { title: "Product List", path: "/admin/products/list" },
+      { title: "Add Product", path: "/admin/products/add" },
+      { title: "Catalog", path: "/admin/products/catalog" },
+    ],
+  },
+  {
+    title: "Organizations",
+    icon: "ri-building-4-line",
+    path: "/admin/clients",
+  },
+  {
+    title: "Company Pricing",
+    icon: "ri-price-tag-3-line",
+    path: "/admin/pricing",
+  },
+  {
+    title: "RFQs",
+    icon: "ri-file-list-3-line",
+    path: "/admin/rfqs",
+  },
+  {
+    title: "Proposal",
+    icon: "ri-article-line",
+    children: [
+      { title: "Edit Proposal", path: "/admin/invoice/edit" },
+      { title: "Proposal History", path: "/admin/proposal" },
+    ],
+  },
+  {
+    title: "Invoice",
+    icon: "ri-receipt-line",
+    path: "/admin/challan",
+  },
+  {
+    title: "Settings",
+    icon: "ri-settings-3-line",
+    path: "/admin/settings",
+  },
+];
+
 const Sidebar = () => {
-  const [openProducts, setOpenProducts] = useState(false);
-const [openProposal, setOpenProposal] = useState(false);
-const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
-const isActive = (path) => pathname === path;
-const isStartsWith = (path) => pathname.startsWith(path);
+  const [collapsed, setCollapsed] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null);
 
-const isProductsGroup = isStartsWith("/admin/products");
-const isProposalGroup =
-  isStartsWith("/admin/proposal") ||
-  isStartsWith("/admin/invoice");
-
-useEffect(() => {
-  setOpenProducts(isProductsGroup);
-  setOpenProposal(isProposalGroup);
-}, [pathname]);
-  // helper for dropdown groups
-const groupClass = (isOpen) =>
-  `menu-item ${isOpen ? "open not-active" : ""}`;
+  const toggleMenu = (title) => {
+    setOpenMenu(openMenu === title ? null : title);
+  };
 
   return (
-  <aside
-  id="layout-menu"
-  className={`layout-menu menu-vertical menu bg-menu-theme ${
-    collapsed ? "layout-menu-collapsed" : ""
-  }`}
->
-<div className="app-brand demo">
-   <Link
-    href="/admin/dashboard"
-    className="app-brand-link d-flex align-items-center justify-content-center text-center"
-  >
-    <div className="d-flex justify-content-center app-brand-logo demo align-items-center">
-      <img
-        src="/materialize/assets/img/favicon/faviconSidebar.png"
-        alt="Logo"
-        style={{ height: 50 }}
-      />
+    <aside
+      id="layout-menu"
+      className={`layout-menu menu-vertical menu bg-menu-theme ${
+        collapsed ? "layout-menu-collapsed" : ""
+      }`}
+    >
+      {/* LOGO */}
+      <div className="app-brand demo">
+        <Link
+          href="/admin/dashboard"
+          className="app-brand-link d-flex align-items-center justify-content-center"
+        >
+          <img
+            src="/materialize/assets/img/favicon/favicon.png"
+            className="brand-text-img"
+            alt="Logo"
+          />
+        </Link>
 
-      {/* hide name when collapsed */}
-    <img
-  src="/materialize/assets/img/favicon/name.png"
-  alt="Logo"
-  className="brand-text-img ms-2"
-/>
-    </div>
-  </Link>
-
-  {/* Toggle */}
- <a
-  href="#"
-  className="layout-menu-toggle menu-link text-large ms-auto"
-  onClick={(e) => {
-    e.preventDefault();
-    setCollapsed(!collapsed);
-  }}
->
-  <i
-    className={`ri-arrow-left-s-line ${
-      collapsed ? "rotate-icon" : ""
-    }`}
-    style={{ fontSize: 22 }}
-  ></i>
-  
-</a>
-</div>
-
-
+        {/* TOGGLE */}
+        {/* <a
+          href="#"
+          className="layout-menu-toggle menu-link text-large ms-auto"
+          onClick={(e) => {
+            e.preventDefault();
+            setCollapsed(!collapsed);
+          }}
+        >
+          <i
+            className={`ri-arrow-left-s-line ${
+              collapsed ? "rotate-icon" : ""
+            }`}
+          ></i>
+        </a> */}
+      </div>
 
       <div className="menu-inner-shadow"></div>
 
+      {/* MENU */}
       <ul className="menu-inner py-1">
-        <li
-          className={`menu-item ${
-            pathname === "/admin/dashboard" ? "active" : ""
-          }`}
-        >
-          <Link href="/admin/dashboard" className="menu-link">
-            <i className="menu-icon tf-icons ri-home-4-line"></i>
-            <div>Dashboard</div>
-          </Link>
-        </li>
+        {menuItems.map((item, index) => {
+          const isActive = pathname === item.path;
+          const isOpen = openMenu === item.title;
 
-        {/* PRODUCTS */}
-    <li className={groupClass(openProducts)}>
-  <div
-    className="menu-link menu-toggle"
-    onClick={() => setOpenProducts(!openProducts)}
-    style={{ cursor: "pointer" }}
-  >
-    <i className="menu-icon tf-icons ri-shopping-bag-3-line"></i>
-    <div>Products & Catalog</div>
-  </div>
+          if (item.children) {
+            return (
+              <li
+                key={index}
+                className={`menu-item ${isOpen ? "open not-active" : ""}`}
+              >
+                <div
+                  className="menu-link menu-toggle"
+                  onClick={() => toggleMenu(item.title)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <i className={`menu-icon tf-icons ${item.icon}`}></i>
+                  <div>{item.title}</div>
+                </div>
 
-  <ul className="menu-sub">
-    <li className={`menu-item ${isActive("/admin/products/list") ? "active" : ""}`}>
-      <Link href="/admin/products/list" className="menu-link">
-        <div>Product List</div>
-      </Link>
-    </li>
+                <ul className="menu-sub">
+                  {item.children.map((child, i) => (
+                    <li
+                      key={i}
+                      className={`menu-item ${
+                        pathname === child.path ? "active" : ""
+                      }`}
+                    >
+                      <Link href={child.path} className="menu-link">
+                        <div>{child.title}</div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            );
+          }
 
-    <li className={`menu-item ${isActive("/admin/products/add") ? "active" : ""}`}>
-      <Link href="/admin/products/add" className="menu-link">
-        <div>Add Product</div>
-      </Link>
-    </li>
-
-    <li className={`menu-item ${isActive("/admin/products/catalog") ? "active" : ""}`}>
-      <Link href="/admin/products/catalog" className="menu-link">
-        <div>Catalog</div>
-      </Link>
-    </li>
-  </ul>
-</li>
-
-        {/* ORGANIZATIONS */}
-        <li
-          className={`menu-item ${
-            pathname === "/admin/clients" ? "active" : ""
-          }`}
-        >
-          <Link href="/admin/clients" className="menu-link">
-            <i className="menu-icon tf-icons ri-building-4-line"></i>
-            <div>Organizations</div>
-          </Link>
-        </li>
-
-        {/* PRICING */}
-        <li
-          className={`menu-item ${
-            pathname === "/admin/pricing" ? "active" : ""
-          }`}
-        >
-          <Link href="/admin/pricing" className="menu-link">
-            <i className="menu-icon tf-icons ri-price-tag-3-line"></i>
-            <div>Company Pricing</div>
-          </Link>
-        </li>
-
-        {/* RFQ */}
-        <li
-          className={`menu-item ${
-            pathname === "/admin/rfqs" ? "active" : ""
-          }`}
-        >
-          <Link href="/admin/rfqs" className="menu-link">
-            <i className="menu-icon tf-icons ri-file-list-3-line"></i>
-            <div>RFQs</div>
-          </Link>
-        </li>
-
-        {/* PROPOSAL */}
-    <li className={groupClass(openProposal)}>
-  <div
-    className="menu-link menu-toggle"
-    onClick={() => setOpenProposal(!openProposal)}
-    style={{ cursor: "pointer" }}
-  >
-    <i className="menu-icon tf-icons ri-article-line"></i>
-    <div>Proposal</div>
-  </div>
-
-  <ul className="menu-sub">
-    <li className={`menu-item ${isStartsWith("/admin/invoice/edit") ? "active" : ""}`}>
-      <Link href="/admin/invoice/edit" className="menu-link">
-        <div>Edit Proposal</div>
-      </Link>
-    </li>
-
-    <li className={`menu-item ${isActive("/admin/proposal") ? "active" : ""}`}>
-      <Link href="/admin/proposal" className="menu-link">
-        <div>Proposal History</div>
-      </Link>
-    </li>
-  </ul>
-</li>
-
-        {/* INVOICE */}
-        <li
-          className={`menu-item ${
-            pathname === "/admin/challan" ? "active" : ""
-          }`}
-        >
-          <Link href="/admin/challan" className="menu-link">
-            <i className="menu-icon tf-icons ri-receipt-line"></i>
-            <div>Invoice</div>
-          </Link>
-        </li>
-
-        {/* SETTINGS */}
-        <li
-          className={`menu-item ${
-            pathname === "/admin/settings" ? "active" : ""
-          }`}
-        >
-          <Link href="/admin/settings" className="menu-link">
-            <i className="menu-icon tf-icons ri-settings-3-line"></i>
-            <div>Settings</div>
-          </Link>
-        </li>
+          return (
+            <li
+              key={index}
+              className={`menu-item ${isActive ? "active" : ""}`}
+            >
+              <Link href={item.path} className="menu-link">
+                <i className={`menu-icon tf-icons ${item.icon}`}></i>
+                <div>{item.title}</div>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </aside>
   );

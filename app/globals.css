@@ -361,13 +361,41 @@ li.list-group-item.bg-primary.text-white{
   transition: transform 0.25s ease;
 }
 /* brand text normal */
-.brand-text-img {
-  height: 40px;
-  transition: opacity .25s ease, transform .25s ease;
+
+
+.layout-menu .app-brand{
+  margin-bottom: 25px;
 }
 
+.layout-menu{
+  padding: 30px 0px;
 
+
+}
 
 .navbar-nav .navbar-search-wrapper {
   display: none !important;
 }
+.app-brand{
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+/* ICON LOGO */
+.logo-icon{
+  display: none;
+}
+
+
+
+/* LOGO */
+.brand-text-img{
+  display: block;
+  margin: 0 35px;
+  height: auto;
+  max-height: 70px;
+  width: auto;
+}
+
+
+
