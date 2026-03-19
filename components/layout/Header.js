@@ -463,8 +463,8 @@ const Header = () => {
                         </div>
                       </div>
                       <div className="flex-grow-1">
-                        <span className="fw-medium d-block small">John Doe</span>
-                        <small className="text-muted">Admin</small>
+                        <span className="fw-medium d-block small mt-3">Admin</span>
+                        {/* <small className="text-muted">Admin</small> */}
                       </div>
                     </div>
                   </a>
@@ -484,12 +484,12 @@ const Header = () => {
                   </Link>
                 </li>
 
-                <li>
+                {/* <li>
                   <Link href="/admin/pricing" className="dropdown-item">
                     <i className="ri-money-dollar-circle-line ri-22px me-3"></i>
                     <span className="align-middle">Pricing</span>
                   </Link>
-                </li>
+                </li> */}
                 {/* <li>
                       <a className="dropdown-item" href="pages-faq.html">
                         <i className="ri-question-line ri-22px me-3"></i><span className="align-middle">FAQ</span>
