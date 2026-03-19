@@ -63,6 +63,7 @@ li.list-group-item.bg-primary.text-white{
 .layout-menu .menu-inner {
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Main content scroll */
