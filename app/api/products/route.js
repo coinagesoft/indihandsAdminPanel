@@ -120,7 +120,7 @@ export async function GET(req) {
       SELECT 
         p.id,
         p.product_name AS name,
-      
+       p.barcode,
         p.hsn AS hsn, 
           p.size,         
         p.weight, 
