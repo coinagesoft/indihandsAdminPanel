@@ -95,6 +95,7 @@ const [confirmAction, setConfirmAction] = useState(null);
       ...product,
       size: product.size || "",
       weight: product.weight || "",
+      barcode: product.barcode || "",
       featureImage: product.featureImage,   // URL
       images: normalizeImages(product.images), // ✅ FIX HERE
       // Array of URLs
@@ -165,6 +166,7 @@ const [confirmAction, setConfirmAction] = useState(null);
         sku: selectedProduct.sku,
         hsn: selectedProduct.hsn,
         size: selectedProduct.size,
+        barcode: selectedProduct.barcode,
         weight: selectedProduct.weight,
         stock: selectedProduct.stock,
         price: selectedProduct.price,
@@ -197,6 +199,7 @@ const [confirmAction, setConfirmAction] = useState(null);
       const listData = await listRes.json();
       setProducts(listData.products);
       setTotalPages(listData.pagination.totalPages);
+      console.log("products",products)
 
       closeEditModal();
     } catch (err) {
@@ -481,6 +484,7 @@ const openDeleteModal = (product) => {
                 <th>Product</th>
                 <th>HSN</th>
                 <th>Size</th>
+                <th>Barcode</th>
                 <th>Weight</th>
                 <th>Stock</th>
                 <th>SKU</th>
@@ -520,6 +524,7 @@ const openDeleteModal = (product) => {
                     <td>{p.name}</td>
                     <td>{p.hsn || "-"}</td>
                     <td>{p.size || "-"}</td>
+                     <td>{p.barcode || "-"}</td>
                     <td>{p.weight || "-"}</td>
 
                     <td>{p.stock}</td>
@@ -743,6 +748,19 @@ const openDeleteModal = (product) => {
                           value={selectedProduct.weight || ""}
                           onChange={(e) =>
                             setSelectedProduct({ ...selectedProduct, weight: e.target.value })
+                          }
+                        />
+                      </div>
+
+                      
+                      <div className="col-md-4">
+                        <label className="form-label">Barcode</label>
+                        <input
+                          className="form-control form-control-sm"
+                          placeholder="7896"
+                          value={selectedProduct.barcode || ""}
+                          onChange={(e) =>
+                            setSelectedProduct({ ...selectedProduct, barcode: e.target.value })
                           }
                         />
                       </div>
