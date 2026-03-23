@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import  ProtectedRoute from '../../../../components/ProtectedRoute'
+import ProtectedRoute from '../../../../components/ProtectedRoute'
 import { showSuccess, showError } from "../../../../lib/toast";
 import ConfirmDialog from "../../../../components/ConfirmDialog";
 import { useFetchWithLoader } from "../../../../lib/fetchWithLoader";
@@ -16,9 +16,9 @@ const Page = () => {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-const [confirmOpen, setConfirmOpen] = useState(false);
-const [confirmMsg, setConfirmMsg] = useState("");
-const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMsg, setConfirmMsg] = useState("");
+  const [confirmAction, setConfirmAction] = useState(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [showGalleryModal, setShowGalleryModal] = useState(false);
@@ -70,7 +70,7 @@ const [confirmAction, setConfirmAction] = useState(null);
 
 
     const matchStatus = status === "All" || p.status === status;
-    return matchSearch  && matchStatus;
+    return matchSearch && matchStatus;
   });
 
   const paginatedProducts = filteredProducts.slice(
@@ -171,7 +171,7 @@ const [confirmAction, setConfirmAction] = useState(null);
         stock: selectedProduct.stock,
         price: selectedProduct.price,
         status: selectedProduct.status,
-
+        description: selectedProduct.description,
         featuredImage: featuredImageUrl,
         images: finalGallery, // ✅ always array
       };
@@ -199,7 +199,7 @@ const [confirmAction, setConfirmAction] = useState(null);
       const listData = await listRes.json();
       setProducts(listData.products);
       setTotalPages(listData.pagination.totalPages);
-      console.log("products",products)
+      console.log("products", products)
 
       closeEditModal();
     } catch (err) {
@@ -213,28 +213,28 @@ const [confirmAction, setConfirmAction] = useState(null);
 
 
   // --- Existing Delete Handlers ---
-const openDeleteModal = (product) => {
-  setConfirmMsg(`Delete product "${product.name}" ?`);
-  setConfirmAction(() => async () => {
-    try {
-      const res = await fetchWithLoader(`/api/products/${product.id}`, {
-        method: "DELETE",
-      });
+  const openDeleteModal = (product) => {
+    setConfirmMsg(`Delete product "${product.name}" ?`);
+    setConfirmAction(() => async () => {
+      try {
+        const res = await fetchWithLoader(`/api/products/${product.id}`, {
+          method: "DELETE",
+        });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Delete failed");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Delete failed");
 
-      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
 
-      showSuccess("Product deleted successfully");
-    } catch (err) {
-      console.error("Delete product error:", err);
-      showError(err.message);
-    }
-  });
+        showSuccess("Product deleted successfully");
+      } catch (err) {
+        console.error("Delete product error:", err);
+        showError(err.message);
+      }
+    });
 
-  setConfirmOpen(true);
-};
+    setConfirmOpen(true);
+  };
   const closeDeleteModal = () => {
     setDeleteProduct(null);
     setIsDeleteModalOpen(false);
@@ -274,7 +274,7 @@ const openDeleteModal = (product) => {
 
       if (!res.ok) throw new Error(data.message || "Failed to fetch product catalogs");
 
-      setAlreadyAssignedCatalogs(data.catalogIds || []); 
+      setAlreadyAssignedCatalogs(data.catalogIds || []);
 
       setSelectedProduct({
         ...product,
@@ -407,7 +407,7 @@ const openDeleteModal = (product) => {
     };
 
     fetchProducts();
-  }, [currentPage, search,  status]);
+  }, [currentPage, search, status]);
 
   const makeThumb = (url) =>
     url?.includes("/image/upload/")
@@ -418,562 +418,575 @@ const openDeleteModal = (product) => {
 
 
   return (
-     <ProtectedRoute>
-    <div className="container-xxl flex-grow-1 container-p-y">
-   
+    <ProtectedRoute>
+      <div className="container-xxl flex-grow-1 container-p-y">
 
-      <div className="card mb-4">
-        <div className="card-body">
-          <div className="text-end">
-            <button
-              className="btn btn-orange btn-sm mb-3"
-              onClick={() => {
-                const params = new URLSearchParams({
-                  search,
-                  status,
-                });
 
-                window.location.href = `/api/products/bulk-export?${params.toString()}`;
-              }}
-            >
-              <i className="bi bi-file-earmark-excel"></i> Export Excel
-            </button>
+        <div className="card mb-4">
+          <div className="card-body">
+            <div className="text-end">
+              <button
+                className="btn btn-orange btn-sm mb-3"
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    search,
+                    status,
+                  });
 
-          </div>
-          <div className="row g-3">
-
-            <div className="col-md-5">
-              <label className="form-label">Search</label>
-              <input
-                className="form-control"
-                placeholder="Product name or SKU"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            <div className="col-md-4">
-              <label className="form-label">Status</label>
-              <select
-                className="form-select"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                  window.location.href = `/api/products/bulk-export?${params.toString()}`;
+                }}
               >
-                <option value="All">All</option>
-                <option value="Available">Available</option>
-                <option value="Out of Stock">Out of Stock</option>
-              </select>
+                <i className="bi bi-file-earmark-excel"></i> Export Excel
+              </button>
+
+            </div>
+            <div className="row g-3">
+
+              <div className="col-md-5">
+                <label className="form-label">Search</label>
+                <input
+                  className="form-control"
+                  placeholder="Product name or SKU"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">Status</label>
+                <select
+                  className="form-select"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                >
+                  <option value="All">All</option>
+                  <option value="Available">Available</option>
+                  <option value="Out of Stock">Out of Stock</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Products Table */}
-      <div className="card position-relative">
-        <div className="card-header">
+        {/* Products Table */}
+        <div className="card position-relative">
+          <div className="card-header">
 
-          <h5 className="card-title mb-0">Products</h5>
+            <h5 className="card-title mb-0">Products</h5>
 
-        </div>
-        <div className="card-datatable table-responsive" style={{ overflowX: "auto" }}>
-          <table className="table table-striped table-hover mb-0 text-nowrap">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Image</th>
-                <th>Product</th>
-                <th>HSN</th>
-                <th>Size</th>
-                <th>Barcode</th>
-                <th>Weight</th>
-                <th>Stock</th>
-                <th>SKU</th>
-                <th>Price</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.length === 0 ? (
+          </div>
+          <div className="card-datatable table-responsive" style={{ overflowX: "auto" }}>
+            <table className="table table-striped table-hover mb-0 text-nowrap">
+              <thead>
                 <tr>
-                  <td colSpan="10" className="text-center text-muted py-4">
-                    No products found
-                  </td>
+                  <th>ID</th>
+                  <th>Image</th>
+                  <th>Product</th>
+                  <th>HSN</th>
+                  <th>Size</th>
+                  <th>Barcode</th>
+                  <th>Weight</th>
+                  <th>Stock</th>
+                  <th>SKU</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                products.map((p) => (
-                  <tr key={p.id}>
-                    <td>{p.id}</td>
-
-                    <td>
-                      {p.featureImage ? (
-                        <img
-                          src={makeThumb(p.featureImage)}
-                          width={50}
-                          height={50}
-                          loading="lazy"
-                          style={{ objectFit: "cover", borderRadius: "8px" }}
-                        />
-
-                      ) : (
-                        <span className="text-muted">No Image</span>
-                      )}
-                    </td>
-
-
-                    <td>{p.name}</td>
-                    <td>{p.hsn || "-"}</td>
-                    <td>{p.size || "-"}</td>
-                     <td>{p.barcode || "-"}</td>
-                    <td>{p.weight || "-"}</td>
-
-                    <td>{p.stock}</td>
-                    <td>{p.sku || "-"}</td>
-                    <td>Rs.{p.price}</td>
-                    <td>
-                      <span className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"}`}>
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="text-center">
-                      <div className="d-flex gap-2 justify-content-center ">
-                        <button className="btn btn-sm btn-orange " onClick={() => openEditModal(p)}><i className="bi bi-pencil-square "></i></button>
-                        {/* 🔹 GALLERY BUTTON */}
-                        <button
-                          className="btn btn-sm btn-outline-info"
-                          onClick={() => openGalleryModal(p)}
-                        >
-                          <i className="bi bi-images"></i>
-                        </button>
-                        <button className="btn btn-sm btn-outline-danger" onClick={() => openDeleteModal(p)}><i className="bi bi-trash text-danger"></i></button>
-                        <button className="btn btn-sm btn-outline-success" onClick={() => openAssignModal(p)}><i className="bi bi-box-arrow-in-down-right text-success"></i> </button>
-                      </div>
+              </thead>
+              <tbody>
+                {products.length === 0 ? (
+                  <tr>
+                    <td colSpan="10" className="text-center text-muted py-4">
+                      No products found
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  products.map((p) => (
+                    <tr key={p.id}>
+                      <td>{p.id}</td>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap pagination-custom">
-            <button className="btn btn-outline-secondary btn-sm" onClick={() => changePage(currentPage - 1)}>Prev</button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                className={`btn btn-sm ${currentPage === i + 1 ? "btn-primary" : "btn-outline-primary"}`}
-                onClick={() => changePage(i + 1)}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button className="btn btn-outline-secondary btn-sm" onClick={() => changePage(currentPage + 1)}>Next</button>
+                      <td>
+                        {p.featureImage ? (
+                          <img
+                            src={makeThumb(p.featureImage)}
+                            width={50}
+                            height={50}
+                            loading="lazy"
+                            style={{ objectFit: "cover", borderRadius: "8px" }}
+                          />
+
+                        ) : (
+                          <span className="text-muted">No Image</span>
+                        )}
+                      </td>
+
+
+                      <td>{p.name}</td>
+                      <td>{p.hsn || "-"}</td>
+                      <td>{p.size || "-"}</td>
+                      <td>{p.barcode || "-"}</td>
+                      <td>{p.weight || "-"}</td>
+
+                      <td>{p.stock}</td>
+                      <td>{p.sku || "-"}</td>
+                      <td>Rs.{p.price}</td>
+                      <td>
+                        <span className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"}`}>
+                          {p.status}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <div className="d-flex gap-2 justify-content-center ">
+                          <button className="btn btn-sm btn-orange " onClick={() => openEditModal(p)}><i className="bi bi-pencil-square "></i></button>
+                          {/* 🔹 GALLERY BUTTON */}
+                          <button
+                            className="btn btn-sm btn-outline-info"
+                            onClick={() => openGalleryModal(p)}
+                          >
+                            <i className="bi bi-images"></i>
+                          </button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => openDeleteModal(p)}><i className="bi bi-trash text-danger"></i></button>
+                          <button className="btn btn-sm btn-outline-success" onClick={() => openAssignModal(p)}><i className="bi bi-box-arrow-in-down-right text-success"></i> </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
 
-        {/* --- Assign to Catalog Modal --- */}
-        {isAssignModalOpen && selectedProduct && (
-          <div
-            className="position-absolute top-50 start-50 translate-middle bg-white p-4 rounded shadow"
-            style={{ maxWidth: "400px", zIndex: 20 }}
-          >
-            <h5 className="mb-3">Assign Product to Catalog</h5>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap pagination-custom">
+              <button className="btn btn-outline-secondary btn-sm" onClick={() => changePage(currentPage - 1)}>Prev</button>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  className={`btn btn-sm ${currentPage === i + 1 ? "btn-primary" : "btn-outline-primary"}`}
+                  onClick={() => changePage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button className="btn btn-outline-secondary btn-sm" onClick={() => changePage(currentPage + 1)}>Next</button>
+            </div>
+          )}
 
-            {/* Existing Catalogs */}
-            <div className="d-flex flex-column gap-2">
+          {/* --- Assign to Catalog Modal --- */}
+          {isAssignModalOpen && selectedProduct && (
+            <div
+              className="position-absolute top-50 start-50 translate-middle bg-white p-4 rounded shadow"
+              style={{ maxWidth: "400px", zIndex: 20 }}
+            >
+              <h5 className="mb-3">Assign Product to Catalog</h5>
 
-              {catalogs
-                .filter((cat) => !alreadyAssignedCatalogs.includes(cat.id))
-                .map((cat) => (
-                  <div key={cat.id} className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={selectedProduct?.catalogs?.includes(cat.id)}
-                      onChange={() => toggleCatalogSelection(cat.id)}
-                      id={`cat-${cat.id}`}
-                    />
-                    <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
-                      {cat.name}
-                    </label>
+              {/* Existing Catalogs */}
+              <div className="d-flex flex-column gap-2">
+
+                {catalogs
+                  .filter((cat) => !alreadyAssignedCatalogs.includes(cat.id))
+                  .map((cat) => (
+                    <div key={cat.id} className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={selectedProduct?.catalogs?.includes(cat.id)}
+                        onChange={() => toggleCatalogSelection(cat.id)}
+                        id={`cat-${cat.id}`}
+                      />
+                      <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
+                        {cat.name}
+                      </label>
+                    </div>
+                  ))}
+
+
+              </div>
+
+
+              {/* Add New Catalog */}
+              <div className="mt-3 d-flex gap-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="New catalog name"
+                  value={newCatalogName}
+                  onChange={(e) => setNewCatalogName(e.target.value)}
+                />
+                <button className="btn btn-outline-orange" onClick={createNewCatalog}>Add</button>
+              </div>
+
+              <div className="d-flex justify-content-end gap-2 mt-3">
+                <button className="btn btn-secondary" onClick={closeAssignModal}>Cancel</button>
+                <button className="btn btn-orange" onClick={saveCatalogAssignment}>Save</button>
+              </div>
+            </div>
+          )}
+          {/* 🔹 GALLERY MODAL */}
+          {showGalleryModal && galleryProduct && (
+            <>
+              <div className="modal-backdrop fade show" style={{ zIndex: 10 }} />
+              <div className="modal d-block" style={{ zIndex: 20 }}>
+                <div className="modal-dialog modal-lg modal-dialog-centered">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">
+                        {galleryProduct.name} – Gallery
+                      </h5>
+                      <button
+                        className="btn-close"
+                        onClick={closeGalleryModal}
+                      ></button>
+                    </div>
+
+                    <div className="modal-body">
+                      <div className="row g-3">
+                        {normalizeImages(galleryProduct.images).length > 0 ? (
+                          normalizeImages(galleryProduct.images).map((img, i) => (
+                            <div key={i} className="col-6 col-md-4 col-lg-3">
+                              <div className="border rounded p-2 h-100 d-flex align-items-center justify-content-center">
+                                <img
+                                  src={img}
+                                  alt={`gallery-${i}`}
+                                  className="img-fluid rounded"
+                                  style={{
+                                    maxHeight: "150px",
+                                    objectFit: "cover",
+                                    width: "100%",
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-muted text-center">No gallery images found</p>
+                        )}
+                      </div>
+                    </div>
+
                   </div>
-                ))}
+                </div>
+              </div>
+            </>
+          )}
+          {/* --- Edit Product Modal --- */}
+          {isEditModalOpen && selectedProduct && (
+            <>
+              {/* Backdrop */}
+              <div className="modal-backdrop fade show" style={{ zIndex: 10 }}></div>
+
+              {/* Modal */}
+              <div className="modal d-block" tabIndex="-1" style={{ zIndex: 20 }}>
+                <div className="modal-dialog modal-lg modal-dialog-centered">
+                  <div className="modal-content">
+
+                    {/* Header */}
+                    <div className="modal-header py-2">
 
 
-            </div>
+                      <h5 className="modal-title">Edit Product</h5>
+                      <button type="button" className="btn-close" onClick={closeEditModal}></button>
+                    </div>
+
+                    {/* Body */}
+                    <div className="modal-body">
+                      <div className="row g-3">
+
+                        {/* ================= ROW 1 ================= */}
+                        <div className="col-md-4">
+                          <label className="form-label">Product Name</label>
+                          <input
+                            className="form-control form-control-sm"
+                            value={selectedProduct.name}
+                            onChange={(e) =>
+                              setSelectedProduct({ ...selectedProduct, name: e.target.value })
+                            }
+                          />
+                        </div>
+
+                        <div className="col-md-4">
+                          <label className="form-label">SKU</label>
+                          <input
+                            className="form-control form-control-sm"
+                            value={selectedProduct.sku}
+                            onChange={(e) =>
+                              setSelectedProduct({ ...selectedProduct, sku: e.target.value })
+                            }
+                          />
+                        </div>
+
+                        <div className="col-md-4">
+                          <label className="form-label">HSN</label>
+                          <input
+                            className="form-control form-control-sm"
+                            value={selectedProduct.hsn || ""}
+                            onChange={(e) =>
+                              setSelectedProduct({ ...selectedProduct, hsn: e.target.value })
+                            }
+                          />
+                        </div>
+
+                        {/* ================= ROW 2 ================= */}
+                        <div className="col-md-4">
+                          <label className="form-label">Size</label>
+                          <input
+                            className="form-control form-control-sm"
+                            placeholder="12 x 10 x 8 inch"
+                            value={selectedProduct.size || ""}
+                            onChange={(e) =>
+                              setSelectedProduct({ ...selectedProduct, size: e.target.value })
+                            }
+                          />
+                        </div>
+
+                        <div className="col-md-4">
+                          <label className="form-label">Weight</label>
+                          <input
+                            className="form-control form-control-sm"
+                            placeholder="1.5 kg"
+                            value={selectedProduct.weight || ""}
+                            onChange={(e) =>
+                              setSelectedProduct({ ...selectedProduct, weight: e.target.value })
+                            }
+                          />
+                        </div>
 
 
-            {/* Add New Catalog */}
-            <div className="mt-3 d-flex gap-2">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="New catalog name"
-                value={newCatalogName}
-                onChange={(e) => setNewCatalogName(e.target.value)}
-              />
-              <button className="btn btn-outline-orange" onClick={createNewCatalog}>Add</button>
-            </div>
+                        <div className="col-md-4">
+                          <label className="form-label">Barcode</label>
+                          <input
+                            className="form-control form-control-sm"
+                            placeholder="7896"
+                            value={selectedProduct.barcode || ""}
+                            onChange={(e) =>
+                              setSelectedProduct({ ...selectedProduct, barcode: e.target.value })
+                            }
+                          />
+                        </div>
 
-            <div className="d-flex justify-content-end gap-2 mt-3">
-              <button className="btn btn-secondary" onClick={closeAssignModal}>Cancel</button>
-              <button className="btn btn-orange" onClick={saveCatalogAssignment}>Save</button>
-            </div>
-          </div>
-        )}
-        {/* 🔹 GALLERY MODAL */}
-        {showGalleryModal && galleryProduct && (
-          <>
-            <div className="modal-backdrop fade show" style={{ zIndex: 10 }} />
-            <div className="modal d-block" style={{ zIndex: 20 }}>
-              <div className="modal-dialog modal-lg modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">
-                      {galleryProduct.name} – Gallery
-                    </h5>
-                    <button
-                      className="btn-close"
-                      onClick={closeGalleryModal}
-                    ></button>
-                  </div>
+                        <div className="col-md-4">
+                          <label className="form-label">Stock</label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            value={selectedProduct.stock}
+                            disabled={selectedProduct.status === "Out of Stock"}
+                            onChange={(e) => {
+                              const qty = Number(e.target.value);
 
-                  <div className="modal-body">
-                    <div className="row g-3">
-                      {normalizeImages(galleryProduct.images).length > 0 ? (
-                        normalizeImages(galleryProduct.images).map((img, i) => (
-                          <div key={i} className="col-6 col-md-4 col-lg-3">
-                            <div className="border rounded p-2 h-100 d-flex align-items-center justify-content-center">
-                              <img
-                                src={img}
-                                alt={`gallery-${i}`}
-                                className="img-fluid rounded"
-                                style={{
-                                  maxHeight: "150px",
-                                  objectFit: "cover",
-                                  width: "100%",
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                stock: qty,
+                                status: qty === 0 ? "Out of Stock" : "Available",
+                              });
+                            }}
+
+                          />
+                        </div>
+
+                        {/* ================= ROW 3 ================= */}
+                        <div className="col-md-4">
+                          <label className="form-label">Price</label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            value={selectedProduct.price}
+                            onChange={(e) =>
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                price: Number(e.target.value),
+                              })
+                            }
+                          />
+                        </div>
+
+                        <div className="col-md-4">
+                          <label className="form-label">Status</label>
+                          <select
+                            className="form-select form-select-sm"
+                            value={selectedProduct.status}
+                            onChange={(e) => {
+                              const value = e.target.value;
+
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                status: value,
+                                stock: value === "Out of Stock" ? 0 : selectedProduct.stock,
+                              });
+                            }}
+
+                          >
+                            <option value="Available">Available</option>
+                            <option value="Out of Stock">Out of Stock</option>
+                          </select>
+                        </div>
+
+                        <div className="col-md-4"></div> {/* spacer for alignment */}
+
+
+                        <div className="col-12">
+                          <label className="form-label">Description</label>
+                          <input
+                            type="text"
+                            className="form-control form-control-sm"
+                            value={selectedProduct.description}
+                            onChange={(e) =>
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                description: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        {/* ================= FEATURE IMAGE ================= */}
+                        <div className="col-12">
+                          <label className="form-label">Feature Image</label>
+                          <input
+                            type="file"
+                            className="form-control form-control-sm"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                setSelectedProduct({ ...selectedProduct, featureImage: file });
+                              }
+                            }}
+                          />
+                          <small className="text-muted d-block mt-1">
+                            {selectedProduct.featureImage instanceof File
+                              ? selectedProduct.featureImage.name
+                              : selectedProduct.featureImage || "No image selected"}
+                          </small>
+                        </div>
+
+                        {/* ================= GALLERY ================= */}
+                        <div className="col-12">
+                          <label className="form-label me-2">Gallery Images </label>
+
+                          {(selectedProduct.images || []).map((img, index) => (
+                            <div key={index} className="d-flex align-items-center gap-2 mb-2">
+                              <input
+                                type="file"
+                                className="form-control form-control-sm"
+                                style={{ maxWidth: 260 }}
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    const updated = [...selectedProduct.images];
+                                    updated[index] = file;
+                                    setSelectedProduct({ ...selectedProduct, images: updated });
+                                  }
                                 }}
                               />
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-muted text-center">No gallery images found</p>
-                      )}
-                    </div>
-                  </div>
 
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-        {/* --- Edit Product Modal --- */}
-        {isEditModalOpen && selectedProduct && (
-          <>
-            {/* Backdrop */}
-            <div className="modal-backdrop fade show" style={{ zIndex: 10 }}></div>
-
-            {/* Modal */}
-            <div className="modal d-block" tabIndex="-1" style={{ zIndex: 20 }}>
-              <div className="modal-dialog modal-lg modal-dialog-centered">
-                <div className="modal-content">
-
-                  {/* Header */}
-                  <div className="modal-header py-2">
-
-
-                    <h5 className="modal-title">Edit Product</h5>
-                    <button type="button" className="btn-close" onClick={closeEditModal}></button>
-                  </div>
-
-                  {/* Body */}
-                  <div className="modal-body">
-                    <div className="row g-3">
-
-                      {/* ================= ROW 1 ================= */}
-                      <div className="col-md-4">
-                        <label className="form-label">Product Name</label>
-                        <input
-                          className="form-control form-control-sm"
-                          value={selectedProduct.name}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, name: e.target.value })
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label">SKU</label>
-                        <input
-                          className="form-control form-control-sm"
-                          value={selectedProduct.sku}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, sku: e.target.value })
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label">HSN</label>
-                        <input
-                          className="form-control form-control-sm"
-                          value={selectedProduct.hsn || ""}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, hsn: e.target.value })
-                          }
-                        />
-                      </div>
-
-                      {/* ================= ROW 2 ================= */}
-                      <div className="col-md-4">
-                        <label className="form-label">Size</label>
-                        <input
-                          className="form-control form-control-sm"
-                          placeholder="12 x 10 x 8 inch"
-                          value={selectedProduct.size || ""}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, size: e.target.value })
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label">Weight</label>
-                        <input
-                          className="form-control form-control-sm"
-                          placeholder="1.5 kg"
-                          value={selectedProduct.weight || ""}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, weight: e.target.value })
-                          }
-                        />
-                      </div>
-
-                      
-                      <div className="col-md-4">
-                        <label className="form-label">Barcode</label>
-                        <input
-                          className="form-control form-control-sm"
-                          placeholder="7896"
-                          value={selectedProduct.barcode || ""}
-                          onChange={(e) =>
-                            setSelectedProduct({ ...selectedProduct, barcode: e.target.value })
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label">Stock</label>
-                        <input
-                          type="number"
-                          className="form-control form-control-sm"
-                          value={selectedProduct.stock}
-                          disabled={selectedProduct.status === "Out of Stock"}
-                          onChange={(e) => {
-                            const qty = Number(e.target.value);
-
-                            setSelectedProduct({
-                              ...selectedProduct,
-                              stock: qty,
-                              status: qty === 0 ? "Out of Stock" : "Available",
-                            });
-                          }}
-
-                        />
-                      </div>
-
-                      {/* ================= ROW 3 ================= */}
-                      <div className="col-md-4">
-                        <label className="form-label">Price</label>
-                        <input
-                          type="number"
-                          className="form-control form-control-sm"
-                          value={selectedProduct.price}
-                          onChange={(e) =>
-                            setSelectedProduct({
-                              ...selectedProduct,
-                              price: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label">Status</label>
-                        <select
-                          className="form-select form-select-sm"
-                          value={selectedProduct.status}
-                          onChange={(e) => {
-                            const value = e.target.value;
-
-                            setSelectedProduct({
-                              ...selectedProduct,
-                              status: value,
-                              stock: value === "Out of Stock" ? 0 : selectedProduct.stock,
-                            });
-                          }}
-
-                        >
-                          <option value="Available">Available</option>
-                          <option value="Out of Stock">Out of Stock</option>
-                        </select>
-                      </div>
-
-                      <div className="col-md-4"></div> {/* spacer for alignment */}
-
- 
-
-                      {/* ================= FEATURE IMAGE ================= */}
-                      <div className="col-12">
-                        <label className="form-label">Feature Image</label>
-                        <input
-                          type="file"
-                          className="form-control form-control-sm"
-                          onChange={(e) => {
-                            const file = e.target.files[0];
-                            if (file) {
-                              setSelectedProduct({ ...selectedProduct, featureImage: file });
-                            }
-                          }}
-                        />
-                        <small className="text-muted d-block mt-1">
-                          {selectedProduct.featureImage instanceof File
-                            ? selectedProduct.featureImage.name
-                            : selectedProduct.featureImage || "No image selected"}
-                        </small>
-                      </div>
-
-                      {/* ================= GALLERY ================= */}
-                      <div className="col-12">
-                        <label className="form-label me-2">Gallery Images </label>
-
-                        {(selectedProduct.images || []).map((img, index) => (
-                          <div key={index} className="d-flex align-items-center gap-2 mb-2">
-                            <input
-                              type="file"
-                              className="form-control form-control-sm"
-                              style={{ maxWidth: 260 }}
-                              onChange={(e) => {
-                                const file = e.target.files[0];
-                                if (file) {
-                                  const updated = [...selectedProduct.images];
-                                  updated[index] = file;
-                                  setSelectedProduct({ ...selectedProduct, images: updated });
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                readOnly
+                                value={
+                                  img instanceof File ? img.name : img || "No image"
                                 }
-                              }}
-                            />
+                              />
 
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              readOnly
-                              value={
-                                img instanceof File ? img.name : img || "No image"
-                              }
-                            />
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() =>
+                                  setSelectedProduct({
+                                    ...selectedProduct,
+                                    images: selectedProduct.images.filter((_, i) => i !== index),
+                                  })
+                                }
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
 
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() =>
-                                setSelectedProduct({
-                                  ...selectedProduct,
-                                  images: selectedProduct.images.filter((_, i) => i !== index),
-                                })
-                              }
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
+                          <button
+                            className="btn btn-sm btn-outline-orange"
+                            onClick={() =>
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                images: [...(selectedProduct.images || []), null],
+                              })
+                            }
+                          >
+                            + Add Image
+                          </button>
+                        </div>
 
-                        <button
-                          className="btn btn-sm btn-outline-orange"
-                          onClick={() =>
-                            setSelectedProduct({
-                              ...selectedProduct,
-                              images: [...(selectedProduct.images || []), null],
-                            })
-                          }
-                        >
-                          + Add Image
-                        </button>
                       </div>
-
                     </div>
+
+
+                    {/* Footer */}
+                    <div className="modal-footer py-2">
+                      <button className="btn btn-sm btn-secondary" onClick={closeEditModal}>
+                        Cancel
+                      </button>
+                      <button className="btn btn-sm btn-orange" onClick={saveChanges}>
+                        Save Changes
+                      </button>
+                    </div>
+
                   </div>
-
-
-                  {/* Footer */}
-                  <div className="modal-footer py-2">
-                    <button className="btn btn-sm btn-secondary" onClick={closeEditModal}>
-                      Cancel
-                    </button>
-                    <button className="btn btn-sm btn-orange" onClick={saveChanges}>
-                      Save Changes
-                    </button>
-                  </div>
-
                 </div>
               </div>
-            </div>
-          </>
-        )}
-        {isDeleteModalOpen && deleteProduct && (
-          <>
-            <div className="modal-backdrop fade show" style={{ zIndex: 10 }}></div>
+            </>
+          )}
+          {isDeleteModalOpen && deleteProduct && (
+            <>
+              <div className="modal-backdrop fade show" style={{ zIndex: 10 }}></div>
 
-            <div className="modal d-block" tabIndex="-1" style={{ zIndex: 20 }}>
-              <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content">
+              <div className="modal d-block" tabIndex="-1" style={{ zIndex: 20 }}>
+                <div className="modal-dialog modal-dialog-centered">
+                  <div className="modal-content">
 
-                  <div className="modal-header py-2">
-                    <h5 className="modal-title text-danger">Delete Product</h5>
-                    <button type="button" className="btn-close" onClick={closeDeleteModal}></button>
+                    <div className="modal-header py-2">
+                      <h5 className="modal-title text-danger">Delete Product</h5>
+                      <button type="button" className="btn-close" onClick={closeDeleteModal}></button>
+                    </div>
+
+                    <div className="modal-body">
+                      <p>
+                        Are you sure you want to delete <b>{deleteProduct.name}</b> ?
+                      </p>
+                      <p className="text-muted mb-0">
+                        This will also delete gallery images mapping.
+                      </p>
+                    </div>
+
+                    <div className="modal-footer py-2">
+                      <button className="btn btn-sm btn-secondary" onClick={closeDeleteModal}>
+                        Cancel
+                      </button>
+                      <button className="btn btn-sm btn-danger" onClick={confirmDelete}>
+                        Delete
+                      </button>
+                    </div>
+
                   </div>
-
-                  <div className="modal-body">
-                    <p>
-                      Are you sure you want to delete <b>{deleteProduct.name}</b> ?
-                    </p>
-                    <p className="text-muted mb-0">
-                      This will also delete gallery images mapping.
-                    </p>
-                  </div>
-
-                  <div className="modal-footer py-2">
-                    <button className="btn btn-sm btn-secondary" onClick={closeDeleteModal}>
-                      Cancel
-                    </button>
-                    <button className="btn btn-sm btn-danger" onClick={confirmDelete}>
-                      Delete
-                    </button>
-                  </div>
-
                 </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
 
 
 
+        </div>
       </div>
-    </div>
-    <ConfirmDialog
-  open={confirmOpen}
-  title="Delete Product"
-  message={confirmMsg}
-  confirmText="Delete"
-  cancelText="Cancel"
-  onCancel={() => setConfirmOpen(false)}
-  onConfirm={async () => {
-    setConfirmOpen(false);
-    if (confirmAction) await confirmAction();
-  }}
-/>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete Product"
+        message={confirmMsg}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={async () => {
+          setConfirmOpen(false);
+          if (confirmAction) await confirmAction();
+        }}
+      />
     </ProtectedRoute>
   );
 };

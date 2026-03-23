@@ -124,6 +124,7 @@ export async function GET(req) {
         p.hsn AS hsn, 
           p.size,         
         p.weight, 
+        p.description,
         p.stock_qty AS stock,
         p.sku,
         p.base_price AS price,
