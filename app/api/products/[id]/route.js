@@ -30,35 +30,37 @@ export async function PATCH(req, { params }) {
 
     const featuredImageUrl = featuredImage || existing?.featured_image || null;
 
-    await db.query(
-      `UPDATE products SET 
-        product_name = ?, 
-        sku = ?, 
-         hsn = ?, 
-        size           = ?, 
-       description           = ?, 
-        barcode           = ?,    
-        weight         = ?,   
-        stock_qty = ?, 
-        base_price = ?, 
-        status = ?, 
-        featured_image = ?
-       WHERE id = ?`,
-      [
-        name,
-        sku,
-        hsn || null,
-        size || null,
-        description || null,
-        barcode || null,
-        weight || null,
-        stock,
-        price,
-        status,
-        featuredImageUrl,
-        productId,
-      ]
-    );
+ const cleanDescription = description?.replace(/\r\n/g, "\n");
+
+await db.query(
+  `UPDATE products SET 
+    product_name = ?, 
+    sku = ?, 
+    hsn = ?, 
+    size = ?, 
+    description = ?, 
+    barcode = ?,    
+    weight = ?,   
+    stock_qty = ?, 
+    base_price = ?, 
+    status = ?, 
+    featured_image = ?
+   WHERE id = ?`,
+  [
+    name,
+    sku,
+    hsn || null,
+    size || null,
+    cleanDescription ?? null, // ✅ FIX
+    barcode || null,
+    weight || null,
+    stock,
+    price,
+    status,
+    featuredImageUrl,
+    productId,
+  ]
+);
 
     // ✅ Update gallery only if array passed
     if (Array.isArray(images)) {
