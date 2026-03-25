@@ -130,7 +130,7 @@ if (status === "Out of Stock" && stockQty > 0) {
         product_name: form.productName.value.trim(),
         sku: form.sku.value.trim(),
         barcode: form.barcode.value.trim(),
-        description: form.description.value.trim(),
+description: form.description.value,
         hsn: form.hsn.value.trim(),
         size: form.size.value.trim(),
         weight: form.weight.value.trim(),

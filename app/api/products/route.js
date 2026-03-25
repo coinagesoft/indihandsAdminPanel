@@ -14,10 +14,10 @@ async function uploadBase64ToCloudinary(base64, folder = "products") {
   }
 
   const uploadResult = await cloudinary.uploader.upload(file, {
-  folder: "products",
-  quality: "auto",
-  fetch_format: "auto"
-});
+    folder: "products",
+    quality: "auto",
+    fetch_format: "auto"
+  });
 
 
   return uploadResult.secure_url;
@@ -30,39 +30,41 @@ export async function POST(req) {
   try {
     const data = await req.json();
 
-  const {
-  product_name,
-  sku,
-  barcode,
-  description,
-  stock,
-  price,
-  status,
-  featuredImage,
-  images,
-  hsn,
-   size,          
+    const {
+      product_name,
+      sku,
+      barcode,
+      description,
+      stock,
+      price,
+      status,
+      featuredImage,
+      images,
+      hsn,
+      size,
       weight
-} = data;
+    } = data;
 
-const [result] = await db.query(
-  `INSERT INTO products 
+    const cleanDescription = description?.replace(/\r\n/g, "\n");
+
+    const [result] = await db.query(
+      `INSERT INTO products 
   (product_name, sku, barcode, description, hsn, size, weight, stock_qty,  base_price, status, featured_image)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  [
-    product_name,
-    sku,
-    barcode || null,
-    description || null,
-    hsn || null,
-    size || null,     
-    weight || null,
-    stock,
-    price,
-    status,
-    featuredImage || null,
-  ]
-);
+      [
+        product_name,
+        sku,
+        barcode || null,
+        cleanDescription ?? null,
+        hsn || null,
+        size || null,
+        weight || null,
+        stock,
+        price,
+        status,
+        featuredImage || null,
+      ]
+    );
 
 
     const productId = result.insertId;
@@ -107,7 +109,7 @@ export async function GET(req) {
       values.push(`%${search}%`, `%${search}%`);
     }
 
- 
+
 
     if (status && status !== "All") {
       where += ` AND p.status = ?`;
@@ -155,8 +157,8 @@ export async function GET(req) {
         typeof p.images === "string"
           ? JSON.parse(p.images)
           : Array.isArray(p.images)
-          ? p.images
-          : [],
+            ? p.images
+            : [],
     }));
 
     // 🔹 Total count (pagination)

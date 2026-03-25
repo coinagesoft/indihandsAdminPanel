@@ -383,7 +383,16 @@ const Page = () => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
+  
+useEffect(() => {
+  if (!selectedProduct) return;
 
+  const textarea = document.getElementById("descBox");
+  if (textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+  }
+}, [selectedProduct?.description]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -827,17 +836,25 @@ const Page = () => {
 
                         <div className="col-12">
                           <label className="form-label">Description</label>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            value={selectedProduct.description}
-                            onChange={(e) =>
-                              setSelectedProduct({
-                                ...selectedProduct,
-                                description: e.target.value,
-                              })
-                            }
-                          />
+                          <textarea
+                           id="descBox"
+  className="form-control form-control-sm"
+  value={selectedProduct.description}
+  rows={1}
+  style={{ overflow: "hidden", resize: "none" }}
+  onChange={(e) => {
+    const value = e.target.value;
+
+    // auto resize logic
+    e.target.style.height = "auto";
+    e.target.style.height = e.target.scrollHeight + "px";
+
+    setSelectedProduct({
+      ...selectedProduct,
+      description: value,
+    });
+  }}
+/>
                         </div>
                         {/* ================= FEATURE IMAGE ================= */}
                         <div className="col-12">
