@@ -78,6 +78,41 @@ const Page = () => {
     currentPage * itemsPerPage
   );
 
+
+  const getPagination = () => {
+    const pages = [];
+    const maxVisible = 5; // how many buttons to show
+
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(totalPages, currentPage + 2);
+
+    // Ensure fixed window size
+    if (currentPage <= 3) {
+      end = Math.min(totalPages, maxVisible);
+    }
+    if (currentPage > totalPages - 3) {
+      start = Math.max(1, totalPages - maxVisible + 1);
+    }
+
+    // First page
+    if (start > 1) {
+      pages.push(1);
+      if (start > 2) pages.push("...");
+    }
+
+    // Middle pages
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    // Last page
+    if (end < totalPages) {
+      if (end < totalPages - 1) pages.push("...");
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
   const normalizeImages = (images) => {
     if (Array.isArray(images)) return images;
     if (typeof images === "string") {
@@ -383,16 +418,16 @@ const Page = () => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
-  
-useEffect(() => {
-  if (!selectedProduct) return;
 
-  const textarea = document.getElementById("descBox");
-  if (textarea) {
-    textarea.style.height = "auto";
-    textarea.style.height = textarea.scrollHeight + "px";
-  }
-}, [selectedProduct?.description]);
+  useEffect(() => {
+    if (!selectedProduct) return;
+
+    const textarea = document.getElementById("descBox");
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = textarea.scrollHeight + "px";
+    }
+  }, [selectedProduct?.description]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -510,9 +545,9 @@ useEffect(() => {
                     </td>
                   </tr>
                 ) : (
-                  products.map((p) => (
+                  products.map((p, index) => (
                     <tr key={p.id}>
-                      <td>{p.id}</td>
+                      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
 
                       <td>
                         {p.featureImage ? (
@@ -568,17 +603,35 @@ useEffect(() => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap pagination-custom">
-              <button className="btn btn-outline-secondary btn-sm" onClick={() => changePage(currentPage - 1)}>Prev</button>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  className={`btn btn-sm ${currentPage === i + 1 ? "btn-primary" : "btn-outline-primary"}`}
-                  onClick={() => changePage(i + 1)}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button className="btn btn-outline-secondary btn-sm" onClick={() => changePage(currentPage + 1)}>Next</button>
+
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => changePage(currentPage - 1)}
+              >
+                Prev
+              </button>
+
+              {getPagination().map((p, i) =>
+                p === "..." ? (
+                  <span key={i} className="px-2">...</span>
+                ) : (
+                  <button
+                    key={i}
+                    className={`btn btn-sm ${currentPage === p ? "btn-primary" : "btn-outline-primary"}`}
+                    onClick={() => changePage(p)}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => changePage(currentPage + 1)}
+              >
+                Next
+              </button>
+
             </div>
           )}
 
@@ -590,7 +643,6 @@ useEffect(() => {
             >
               <h5 className="mb-3">Assign Product to Catalog</h5>
 
-              {/* Existing Catalogs */}
               <div className="d-flex flex-column gap-2">
 
                 {catalogs
@@ -741,7 +793,7 @@ useEffect(() => {
                           <label className="form-label">Size</label>
                           <input
                             className="form-control form-control-sm"
-                            placeholder="12 x 10 x 8 inch"
+                            placeholder="12 x 10 x 8"
                             value={selectedProduct.size || ""}
                             onChange={(e) =>
                               setSelectedProduct({ ...selectedProduct, size: e.target.value })
@@ -837,24 +889,24 @@ useEffect(() => {
                         <div className="col-12">
                           <label className="form-label">Description</label>
                           <textarea
-                           id="descBox"
-  className="form-control form-control-sm"
-  value={selectedProduct.description}
-  rows={1}
-  style={{ overflow: "hidden", resize: "none" }}
-  onChange={(e) => {
-    const value = e.target.value;
+                            id="descBox"
+                            className="form-control form-control-sm"
+                            value={selectedProduct.description}
+                            rows={1}
+                            style={{ overflow: "hidden", resize: "none" }}
+                            onChange={(e) => {
+                              const value = e.target.value;
 
-    // auto resize logic
-    e.target.style.height = "auto";
-    e.target.style.height = e.target.scrollHeight + "px";
+                              // auto resize logic
+                              e.target.style.height = "auto";
+                              e.target.style.height = e.target.scrollHeight + "px";
 
-    setSelectedProduct({
-      ...selectedProduct,
-      description: value,
-    });
-  }}
-/>
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                description: value,
+                              });
+                            }}
+                          />
                         </div>
                         {/* ================= FEATURE IMAGE ================= */}
                         <div className="col-12">
