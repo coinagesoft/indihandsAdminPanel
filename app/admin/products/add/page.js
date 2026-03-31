@@ -5,6 +5,7 @@ import ConfirmDialog from "../../../../components/ConfirmDialog";
 import { showSuccess, showError } from "../../../../lib/toast";
 import { useFetchWithLoader } from "../../../../lib/fetchWithLoader";
 
+
 const Page = () => {
   const [featuredPreview, setFeaturedPreview] = useState(null);
   const [galleryPreviews, setGalleryPreviews] = useState([]);
