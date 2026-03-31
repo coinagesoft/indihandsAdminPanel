@@ -6,6 +6,7 @@ import { showSuccess, showError } from "../../../../lib/toast";
 import ConfirmDialog from "../../../../components/ConfirmDialog";
 import { useFetchWithLoader } from "../../../../lib/fetchWithLoader";
 
+
 const Page = () => {
   const [products, setProducts] = useState([]);
   const fetchWithLoader = useFetchWithLoader();
@@ -63,56 +64,62 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const filteredProducts = products.filter((p) => {
-    const matchSearch =
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.sku || "").toLowerCase().includes(search.toLowerCase());
+  // const filteredProducts = products.filter((p) => {
+  //   const matchSearch =
+  //     p.name.toLowerCase().includes(search.toLowerCase()) ||
+  //     (p.sku || "").toLowerCase().includes(search.toLowerCase());
 
 
-    const matchStatus = status === "All" || p.status === status;
-    return matchSearch && matchStatus;
-  });
+  //   const matchStatus = status === "All" || p.status === status;
+  //   return matchSearch && matchStatus;
+  // });
 
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // const paginatedProducts = filteredProducts.slice(
+  //   (currentPage - 1) * itemsPerPage,
+  //   currentPage * itemsPerPage
+  // );
 
 
-  const getPagination = () => {
-    const pages = [];
-    const maxVisible = 5; // how many buttons to show
+const getPagination = () => {
+  const pages = new Set(); // ✅ IMPORTANT
 
-    let start = Math.max(1, currentPage - 2);
-    let end = Math.min(totalPages, currentPage + 2);
+  const maxVisible = 5;
 
-    // Ensure fixed window size
-    if (currentPage <= 3) {
-      end = Math.min(totalPages, maxVisible);
-    }
-    if (currentPage > totalPages - 3) {
-      start = Math.max(1, totalPages - maxVisible + 1);
-    }
+  let start = currentPage - Math.floor(maxVisible / 2);
+  let end = currentPage + Math.floor(maxVisible / 2);
 
-    // First page
-    if (start > 1) {
-      pages.push(1);
-      if (start > 2) pages.push("...");
-    }
+  if (start < 1) {
+    start = 1;
+    end = maxVisible;
+  }
 
-    // Middle pages
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
+  if (end > totalPages) {
+    end = totalPages;
+    start = totalPages - maxVisible + 1;
+  }
 
-    // Last page
-    if (end < totalPages) {
-      if (end < totalPages - 1) pages.push("...");
-      pages.push(totalPages);
-    }
+  if (start < 1) start = 1;
 
-    return pages;
-  };
+  // First
+  if (start > 1) {
+    pages.add(1);
+    if (start > 2) pages.add("...");
+  }
+
+  for (let i = start; i <= end; i++) {
+    pages.add(i);
+  }
+
+  // Last
+  if (end < totalPages) {
+    if (end < totalPages - 1) pages.add("...");
+    pages.add(totalPages);
+  }
+
+  return Array.from(pages); // ✅ no duplicates
+};
+
+
   const normalizeImages = (images) => {
     if (Array.isArray(images)) return images;
     if (typeof images === "string") {
@@ -492,7 +499,10 @@ const Page = () => {
                   className="form-control"
                   placeholder="Product name or SKU"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1); // ✅ RESET HERE
+                  }}
                 />
               </div>
 
@@ -501,7 +511,10 @@ const Page = () => {
                 <select
                   className="form-select"
                   value={status}
-                  onChange={(e) => setStatus(e.target.value)}
+                  onChange={(e) => {
+                    setStatus(e.target.value);
+                    setCurrentPage(1); // ✅ RESET HERE
+                  }}
                 >
                   <option value="All">All</option>
                   <option value="Available">Available</option>
@@ -523,7 +536,7 @@ const Page = () => {
             <table className="table table-striped table-hover mb-0 text-nowrap">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>Sr. No</th>
                   <th>Image</th>
                   <th>Product</th>
                   <th>HSN</th>
@@ -547,7 +560,7 @@ const Page = () => {
                 ) : (
                   products.map((p, index) => (
                     <tr key={p.id}>
-                      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                      <td className="text-center">{(currentPage - 1) * itemsPerPage + index + 1}</td>
 
                       <td>
                         {p.featureImage ? (
@@ -616,7 +629,7 @@ const Page = () => {
                   <span key={i} className="px-2">...</span>
                 ) : (
                   <button
-                    key={i}
+                    key={`${p}-${i}`}
                     className={`btn btn-sm ${currentPage === p ? "btn-primary" : "btn-outline-primary"}`}
                     onClick={() => changePage(p)}
                   >
