@@ -2,7 +2,7 @@ import { db } from "../../../db";
 import bcrypt from "bcryptjs";
 
 
-/* ✅ Update branh */
+/* ✅ Update banh */
 export async function PATCH(req, { params }) {
   try {
     const { id } = await params;
