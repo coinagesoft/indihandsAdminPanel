@@ -80,44 +80,44 @@ const Page = () => {
   // );
 
 
-const getPagination = () => {
-  const pages = new Set(); // ✅ IMPORTANT
+  const getPagination = () => {
+    const pages = new Set(); // ✅ IMPORTANT
 
-  const maxVisible = 5;
+    const maxVisible = 5;
 
-  let start = currentPage - Math.floor(maxVisible / 2);
-  let end = currentPage + Math.floor(maxVisible / 2);
+    let start = currentPage - Math.floor(maxVisible / 2);
+    let end = currentPage + Math.floor(maxVisible / 2);
 
-  if (start < 1) {
-    start = 1;
-    end = maxVisible;
-  }
+    if (start < 1) {
+      start = 1;
+      end = maxVisible;
+    }
 
-  if (end > totalPages) {
-    end = totalPages;
-    start = totalPages - maxVisible + 1;
-  }
+    if (end > totalPages) {
+      end = totalPages;
+      start = totalPages - maxVisible + 1;
+    }
 
-  if (start < 1) start = 1;
+    if (start < 1) start = 1;
 
-  // First
-  if (start > 1) {
-    pages.add(1);
-    if (start > 2) pages.add("...");
-  }
+    // First
+    if (start > 1) {
+      pages.add(1);
+      if (start > 2) pages.add("...");
+    }
 
-  for (let i = start; i <= end; i++) {
-    pages.add(i);
-  }
+    for (let i = start; i <= end; i++) {
+      pages.add(i);
+    }
 
-  // Last
-  if (end < totalPages) {
-    if (end < totalPages - 1) pages.add("...");
-    pages.add(totalPages);
-  }
+    // Last
+    if (end < totalPages) {
+      if (end < totalPages - 1) pages.add("...");
+      pages.add(totalPages);
+    }
 
-  return Array.from(pages); // ✅ no duplicates
-};
+    return Array.from(pages); // ✅ no duplicates
+  };
 
 
   const normalizeImages = (images) => {
@@ -132,6 +132,7 @@ const getPagination = () => {
     }
     return [];
   };
+  
   const openEditModal = (product) => {
     setSelectedProduct({
       ...product,
@@ -420,6 +421,26 @@ const getPagination = () => {
     }
   };
 
+const handleEditPriceChange = (e) => {
+  const value = e.target.value;
+
+  if (value === "") {
+    setSelectedProduct((prev) => ({
+      ...prev,
+      price: "",
+    }));
+    return;
+  }
+
+const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
+
+  if (regex.test(value)) {
+    setSelectedProduct((prev) => ({
+      ...prev,
+      price: value,
+    }));
+  }
+};
 
   const changePage = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -863,15 +884,10 @@ const getPagination = () => {
                         <div className="col-md-4">
                           <label className="form-label">Price</label>
                           <input
-                            type="number"
+                            type="text"
                             className="form-control form-control-sm"
-                            value={selectedProduct.price}
-                            onChange={(e) =>
-                              setSelectedProduct({
-                                ...selectedProduct,
-                                price: Number(e.target.value),
-                              })
-                            }
+                            value={selectedProduct.price || ""}
+                            onChange={(e) => handleEditPriceChange(e)}
                           />
                         </div>
 
