@@ -17,9 +17,9 @@ const Page = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmMsg, setConfirmMsg] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
+  const [basePrice, setBasePrice] = useState("");
   const fetchWithLoader = useFetchWithLoader();
 
-  
   const handleFeaturedChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -103,18 +103,18 @@ const Page = () => {
 
       const status = form.status.value;
 
-   const rawStock = form.stockQty.value;
-const stockQty = rawStock === "" ? null : Number(rawStock);
+      const rawStock = form.stockQty.value;
+      const stockQty = rawStock === "" ? null : Number(rawStock);
 
-if (status === "Available" && (!stockQty || stockQty <= 0)) {
-  showError("If status is Available, inventory must be greater than 0");
-  return;
-}
+      if (status === "Available" && (!stockQty || stockQty <= 0)) {
+        showError("If status is Available, inventory must be greater than 0");
+        return;
+      }
 
-if (status === "Out of Stock" && stockQty > 0) {
-  showError("If status is Out of Stock, inventory must be 0");
-  return;
-}
+      if (status === "Out of Stock" && stockQty > 0) {
+        showError("If status is Out of Stock, inventory must be 0");
+        return;
+      }
 
       let featuredImageUrl = null;
       if (form.featuredImage.files[0]) {
@@ -127,19 +127,35 @@ if (status === "Out of Stock" && stockQty > 0) {
         galleryUrls.push(url);
       }
 
+const price = form.basePrice.value.trim();
+
+// strict validation
+const finalRegex = /^\d+(-\d+)?$/;
+
+if (!price) {
+  showError("Price is required");
+  setPublishing(false);
+  return;
+}
+
+if (!finalRegex.test(price)) {
+  showError("Enter valid price (e.g. 100 or 100-200)");
+  setPublishing(false);
+  return;
+}
+
+
       const body = {
         product_name: form.productName.value.trim(),
         sku: form.sku.value.trim(),
         barcode: form.barcode.value.trim(),
-description: form.description.value,
+        description: form.description.value,
         hsn: form.hsn.value.trim(),
         size: form.size.value.trim(),
         weight: form.weight.value.trim(),
         stock: Number(form.stockQty.value),
-        price: Number(form.basePrice.value),
-
+       price: form.basePrice.value.trim(),
         status: form.status.value,
-
         featuredImage: featuredImageUrl,
         images: galleryUrls,
       };
@@ -173,7 +189,16 @@ description: form.description.value,
     }
   };
 
+const handlePriceChange = (e) => {
+  const value = e.target.value;
 
+  // allow only numbers and one dash
+  const regex = /^\d*(-\d*)?$/;
+
+  if (regex.test(value)) {
+    setBasePrice(value);
+  }
+};
 
 
   // --- helper to convert file to base64
@@ -512,11 +537,12 @@ description: form.description.value,
                 <div className="card-body">
                   <div className="form-floating form-floating-outline mb-3">
                     <input
-                      type="number"
-                      min="0"
+                      type="text"
                       className="form-control"
                       name="basePrice"
-                      placeholder="Base Price"
+                      placeholder="Base Price (e.g. 100 or 100-200)"
+                      value={basePrice}
+                      onChange={handlePriceChange}
                       required
                     />
                     <label>Base Price (Admin)</label>
