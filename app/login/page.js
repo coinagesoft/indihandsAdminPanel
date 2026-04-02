@@ -77,7 +77,7 @@ export default function LoginPage() {
             </div>
 
             <div className="card-body mt-1">
-              <h4 className="mb-1">Welcome to Indihand! 👋</h4>
+              <h4 className="mb-1">Welcome to Indihands! 👋</h4>
               <p className="mb-5">
                 Please sign-in to your account and start the adventure
               </p>
