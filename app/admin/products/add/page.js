@@ -127,22 +127,22 @@ const Page = () => {
         galleryUrls.push(url);
       }
 
-const price = form.basePrice.value.trim();
+      const price = form.basePrice.value.trim();
 
-// strict validation
-const finalRegex = /^\d+(-\d+)?$/;
+      // strict validation
+      const finalRegex = /^\d+(-\d+)?$/;
 
-if (!price) {
-  showError("Price is required");
-  setPublishing(false);
-  return;
-}
+      if (!price) {
+        showError("Price is required");
+        setPublishing(false);
+        return;
+      }
 
-if (!finalRegex.test(price)) {
-  showError("Enter valid price (e.g. 100 or 100-200)");
-  setPublishing(false);
-  return;
-}
+      if (!finalRegex.test(price)) {
+        showError("Enter valid price (e.g. 100 or 100-200)");
+        setPublishing(false);
+        return;
+      }
 
 
       const body = {
@@ -154,7 +154,7 @@ if (!finalRegex.test(price)) {
         size: form.size.value.trim(),
         weight: form.weight.value.trim(),
         stock: Number(form.stockQty.value),
-       price: form.basePrice.value.trim(),
+        price: form.basePrice.value.trim(),
         status: form.status.value,
         featuredImage: featuredImageUrl,
         images: galleryUrls,
@@ -180,6 +180,7 @@ if (!finalRegex.test(price)) {
       setGalleryPreviews([]);
       setStockQty(0);
       setStatus("Available");
+      setBasePrice("");
 
     } catch (err) {
       console.error(err);
@@ -189,16 +190,16 @@ if (!finalRegex.test(price)) {
     }
   };
 
-const handlePriceChange = (e) => {
-  const value = e.target.value;
+  const handlePriceChange = (e) => {
+    const value = e.target.value;
 
-  // allow only numbers and one dash
-  const regex = /^\d*(-\d*)?$/;
+    // allow only numbers and one dash
+    const regex = /^\d*(-\d*)?$/;
 
-  if (regex.test(value)) {
-    setBasePrice(value);
-  }
-};
+    if (regex.test(value)) {
+      setBasePrice(value);
+    }
+  };
 
 
   // --- helper to convert file to base64
