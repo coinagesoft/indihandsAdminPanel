@@ -23,23 +23,7 @@ export async function PATCH(req, { params }) {
     } = data;
 
 
-// ✅ Normalize name (ignore spaces + lowercase)
-const normalizedName = name.trim().replace(/\s+/g, "").toLowerCase();
 
-// ✅ Check duplicate (excluding current product)
-const [duplicate] = await db.query(
-  `SELECT id FROM products 
-   WHERE REPLACE(LOWER(product_name), ' ', '') = ? 
-   AND id != ?`,
-  [normalizedName, productId]
-);
-
-if (duplicate.length > 0) {
-  return Response.json(
-    { message: "Product with same name already exists" },
-    { status: 400 }
-  );
-}
 
     // ✅ keep old featured image if not sent
     const [[existing]] = await db.query(
