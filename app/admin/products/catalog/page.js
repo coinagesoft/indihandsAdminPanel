@@ -14,7 +14,7 @@ const Page = () => {
   const [confirmMsg, setConfirmMsg] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
   const fetchWithLoader = useFetchWithLoader();
-  
+
   /* ===================== CATALOG MODAL STATE ===================== */
   const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false);
   const [editingCatalog, setEditingCatalog] = useState(null);
@@ -267,28 +267,28 @@ const Page = () => {
   };
 
 
-const deleteCatalog = (catalog) => {
-  setConfirmMsg(`Delete catalog "${catalog.name}" ?`);
+  const deleteCatalog = (catalog) => {
+    setConfirmMsg(`Delete catalog "${catalog.name}" ?`);
 
-  setConfirmAction(() => async () => {
-    try {
-      const res = await fetchWithLoader(`/api/catalogs/${catalog.id}`, {
-        method: "DELETE",
-      });
+    setConfirmAction(() => async () => {
+      try {
+        const res = await fetchWithLoader(`/api/catalogs/${catalog.id}`, {
+          method: "DELETE",
+        });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
 
-      showSuccess("Catalog deleted");
-      fetchCatalogs();
-    } catch (err) {
-      console.error("Delete catalog error:", err);
-      showError(err.message);
-    }
-  });
+        showSuccess("Catalog deleted");
+        fetchCatalogs();
+      } catch (err) {
+        console.error("Delete catalog error:", err);
+        showError(err.message);
+      }
+    });
 
-  setConfirmOpen(true);
-};
+    setConfirmOpen(true);
+  };
 
 
 
@@ -437,7 +437,7 @@ const deleteCatalog = (catalog) => {
             <table className="table table-striped">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>SR NO </th>
                   <th>Product</th>
                   <th>Stock</th>
                   <th>SKU</th>
@@ -447,9 +447,9 @@ const deleteCatalog = (catalog) => {
                 </tr>
               </thead>
               <tbody>
-                {paginatedCatalogProducts.map((p) => (
+                {paginatedCatalogProducts.map((p, index) => (
                   <tr key={p.id}>
-                    <td>{p.id}</td>
+                    <td>{(catPage - 1) * catItemsPerPage + index + 1}</td>
                     <td>{p.name}</td>
                     <td>{p.stock}</td>
                     <td>{p.sku}</td>
@@ -541,7 +541,7 @@ const deleteCatalog = (catalog) => {
                         {allProducts
                           .filter((p) => !catalogProducts.some((cp) => cp.id === p.id))
                           .map((p) => (
-                            <tr key={p.id}>
+                            <tr key={p.id} >
                               <td>
                                 <td className="text-center">
                                   <input
@@ -624,17 +624,17 @@ const deleteCatalog = (catalog) => {
         )}
       </div>
       <ConfirmDialog
-  open={confirmOpen}
-  title="Delete Catalog"
-  message={confirmMsg}
-  confirmText="Delete"
-  cancelText="Cancel"
-  onCancel={() => setConfirmOpen(false)}
-  onConfirm={async () => {
-    setConfirmOpen(false);
-    if (confirmAction) await confirmAction();
-  }}
-/>
+        open={confirmOpen}
+        title="Delete Catalog"
+        message={confirmMsg}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={async () => {
+          setConfirmOpen(false);
+          if (confirmAction) await confirmAction();
+        }}
+      />
     </ProtectedRoute>
   );
 };
