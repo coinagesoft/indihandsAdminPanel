@@ -46,23 +46,6 @@ export async function POST(req) {
     } = data;
 
 
-    // ✅ Normalize name (ignore spaces + lowercase)
-    const normalizedName = product_name.trim().replace(/\s+/g, "").toLowerCase();
-
-    // ✅ Check duplicate
-    const [duplicate] = await db.query(
-      `SELECT id FROM products 
-   WHERE REPLACE(LOWER(product_name), ' ', '') = ?`,
-      [normalizedName]
-    );
-
-    if (duplicate.length > 0) {
-      return Response.json(
-        { message: "Product with same name already exists" },
-        { status: 400 }
-      );
-    }
-
     const cleanDescription = description?.replace(/\r\n/g, "\n");
 
     const [result] = await db.query(
