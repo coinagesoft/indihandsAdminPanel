@@ -36,8 +36,12 @@ export async function POST(req, { params }) {
     if (!gstin?.trim())
       return Response.json({ message: "GSTIN required" }, { status: 400 });
 
-    if (!loginEmail?.trim())
-      return Response.json({ message: "Login email required" }, { status: 400 });
+  if (!loginEmail?.trim())
+  return Response.json(
+    { message: "Username/Email required" }, // ✅ updated
+    { status: 400 }
+  );
+
 
     if (!password?.trim() || password.trim().length < 6)
       return Response.json(
@@ -46,15 +50,17 @@ export async function POST(req, { params }) {
       );
 
     /* ================= DUPLICATE CHECKS ================= */
+const identifier = loginEmail.trim().toLowerCase(); // ✅ normalize
 
-    const [existingUser] = await db.query(
-      "SELECT id FROM users WHERE email=? LIMIT 1",
-      [loginEmail.trim()]
-    );
+
+   const [existingUser] = await db.query(
+  "SELECT id FROM users WHERE LOWER(email)=? LIMIT 1",
+  [identifier]
+);
 
     if (existingUser.length) {
       return Response.json(
-        { message: "This login email already exists" },
+        { message: "This login email/username already exists" },
         { status: 400 }
       );
     }
