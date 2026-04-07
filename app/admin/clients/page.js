@@ -543,7 +543,7 @@ const Page = () => {
                     { label: "Branch Name", key: "branchName", type: "text", required: true },
                     { label: "GSTIN", key: "gstin", type: "text", required: true },
                     // { label: "Contact Person", key: "contactPerson", type: "text" },
-                    { label: "Login Email", key: "loginEmail", type: "email", required: true },
+                    { label: "Login Email/Username", key: "loginEmail", type: "text", required: true },
                   ].map(({ label, key, type, required }) => (
                     <div key={key} className="col-md-6">
                       <label className="form-label mb-1">{label}</label>
@@ -726,7 +726,7 @@ const Page = () => {
                       { label: "Branch Name", key: "branchName", type: "text" },
                       { label: "GSTIN", key: "gstin", type: "text" },
                       // { label: "Contact Person", key: "contactPerson", type: "text" },
-                      { label: "Login Email", key: "loginEmail", type: "email" },
+                      { label: "Login Email/Username", key: "loginEmail", type: "text" },
                     ].map(({ label, key, type }) => (
                       <div key={key} className="col-md-6">
                         <label className="form-label mb-1">{label}</label>
