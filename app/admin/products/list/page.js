@@ -132,7 +132,7 @@ const Page = () => {
     }
     return [];
   };
-  
+
   const openEditModal = (product) => {
     setSelectedProduct({
       ...product,
@@ -216,7 +216,10 @@ const Page = () => {
         status: selectedProduct.status,
         description: selectedProduct.description,
         featuredImage: featuredImageUrl,
-        images: finalGallery, // ✅ always array
+        images: finalGallery,
+        cgst_rate: Number(selectedProduct.cgst_rate ?? 0),
+        sgst_rate: Number(selectedProduct.sgst_rate ?? 0),
+        igst_rate: Number(selectedProduct.igst_rate ?? 0),
       };
 
       const res = await fetchWithLoader(`/api/products/${selectedProduct.id}`, {
@@ -421,26 +424,26 @@ const Page = () => {
     }
   };
 
-const handleEditPriceChange = (e) => {
-  const value = e.target.value;
+  const handleEditPriceChange = (e) => {
+    const value = e.target.value;
 
-  if (value === "") {
-    setSelectedProduct((prev) => ({
-      ...prev,
-      price: "",
-    }));
-    return;
-  }
+    if (value === "") {
+      setSelectedProduct((prev) => ({
+        ...prev,
+        price: "",
+      }));
+      return;
+    }
 
-const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
+    const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
 
-  if (regex.test(value)) {
-    setSelectedProduct((prev) => ({
-      ...prev,
-      price: value,
-    }));
-  }
-};
+    if (regex.test(value)) {
+      setSelectedProduct((prev) => ({
+        ...prev,
+        price: value,
+      }));
+    }
+  };
 
   const changePage = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -567,6 +570,9 @@ const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
                   <th>Stock</th>
                   <th>SKU</th>
                   <th>Price</th>
+                  <th>CGST %</th>
+                  <th>SGST %</th>
+                  <th>IGST %</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -608,6 +614,9 @@ const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
                       <td>{p.stock}</td>
                       <td>{p.sku || "-"}</td>
                       <td>Rs.{p.price}</td>
+                      <td>{p.cgst_rate ?? 0}%</td>
+                      <td>{p.sgst_rate ?? 0}%</td>
+                      <td>{p.igst_rate ?? 0}%</td>
                       <td>
                         <span className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"}`}>
                           {p.status}
@@ -907,11 +916,57 @@ const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
                             }}
 
                           >
+
+
                             <option value="Available">Available</option>
                             <option value="Out of Stock">Out of Stock</option>
                           </select>
                         </div>
+                        {/* ================= TAX ROW ================= */}
+                        <div className="col-md-4">
+                          <label className="form-label">CGST (%)</label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            value={selectedProduct.cgst_rate || ""}
+                            onChange={(e) =>
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                cgst_rate: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
 
+                        <div className="col-md-4">
+                          <label className="form-label">SGST (%)</label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            value={selectedProduct.sgst_rate || ""}
+                            onChange={(e) =>
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                sgst_rate: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+
+                        <div className="col-md-4">
+                          <label className="form-label">IGST (%)</label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            value={selectedProduct.igst_rate || ""}
+                            onChange={(e) =>
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                igst_rate: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
                         <div className="col-md-4"></div> {/* spacer for alignment */}
 
 

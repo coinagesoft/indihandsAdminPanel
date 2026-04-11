@@ -78,8 +78,21 @@ export async function POST(req, { params }) {
       const productId = Number(p.productId);
       if (!productId) continue;
 
-      const price = p.price === "" || p.price === null ? null : Number(p.price);
-      const prefix = p.prefix?.trim() || null;
+     let price = null;
+
+if (p.price !== "" && p.price !== null && p.price !== undefined) {
+  const parsed = Number(p.price);
+
+  if (!isNaN(parsed)) {
+    price = parsed;
+  }
+}
+   const prefix = p.prefix?.trim() || null;
+
+// ✅ अगर prefix आहे पण price empty आहे
+if (prefix && (p.price === "" || p.price === null || p.price === undefined)) {
+  price = null;
+}
 
       // ✅ DELETE only if BOTH null
       if (price === null && prefix === null) {

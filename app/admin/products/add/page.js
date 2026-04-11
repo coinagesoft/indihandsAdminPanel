@@ -158,6 +158,11 @@ const Page = () => {
         status: form.status.value,
         featuredImage: featuredImageUrl,
         images: galleryUrls,
+
+          // ✅ ADD THIS
+  cgst_rate: Number(form.cgst.value || 0),
+  sgst_rate: Number(form.sgst.value || 0),
+  igst_rate: Number(form.igst.value || 0),
       };
 
       const res = await fetchWithLoader("/api/products", {
@@ -420,6 +425,47 @@ const Page = () => {
                     />
                     <label>HSN Code</label>
                   </div>
+
+                  <div className="row gx-3 mt-4">
+  <div className="col">
+    <div className="form-floating form-floating-outline">
+      <input
+        type="number"
+        step="0.01"
+        className="form-control"
+        name="cgst"
+        placeholder="CGST %"
+      />
+      <label>CGST (%)</label>
+    </div>
+  </div>
+
+  <div className="col">
+    <div className="form-floating form-floating-outline">
+      <input
+        type="number"
+        step="0.01"
+        className="form-control"
+        name="sgst"
+        placeholder="SGST %"
+      />
+      <label>SGST (%)</label>
+    </div>
+  </div>
+
+  <div className="col">
+    <div className="form-floating form-floating-outline">
+      <input
+        type="number"
+        step="0.01"
+        className="form-control"
+        name="igst"
+        placeholder="IGST %"
+      />
+      <label>IGST (%)</label>
+    </div>
+  </div>
+</div>
                   <div className="row gx-5 mt-4">
                     <div className="col">
                       <div className="form-floating form-floating-outline">
