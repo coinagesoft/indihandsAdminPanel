@@ -63,7 +63,11 @@ if (proposalRow) {
     `
     SELECT
       pi.product_id AS productId,
-      p.product_name AS description,
+       CASE 
+      WHEN cpp.prefix IS NOT NULL AND cpp.prefix != ''
+      THEN CONCAT(cpp.prefix, ' | ', p.product_name)
+      ELSE p.product_name
+    END AS description,
       p.hsn,
       pi.quantity AS qty,
       pi.rate,
@@ -74,10 +78,15 @@ if (proposalRow) {
       pi.igst_rate AS igst
     FROM proposal_items pi
     JOIN products p ON p.id = pi.product_id
+
+  LEFT JOIN company_product_pricing cpp
+    ON cpp.product_id = p.id
+    AND cpp.company_id = ?
+
     WHERE pi.proposal_id = ?
     ORDER BY pi.id ASC
     `,
-    [proposalRow.id]
+   [header.companyId, proposalRow.id]
   );
 
   items = pItems.map(x => {
@@ -105,7 +114,11 @@ if (proposalRow) {
     `
     SELECT
       rp.product_id AS productId,
-      p.product_name AS description,
+       CASE 
+      WHEN cpp.prefix IS NOT NULL AND cpp.prefix != ''
+      THEN CONCAT(cpp.prefix, ' | ', p.product_name)
+      ELSE p.product_name
+    END AS description,
       p.hsn,
       rp.quantity AS qty,
       rp.quoted_price AS quotedPrice,
@@ -113,8 +126,11 @@ if (proposalRow) {
      p.base_price AS basePrice 
     FROM rfq_products rp
     JOIN products p ON p.id = rp.product_id
-    LEFT JOIN company_product_pricing cpp
-      ON cpp.company_id = ? AND cpp.product_id = rp.product_id
+
+      LEFT JOIN company_product_pricing cpp
+    ON cpp.company_id = ? 
+    AND cpp.product_id = rp.product_id
+
     WHERE rp.rfq_id = ?
     ORDER BY rp.product_id ASC
     `,

@@ -649,13 +649,22 @@ export async function GET(req, { params }) {
         pi.cgst_rate,
         pi.sgst_rate,
         pi.igst_rate,
-        pr.product_name description,
+       CASE 
+  WHEN cpp.prefix IS NOT NULL AND cpp.prefix != ''
+  THEN CONCAT(cpp.prefix, ' | ', pr.product_name)
+  ELSE pr.product_name
+END AS description,
         pr.hsn
       FROM proposal_items pi
       JOIN products pr ON pr.id = pi.product_id
+ 
+      LEFT JOIN company_product_pricing cpp
+  ON cpp.product_id = pr.id
+  AND cpp.company_id = ?
+
       WHERE pi.proposal_id = ?
       ORDER BY pi.id
-    `, [proposal.id]);
+    `,  [proposal.company_id, proposal.id] );
 
     /* ================= CHARGES ================= */
     const [companyCharges] = await db.query(`

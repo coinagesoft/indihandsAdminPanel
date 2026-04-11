@@ -6,14 +6,14 @@ export async function GET() {
       SELECT
         r.id,
         r.company_id AS companyId,
-         r.rfq_number, 
+        r.rfq_number, 
         r.branch_id AS branchId,
         c.company_name AS company,
         cb.gstin,
         cb.branch_name AS branchName,
         cb.contact_person AS customerName,
         p.place AS place,
-        p.id AS proposalId,          -- ⭐ ADD
+        p.id AS proposalId,        
         p.proposal_number AS proposalNumber
       FROM rfqs r
       JOIN companies c ON c.id = r.company_id
@@ -26,13 +26,13 @@ export async function GET() {
     const rfqs = rows.map((x) => ({
       id: x.id,
       companyId: x.companyId,
-        rfqNumber: x.rfq_number || "", 
+      rfqNumber: x.rfq_number || "", 
       branchId: x.branchId,
       customerName: x.customerName || x.company,
       company: x.company,
       gstin: x.gstin || "",
       place: x.place || "",
-      proposalId: x.proposalId || null,   // ⭐ ADD
+      proposalId: x.proposalId || null,  
       proposalNumber: x.proposalNumber || "",
       branchName: x.branchName,
     }));
