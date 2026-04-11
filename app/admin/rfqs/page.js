@@ -14,7 +14,7 @@ const RFQPage = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState("all");
   const [statusLoading, setStatusLoading] = useState(null);
-    const fetchWithLoader = useFetchWithLoader();
+  const fetchWithLoader = useFetchWithLoader();
 
   /* ---------------- API ---------------- */
 
@@ -26,7 +26,7 @@ const RFQPage = () => {
     try {
       const res = await fetchWithLoader("/api/rfqs");
       const data = await res.json();
- console.log("rfq",data)
+      console.log("rfq",data)
       if (!res.ok) throw new Error(data.message || "Failed to load RFQs");
 
       setOrganizations(data.organizations || []);
@@ -91,6 +91,7 @@ const RFQPage = () => {
   } finally {
     setStatusLoading(null);
   }
+
 };
   /* ---------------- FILTER HELPERS ---------------- */
 
