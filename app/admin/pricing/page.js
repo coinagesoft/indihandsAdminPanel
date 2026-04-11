@@ -65,7 +65,7 @@ const OrgPricingPage = () => {
         (data.pricing || []).map((x) => ({
           orgId: x.companyId,    
           productId: x.productId,
-          price: x.price == null ? "" : Number(x.price),
+          price: x.price == null ? "" : x.price,
           prefix: x.prefix || "",
         }))
       );
@@ -127,10 +127,17 @@ const OrgPricingPage = () => {
     return entry ? entry.prefix || "" : "";
   };
 
-  const getOrgPrice = (orgId, productId) => {
-    const entry = pricing.find((p) => p.orgId === orgId && p.productId === productId);
-    return entry ? entry.price : "";
-  };
+const getOrgPrice = (orgId, productId) => {
+  const entry = pricing.find(
+    (p) => p.orgId === orgId && p.productId === productId
+  );
+
+  if (!entry || entry.price === null || entry.price === undefined) {
+    return "";
+  }
+
+  return entry.price;
+};
 
   const isPriceCustomized = (orgId, productId, basePrice) => {
     const price = getOrgPrice(orgId, productId);

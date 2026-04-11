@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 
 import PreviewPage from '../../../../components/InvoicePreview.js'
-import  ProtectedRoute from '../../../../components/ProtectedRoute.js'
+import ProtectedRoute from '../../../../components/ProtectedRoute.js'
 import { showSuccess, showError } from "../../../../lib/toast.js";
 import { useConfirm } from "../../../../components/ConfirmDialog.js";
 import { useFetchWithLoader } from "../../../../lib/fetchWithLoader.js";
@@ -13,7 +13,7 @@ const Page = () => {
     quotationNo: "",
     date: "",
     clientName: "",
-    clientPhone: "",   
+    clientPhone: "",
     clientEmail: "",
     company: "",
     gstin: "",
@@ -23,50 +23,50 @@ const Page = () => {
     companyId: null,
     branchId: null,
   });
- const fetchWithLoader = useFetchWithLoader();
+  const fetchWithLoader = useFetchWithLoader();
   const [selectedRfq, setSelectedRfq] = useState("");
   const [items, setItems] = useState([]);
   const [acceptedRfqs, setAcceptedRfqs] = useState([]);
   const [saving, setSaving] = useState(false);
   const [charges, setCharges] = useState([]);
- const [mode, setMode] = useState("edit"); 
-// "edit" | "preview"
-const readonlyFields = [
-  "quotationNo",
-  "clientName",
-  "clientEmail",
-  "company",
-  "gstin",
-];
+  const [mode, setMode] = useState("edit");
+  // "edit" | "preview"
+  const readonlyFields = [
+    "quotationNo",
+    "clientName",
+    "clientEmail",
+    "company",
+    "gstin",
+  ];
   /* ================= HANDLERS ================= */
   const handleHeaderChange = (e) => {
     setHeader({ ...header, [e.target.name]: e.target.value });
   };
   const updateCharge = (index, field, value) => {
-  const updated = [...charges];
+    const updated = [...charges];
 
-  if (field === "amount" || field === "taxPercent") {
-    if (value === "") {
-      updated[index][field] = "";
+    if (field === "amount" || field === "taxPercent") {
+      if (value === "") {
+        updated[index][field] = "";
+      } else {
+        let num = Number(value);
+
+        if (isNaN(num)) num = 0;
+
+        // 🚫 prevent negative
+        num = Math.max(0, num);
+
+        // optional: tax cap
+        if (field === "taxPercent") num = Math.min(100, num);
+
+        updated[index][field] = num;
+      }
     } else {
-      let num = Number(value);
-
-      if (isNaN(num)) num = 0;
-
-      // 🚫 prevent negative
-      num = Math.max(0, num);
-
-      // optional: tax cap
-      if (field === "taxPercent") num = Math.min(100, num);
-
-      updated[index][field] = num;
+      updated[index][field] = value;
     }
-  } else {
-    updated[index][field] = value;
-  }
 
-  setCharges(updated);
-};
+    setCharges(updated);
+  };
 
   const removeCharge = (index) => {
     setCharges(charges.filter((_, i) => i !== index));
@@ -315,221 +315,148 @@ const readonlyFields = [
   /* ================= UI ================= */
   return (
     <ProtectedRoute>
-    <div className="container-xxl flex-grow-1 container-p-y">
+      <div className="container-xxl flex-grow-1 container-p-y">
 
 
-      {mode === "edit" && (
-        <>
-          <div className="row g-4">
-            {/* MAIN */}
-            <div className="col-lg-9">
-              <div className="card shadow-sm">
-                <div className="card-body">
-                  <h4 className="mb-4">Proposal Editor</h4>
+        {mode === "edit" && (
+          <>
+            <div className="row g-4">
+              {/* MAIN */}
+              <div className="col-lg-9">
+                <div className="card shadow-sm">
+                  <div className="card-body">
+                    <h4 className="mb-4">Proposal Editor</h4>
 
-                  {/* RFQ */}
-                  <div className="mb-4">
-                    <label className="form-label">Select Accepted RFQ</label>
-                    <select
-                      className="form-select"
-                      value={selectedRfq}
-                      onChange={handleRfqSelect}
-                    >
-                      <option value="">-- Select RFQ --</option>
-                      {acceptedRfqs.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.rfqNumber} — {r.company}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    {/* RFQ */}
+                    <div className="mb-4">
+                      <label className="form-label">Select Accepted RFQ</label>
+                      <select
+                        className="form-select"
+                        value={selectedRfq}
+                        onChange={handleRfqSelect}
+                      >
+                        <option value="">-- Select RFQ --</option>
+                        {acceptedRfqs.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.rfqNumber} — {r.company}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  {/* HEADER */}
-                  <div className="row g-3 mb-4">
-                    {[
-                      ["quotationNo", "Quotation No"],
-                      ["date", "Date", "date"],
-                      ["clientName", "Customer Name"],
-                      ["clientEmail", "Customer Email"],
-                      ["company", "Company"],
-                      ["gstin", "GSTIN"],
-                      ["place", "Place of Supply"],
-                    ].map(([name, label, type = "text"]) => (
-                      <div className="col-md-6" key={name}>
-                        <label className="form-label">{label}</label>
-                        <input
-                          type={type}
-                          className="form-control"
-                          name={name}
-                          value={header[name]}
-                          onChange={handleHeaderChange}
+                    {/* HEADER */}
+                    <div className="row g-3 mb-4">
+                      {[
+                        ["quotationNo", "Quotation No"],
+                        ["date", "Date", "date"],
+                        ["clientName", "Customer Name"],
+                        ["clientEmail", "Customer Email"],
+                        ["company", "Company"],
+                        ["gstin", "GSTIN"],
+                        ["place", "Place of Supply"],
+                      ].map(([name, label, type = "text"]) => (
+                        <div className="col-md-6" key={name}>
+                          <label className="form-label">{label}</label>
+                          <input
+                            type={type}
+                            className="form-control"
+                            name={name}
+                            value={header[name]}
+                            onChange={handleHeaderChange}
                             disabled={readonlyFields.includes(name)}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                          />
+                        </div>
+                      ))}
+                    </div>
 
-                  {/* ITEMS TABLE */}
-                  <div className="table-responsive proposal-table">
-                    <table className="table table-bordered align-middle mb-0">
-                      <colgroup>
-                        <col style={{ minWidth: "50px" }} />
-                        <col style={{ minWidth: "250px" }} />
-                        <col style={{ minWidth: "100px" }} />
-                        <col style={{ minWidth: "60px" }} />
-                        <col style={{ minWidth: "120px" }} />
-                        <col style={{ minWidth: "100px" }} />
-                        <col style={{ minWidth: "120px" }} />
-                        <col style={{ minWidth: "120px" }} />
-                        <col style={{ minWidth: "140px" }} />
+                    {/* ITEMS TABLE */}
+                    <div className="table-responsive proposal-table">
+                      <table className="table table-bordered align-middle mb-0">
+                        <colgroup>
+                          <col style={{ minWidth: "50px" }} />
+                          <col style={{ minWidth: "250px" }} />
+                          <col style={{ minWidth: "100px" }} />
+                          <col style={{ minWidth: "60px" }} />
+                          <col style={{ minWidth: "120px" }} />
+                          <col style={{ minWidth: "100px" }} />
+                          <col style={{ minWidth: "120px" }} />
+                          <col style={{ minWidth: "120px" }} />
 
-                      </colgroup>
+                          <col style={{ minWidth: "140px" }} />
 
-                      <thead className="table-primary">
-                        <tr>
-                          <th className="text-center">#</th>
-                          <th>Description</th>
-                          <th className="text-center">HSN</th>
-                          <th className="text-center">Qty</th>
-                          <th className="text-end">Rate</th>
-                          <th className="text-end">Disc %</th>
-                          <th className="text-end">Disc Amt</th>
-                          <th className="text-end">Amount</th>
-                          <th className="text-end">Tax</th>
-                          <th className="text-end">Total</th>
-                        </tr>
-                      </thead>
+                        </colgroup>
 
-                      <tbody>
-                        {items.map((item, i) => {
-                          const amount = calcAmount(item);
-                          const tax =
-                            calcTax(amount, item.cgst) +
-                            calcTax(amount, item.sgst) +
-                            calcTax(amount, item.igst);
-                          const total = amount + tax;
-
-                          return (
-                            <tr key={i}>
-                              <td className="text-center">{i + 1}</td>
-
-                              <td className="text-wrap">
-                                {item.description || "-"}
-                              </td>
-
-                              <td className="text-center">
-                                {item.hsn || "-"}
-                              </td>
-
-                              <td className="text-center">
-                                {item.qty ?? 0}
-                              </td>
-
-                              <td className="text-end">
-                                {Number(item.rate || 0).toFixed(2)}
-                              </td>
-
-                              <td className="text-end" style={{ width: 70 }}>
-                                {item.discount}%
-                              </td>
-                              <td className="text-end" style={{ width: 70 }}>
-                                {(((item.basePrice - item.rate))).toFixed(2)}
-                              </td>
-                              <td className="text-end">
-                                {amount.toFixed(2)}
-                              </td>
-
-                              <td className="text-end">
-                                {tax.toFixed(2)}
-                              </td>
-
-                              <td colSpan={2} className="text-end fw-semibold">
-                                {total.toFixed(2)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-
-
-
-                  <h6 className="mt-4">Additional Charges</h6>
-                  <button
-                    className="btn btn-sm btn-outline-primary mb-2"
-                    onClick={addCharge}
-                  >
-                    + Add Charge
-                  </button>
-                  {charges.length === 0 ? (
-                    <div className="text-muted">No additional charges</div>
-                  ) : (
-                    <div className="table-responsive">
-                      <table className="table table-sm align-middle">
-                        <thead>
+                        <thead className="table-primary">
                           <tr>
-                            <th>Charge</th>
-                            <th style={{ width: 120 }}>Amount</th>
-                            <th style={{ width: 100 }}>Tax %</th>
-                            <th style={{ width: 120 }}>Total</th>
-                            <th style={{ width: 60 }}></th>
+                            <th className="text-center">#</th>
+                            <th>Description</th>
+                            <th className="text-center">HSN</th>
+                            <th className="text-center">Qty</th>
+                            <th className="text-end">Rate</th>
+                            <th className="text-end">Disc %</th>
+                            <th className="text-end">Disc Amt</th>
+                            <th className="text-end">Amount</th>
+                            {/* ✅ ADD THESE */}
+                            <th className="text-end">CGST</th>
+                            <th className="text-end">SGST</th>
+                            <th className="text-end">IGST</th>
+                            <th className="text-end">Tax</th>
+                            <th className="text-end">Total</th>
                           </tr>
                         </thead>
+
                         <tbody>
-                          {charges.map((c, i) => {
-                            const amt = Number(c.amount || 0);
-                            const tax = (amt * Number(c.taxPercent || 0)) / 100;
-                            const total = amt + tax;
+                          {items.map((item, i) => {
+                            const amount = calcAmount(item);
+
+                            const cgstAmt = calcTax(amount, item.cgst);
+                            const sgstAmt = calcTax(amount, item.sgst);
+                            const igstAmt = calcTax(amount, item.igst);
+
+                            const tax = cgstAmt + sgstAmt + igstAmt;
+                            const total = amount + tax;
 
                             return (
                               <tr key={i}>
-                                <td>
-                                  <input
-                                    className="form-control form-control-sm"
-                                    value={c.label}
-                                    onChange={(e) =>
-                                      updateCharge(i, "label", e.target.value)
-                                    }
-                                  />
-                                </td>
+                                <td className="text-center">{i + 1}</td>
 
-
-                                <td>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    className="form-control form-control-sm"
-                                    value={c.amount ?? ""}
-                                    onChange={(e) =>
-                                      updateCharge(i, "amount", e.target.value)
-                                    }
-                                  />
-                                </td>
-
-                                <td>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    className="form-control form-control-sm"
-                                    value={c.taxPercent ?? ""}
-                                    onChange={(e) =>
-                                      updateCharge(i, "taxPercent", e.target.value)
-                                    }
-                                  />
-                                </td>
-
-                                <td className="fw-semibold">
-                                  ₹ {total.toFixed(2)}
+                                <td className="text-wrap">
+                                  {item.description || "-"}
                                 </td>
 
                                 <td className="text-center">
-                                  <button
-                                    className="btn btn-sm btn-danger"
-                                    onClick={() => removeCharge(i)}
-                                  >
-                                    ✕
-                                  </button>
+                                  {item.hsn || "-"}
+                                </td>
+
+                                <td className="text-center">
+                                  {item.qty ?? 0}
+                                </td>
+
+                                <td className="text-end">
+                                  {Number(item.rate || 0).toFixed(2)}
+                                </td>
+
+                                <td className="text-end">
+                                  {item.discount}%
+                                </td>
+
+                                <td className="text-end">
+                                  {(item.basePrice - item.rate).toFixed(2)}
+                                </td>
+
+                                <td className="text-end">
+                                  {amount.toFixed(2)}
+                                </td>
+
+                                {/* ✅ TAX COLUMNS */}
+                                <td className="text-end">{cgstAmt.toFixed(2)}</td>
+                                <td className="text-end">{sgstAmt.toFixed(2)}</td>
+                                <td className="text-end">{igstAmt.toFixed(2)}</td>
+
+                                <td className="text-end">{tax.toFixed(2)}</td>
+
+                                <td className="text-end fw-semibold">
+                                  {total.toFixed(2)}
                                 </td>
                               </tr>
                             );
@@ -537,107 +464,192 @@ const readonlyFields = [
                         </tbody>
                       </table>
                     </div>
-                  )}
+
+
+
+                    <h6 className="mt-4">Additional Charges</h6>
+                    <button
+                      className="btn btn-sm btn-outline-primary mb-2"
+                      onClick={addCharge}
+                    >
+                      + Add Charge
+                    </button>
+                    {charges.length === 0 ? (
+                      <div className="text-muted">No additional charges</div>
+                    ) : (
+                      <div className="table-responsive">
+                        <table className="table table-sm align-middle">
+                          <thead>
+                            <tr>
+                              <th>Charge</th>
+                              <th style={{ width: 120 }}>Amount</th>
+                              <th style={{ width: 100 }}>Tax %</th>
+                              <th style={{ width: 120 }}>Total</th>
+                              <th style={{ width: 60 }}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {charges.map((c, i) => {
+                              const amt = Number(c.amount || 0);
+                              const tax = (amt * Number(c.taxPercent || 0)) / 100;
+                              const total = amt + tax;
+
+                              return (
+                                <tr key={i}>
+                                  <td>
+                                    <input
+                                      className="form-control form-control-sm"
+                                      value={c.label}
+                                      onChange={(e) =>
+                                        updateCharge(i, "label", e.target.value)
+                                      }
+                                    />
+                                  </td>
+
+
+                                  <td>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      className="form-control form-control-sm"
+                                      value={c.amount ?? ""}
+                                      onChange={(e) =>
+                                        updateCharge(i, "amount", e.target.value)
+                                      }
+                                    />
+                                  </td>
+
+                                  <td>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      className="form-control form-control-sm"
+                                      value={c.taxPercent ?? ""}
+                                      onChange={(e) =>
+                                        updateCharge(i, "taxPercent", e.target.value)
+                                      }
+                                    />
+                                  </td>
+
+                                  <td className="fw-semibold">
+                                    ₹ {total.toFixed(2)}
+                                  </td>
+
+                                  <td className="text-center">
+                                    <button
+                                      className="btn btn-sm btn-danger"
+                                      onClick={() => removeCharge(i)}
+                                    >
+                                      ✕
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
 
 
 
 
 
 
-                  {/* TOTALS */}
-                  <div className="row justify-content-end mt-4">
-                    <div className="col-md-6">
-                      <table className="table">
-                        <tbody>
-                          <tr>
-                            <td>Subtotal</td>
-                            <td className="text-end">
-                              ₹ {totals.subtotal.toFixed(2)}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>CGST</td>
-                            <td className="text-end">
-                              ₹ {totals.cgst.toFixed(2)}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>SGST</td>
-                            <td className="text-end">
-                              ₹ {totals.sgst.toFixed(2)}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>IGST</td>
-                            <td className="text-end">
-                              ₹ {totals.igst.toFixed(2)}
-                            </td>
-                          </tr>
-                          {charges.map((c, i) => {
-                            const amt = Number(c.amount || 0);
-                            const tax = (amt * Number(c.taxPercent || 0)) / 100;
-                            const total = amt + tax;
-                            if (total <= 0) return null;
+                    {/* TOTALS */}
+                    <div className="row justify-content-end mt-4">
+                      <div className="col-md-6">
+                        <table className="table">
+                          <tbody>
+                            <tr>
+                              <td>Subtotal</td>
+                              <td className="text-end">
+                                ₹ {totals.subtotal.toFixed(2)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>CGST</td>
+                              <td className="text-end">
+                                ₹ {totals.cgst.toFixed(2)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>SGST</td>
+                              <td className="text-end">
+                                ₹ {totals.sgst.toFixed(2)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>IGST</td>
+                              <td className="text-end">
+                                ₹ {totals.igst.toFixed(2)}
+                              </td>
+                            </tr>
+                            {charges.map((c, i) => {
+                              const amt = Number(c.amount || 0);
+                              const tax = (amt * Number(c.taxPercent || 0)) / 100;
+                              const total = amt + tax;
+                              if (total <= 0) return null;
 
-                            return (
-                              <tr key={i}>
-                                <td className="">{c.label}</td>
-                                <td className="text-end">₹ {total.toFixed(2)}</td>
-                              </tr>
-                            );
-                          })}
+                              return (
+                                <tr key={i}>
+                                  <td className="">{c.label}</td>
+                                  <td className="text-end">₹ {total.toFixed(2)}</td>
+                                </tr>
+                              );
+                            })}
 
 
-                          <tr className="fw-bold">
-                            <td>Grand Total</td>
-                            <td className="text-end">
-                              ₹ {grandTotal.toFixed(2)}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                            <tr className="fw-bold">
+                              <td>Grand Total</td>
+                              <td className="text-end">
+                                ₹ {grandTotal.toFixed(2)}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* ACTIONS */}
-            <div className="col-lg-3">
-              <div className="card shadow-sm p-3">
-                <button
-                  className="btn btn-orange mb-3"
-                  onClick={handleSaveProposal}
-                 disabled={!selectedRfq || saving}
-                >
-                  {saving ? "Saving..." : "Save Proposal"}
-                </button>
+              {/* ACTIONS */}
+              <div className="col-lg-3">
+                <div className="card shadow-sm p-3">
+                  <button
+                    className="btn btn-orange mb-3"
+                    onClick={handleSaveProposal}
+                    disabled={!selectedRfq || saving}
+                  >
+                    {saving ? "Saving..." : "Save Proposal"}
+                  </button>
 
-                <button
-                  className="btn btn-outline-orange mb-3 w-100"
-                  onClick={() => setMode("preview")}
-                >
-                  👁 Preview
-                </button>
+                  <button
+                    className="btn btn-outline-orange mb-3 w-100"
+                    onClick={() => setMode("preview")}
+                  >
+                    👁 Preview
+                  </button>
 
-                {/* <button className="btn btn-outline-secondary">
+                  {/* <button className="btn btn-outline-secondary">
               Download PDF
             </button> */}
+                </div>
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
 
-      {mode === "preview" && (
-        <>
-      <PreviewPage
-        onBack={() => setMode("edit")}
-        rfqId={selectedRfq}
-      />
-        </>
-      )}
-    </div>
+        {mode === "preview" && (
+          <>
+            <PreviewPage
+              onBack={() => setMode("edit")}
+              rfqId={selectedRfq}
+            />
+          </>
+        )}
+      </div>
     </ProtectedRoute>
   );
 };

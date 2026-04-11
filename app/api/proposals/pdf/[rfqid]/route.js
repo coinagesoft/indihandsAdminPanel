@@ -29,7 +29,7 @@ function buildHTML(data) {
   const {
     proposal, sender, computedItems, charges: computedCharges,
     subtotal, cgstTotal, sgstTotal, igstTotal,
-    totalTax, grandTotal, formattedDate
+    totalTax, grandTotal, formattedDate,  isInterState
   } = data;
 
 
@@ -89,9 +89,9 @@ function buildHTML(data) {
 
 
 const itemRows = computedItems.map((x, i) => {
-const sgstRate = x.igst > 0 ? 0 : (x.sgst_rate || 0);
-const cgstRate = x.igst > 0 ? 0 : (x.cgst_rate || 0);
-const igstRate = x.igst > 0 ? (x.igstRate || 0) : 0;
+const sgstRate = isInterState ? 0 : (x.sgst_rate || 0);
+const cgstRate = isInterState ? 0 : (x.cgst_rate || 0);
+const igstRate = isInterState ? (x.igstRate || 0) : 0;
 
   return `
 <tr>
@@ -118,9 +118,9 @@ const igstRate = x.igst > 0 ? (x.igstRate || 0) : 0;
 }).join("");
 
 const chargeRows = computedCharges.map(c => {
-  const sgstRate = c.igst > 0 ? 0 : c.taxPercent / 2;
-  const cgstRate = c.igst > 0 ? 0 : c.taxPercent / 2;
-  const igstRate = c.igst > 0 ? c.taxPercent : 0;
+const sgstRate = isInterState ? 0 : c.taxPercent / 2;
+const cgstRate = isInterState ? 0 : c.taxPercent / 2;
+const igstRate = isInterState ? c.taxPercent : 0;
 
   return `
 <tr>
@@ -809,7 +809,8 @@ const unitDiscount = disc
       igstTotal,
       totalTax,
       grandTotal,
-      formattedDate
+      formattedDate,
+        isInterState
     });
 
     /* ================= PDFSHIFT ================= */
