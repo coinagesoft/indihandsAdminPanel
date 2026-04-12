@@ -213,7 +213,7 @@ const getOrgPrice = (orgId, productId) => {
         company_id: r["Company ID"],
         product_id: r["Product ID"],
         custom_price: r["Custom Price (₹)"],  // ✅ correct
-        prefix: r["Prefix"],
+         prefix: r["Prefix Line No"],
       }));
 
       const res = await fetchWithLoader("/api/org-pricing/import", {

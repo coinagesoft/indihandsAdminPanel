@@ -234,21 +234,22 @@ const Page = () => {
 
       if (jsonData.length === 0) return showError("Excel is empty");
 
-      const mapped = jsonData.map((x, index) => ({
-        productName: x["Product Name"]?.toString().trim() || "",
-        sku: x["SKU"]?.toString().trim() || "",
-        barcode: x["Barcode"]?.toString().trim() || "",
-        hsn: x["HSN"]?.toString().trim() || "",
-        size: x["Size"]?.toString().trim() || "",
-        weight: x["Weight"]?.toString().trim() || "",
-        description: x["Description"]?.toString().trim() || "",
-        stockQty: Number(x["Stock Qty"] ?? 0),
-        basePrice: Number(x["Base Price"] ?? 0),
-        status: x["Status"]?.toString().trim() || "Available",
+  const mapped = jsonData.map((x, index) => ({
+  id: x["ID"], // ✅ ADD THIS
 
-        // 🔍 helpful for debugging
-        __row: index + 2,
-      }));
+  productName: x["Product Name"]?.toString().trim() || "",
+  sku: x["SKU"]?.toString().trim() || "",
+  barcode: x["Barcode"]?.toString().trim() || "",
+  hsn: x["HSN"]?.toString().trim() || "",
+  size: x["Size"]?.toString().trim() || "",
+  weight: x["Weight"]?.toString().trim() || "",
+  description: x["Description"]?.toString().trim() || "",
+  stockQty: x["Stock Qty"] !== undefined ? Number(x["Stock Qty"]) : null,
+basePrice: x["Base Price"]?.toString().trim() || "",
+  cgst: x["CGST"],
+  sgst: x["SGST"],
+  igst: x["IGST"],
+}));
 
 
       setProducts(mapped);
@@ -337,39 +338,40 @@ const Page = () => {
           </div>
 
           {/* Show Imported Products */}
-          {products.length > 0 && (
-            <div className="card mb-6">
-              <div className="card-header">Imported Products</div>
-              <div className="table-responsive">
-                <table className="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>Product Name</th>
-                      <th>SKU</th>
-                      <th>HSN</th>
-                      <th>Size</th>
-                      <th>Weight</th>
-                      <th>Stock</th>
-                      <th>Price</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products.map((p, idx) => (
-                      <tr key={idx}>
-                        <td>{p.productName}</td>
-                        <td>{p.sku}</td>
-                        <td>{p.hsn}</td>
-                        <td>{p.size || "-"}</td>
-                        <td>{p.weight || "-"}</td>
-                        <td>{p.stockQty}</td>
-                        <td>₹{p.basePrice}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+      {products.length > 0 && (
+  <div className="card mb-6">
+    <div className="card-header">Imported Products</div>
+    <div className="table-responsive">
+      <table className="table table-striped">
+        <thead>
+          <tr>
+            {Object.keys(products[0]).map((key) => (
+              key !== "__row" && ( // optional: skip debug field
+                <th key={key}>{key}</th>
+              )
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {products.map((p, idx) => (
+            <tr key={idx}>
+              {Object.keys(p).map((key) => (
+                key !== "__row" && (
+                  <td key={key}>
+                    {p[key] !== undefined && p[key] !== ""
+                      ? p[key].toString()
+                      : "-"}
+                  </td>
+                )
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
 
           {/* Original Form Sections */}
           <div className="row">

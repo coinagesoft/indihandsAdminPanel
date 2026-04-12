@@ -217,9 +217,9 @@ const Page = () => {
         description: selectedProduct.description,
         featuredImage: featuredImageUrl,
         images: finalGallery,
-        cgst_rate: Number(selectedProduct.cgst_rate ?? 0),
-        sgst_rate: Number(selectedProduct.sgst_rate ?? 0),
-        igst_rate: Number(selectedProduct.igst_rate ?? 0),
+        cgst_rate: selectedProduct.cgst_rate === "" ? null : Number(selectedProduct.cgst_rate),
+        sgst_rate: selectedProduct.sgst_rate === "" ? null : Number(selectedProduct.sgst_rate),
+        igst_rate: selectedProduct.igst_rate === "" ? null : Number(selectedProduct.igst_rate),
       };
 
       const res = await fetchWithLoader(`/api/products/${selectedProduct.id}`, {
@@ -322,10 +322,10 @@ const Page = () => {
 
       setAlreadyAssignedCatalogs(data.catalogIds || []);
 
-      setSelectedProduct({
-        ...product,
-        catalogs: [], // ✅ user selection empty initially (NOT same as assigned)
-      });
+     setSelectedProduct({
+  ...product,
+  catalogs: data.catalogIds || [], // ✅ preload
+});
 
       setIsAssignModalOpen(true);
       setNewCatalogName("");
@@ -342,17 +342,18 @@ const Page = () => {
     setIsAssignModalOpen(false);
     setNewCatalogName("");
   };
-  const toggleCatalogSelection = (catalogId) => {
-    setSelectedProduct((prev) => {
-      const isAssigned = prev.catalogs.includes(catalogId);
-      return {
-        ...prev,
-        catalogs: isAssigned
-          ? prev.catalogs.filter((id) => id !== catalogId)
-          : [...prev.catalogs, catalogId],
-      };
-    });
-  };
+const toggleCatalogSelection = (catalogId) => {
+  setSelectedProduct((prev) => {
+    const exists = prev.catalogs.includes(catalogId);
+
+    return {
+      ...prev,
+      catalogs: exists
+        ? prev.catalogs.filter((id) => id !== catalogId) // uncheck
+        : [...prev.catalogs, catalogId], // check
+    };
+  });
+};
 
   const fetchCatalogs = async () => {
     try {
@@ -371,29 +372,46 @@ const Page = () => {
 
 
 
-  const saveCatalogAssignment = async () => {
-    try {
-      if (!selectedProduct?.id) return;
+const saveCatalogAssignment = async () => {
+  try {
+    if (!selectedProduct?.id) return;
 
-      // ✅ assign product to all selected catalogs
-      for (const catalogId of selectedProduct.catalogs) {
-        await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productIds: [selectedProduct.id] }),
-        });
-      }
+    const selected = selectedProduct.catalogs;
+    const already = alreadyAssignedCatalogs;
 
-      showSuccess("Product assigned to catalogs");
+    // 🔥 1. Assign (new)
+    const toAssign = selected.filter((id) => !already.includes(id));
 
-      closeAssignModal();
-      await fetchCatalogs(); // optional
+    // 🔥 2. Unassign (removed)
+    const toUnassign = already.filter((id) => !selected.includes(id));
 
-    } catch (err) {
-      console.error("Assign product error:", err);
-      showError("❌ " + err.message);
+    // ✅ Assign API
+    for (const catalogId of toAssign) {
+      await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productIds: [selectedProduct.id] }),
+      });
     }
-  };
+
+    // ✅ Unassign API
+    for (const catalogId of toUnassign) {
+      await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: selectedProduct.id }),
+      });
+    }
+
+    showSuccess("✅ Catalog updated (assign + unassign)");
+
+    closeAssignModal();
+
+  } catch (err) {
+    console.error("Toggle assign error:", err);
+    showError("❌ " + err.message);
+  }
+};
 
   const createNewCatalog = async () => {
     try {
@@ -473,6 +491,7 @@ const Page = () => {
 
         const res = await fetchWithLoader(`/api/products?${params.toString()}`);
         const data = await res.json();
+        console.log("DB PRODUCTS:", data);
         setProducts(data.products);
         setTotalPages(data.pagination.totalPages);
       } catch (err) {
@@ -688,22 +707,24 @@ const Page = () => {
 
               <div className="d-flex flex-column gap-2">
 
-                {catalogs
-                  .filter((cat) => !alreadyAssignedCatalogs.includes(cat.id))
-                  .map((cat) => (
-                    <div key={cat.id} className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={selectedProduct?.catalogs?.includes(cat.id)}
-                        onChange={() => toggleCatalogSelection(cat.id)}
-                        id={`cat-${cat.id}`}
-                      />
-                      <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
-                        {cat.name}
-                      </label>
-                    </div>
-                  ))}
+              {catalogs.map((cat) => {
+const isChecked = selectedProduct?.catalogs?.includes(cat.id);
+
+  return (
+    <div key={cat.id} className="form-check">
+      <input
+        className="form-check-input"
+        type="checkbox"
+        checked={isChecked}
+        onChange={() => toggleCatalogSelection(cat.id)}
+        id={`cat-${cat.id}`}
+      />
+      <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
+        {cat.name}
+      </label>
+    </div>
+  );
+})}
 
 
               </div>
