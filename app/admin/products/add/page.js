@@ -159,10 +159,10 @@ const Page = () => {
         featuredImage: featuredImageUrl,
         images: galleryUrls,
 
-          // ✅ ADD THIS
-  cgst_rate: Number(form.cgst.value || 0),
-  sgst_rate: Number(form.sgst.value || 0),
-  igst_rate: Number(form.igst.value || 0),
+        // ✅ ADD THIS
+        cgst_rate: Number(form.cgst.value || 0),
+        sgst_rate: Number(form.sgst.value || 0),
+        igst_rate: Number(form.igst.value || 0),
       };
 
       const res = await fetchWithLoader("/api/products", {
@@ -234,22 +234,22 @@ const Page = () => {
 
       if (jsonData.length === 0) return showError("Excel is empty");
 
-  const mapped = jsonData.map((x, index) => ({
-  id: x["ID"], // ✅ ADD THIS
+      const mapped = jsonData.map((x, index) => ({
+        id: x["ID"], // ✅ ADD THIS
 
-  productName: x["Product Name"]?.toString().trim() || "",
-  sku: x["SKU"]?.toString().trim() || "",
-  barcode: x["Barcode"]?.toString().trim() || "",
-  hsn: x["HSN"]?.toString().trim() || "",
-  size: x["Size"]?.toString().trim() || "",
-  weight: x["Weight"]?.toString().trim() || "",
-  description: x["Description"]?.toString().trim() || "",
-  stockQty: x["Stock Qty"] !== undefined ? Number(x["Stock Qty"]) : null,
-basePrice: x["Base Price"]?.toString().trim() || "",
-  cgst: x["CGST"],
-  sgst: x["SGST"],
-  igst: x["IGST"],
-}));
+        productName: x["Product Name"]?.toString().trim() || "",
+        sku: x["SKU"]?.toString().trim() || "",
+        barcode: x["Barcode"]?.toString().trim() || "",
+        hsn: x["HSN"]?.toString().trim() || "",
+        size: x["Size"]?.toString().trim() || "",
+        weight: x["Weight"]?.toString().trim() || "",
+        description: x["Description"]?.toString().trim() || "",
+        stockQty: x["Stock Qty"] !== undefined ? Number(x["Stock Qty"]) : null,
+        basePrice: x["Base Price"]?.toString().trim() || "",
+        cgst: x["CGST"],
+        sgst: x["SGST"],
+        igst: x["IGST"],
+      }));
 
 
       setProducts(mapped);
@@ -338,40 +338,40 @@ basePrice: x["Base Price"]?.toString().trim() || "",
           </div>
 
           {/* Show Imported Products */}
-      {products.length > 0 && (
-  <div className="card mb-6">
-    <div className="card-header">Imported Products</div>
-    <div className="table-responsive">
-      <table className="table table-striped">
-        <thead>
-          <tr>
-            {Object.keys(products[0]).map((key) => (
-              key !== "__row" && ( // optional: skip debug field
-                <th key={key}>{key}</th>
-              )
-            ))}
-          </tr>
-        </thead>
+          {products.length > 0 && (
+            <div className="card mb-6">
+              <div className="card-header">Imported Products</div>
+              <div className="table-responsive">
+                <table className="table table-striped">
+                  <thead>
+                    <tr>
+                      {Object.keys(products[0]).map((key) => (
+                        key !== "__row" && ( // optional: skip debug field
+                          <th key={key}>{key}</th>
+                        )
+                      ))}
+                    </tr>
+                  </thead>
 
-        <tbody>
-          {products.map((p, idx) => (
-            <tr key={idx}>
-              {Object.keys(p).map((key) => (
-                key !== "__row" && (
-                  <td key={key}>
-                    {p[key] !== undefined && p[key] !== ""
-                      ? p[key].toString()
-                      : "-"}
-                  </td>
-                )
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
+                  <tbody>
+                    {products.map((p, idx) => (
+                      <tr key={idx}>
+                        {Object.keys(p).map((key) => (
+                          key !== "__row" && (
+                            <td key={key}>
+                              {p[key] !== undefined && p[key] !== null && p[key] !== ""
+                                ? p[key].toString()
+                                : "-"}
+                            </td>
+                          )
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Original Form Sections */}
           <div className="row">
@@ -429,45 +429,45 @@ basePrice: x["Base Price"]?.toString().trim() || "",
                   </div>
 
                   <div className="row gx-3 mt-4">
-  <div className="col">
-    <div className="form-floating form-floating-outline">
-      <input
-        type="number"
-        step="0.01"
-        className="form-control"
-        name="cgst"
-        placeholder="CGST %"
-      />
-      <label>CGST (%)</label>
-    </div>
-  </div>
+                    <div className="col">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="form-control"
+                          name="cgst"
+                          placeholder="CGST %"
+                        />
+                        <label>CGST (%)</label>
+                      </div>
+                    </div>
 
-  <div className="col">
-    <div className="form-floating form-floating-outline">
-      <input
-        type="number"
-        step="0.01"
-        className="form-control"
-        name="sgst"
-        placeholder="SGST %"
-      />
-      <label>SGST (%)</label>
-    </div>
-  </div>
+                    <div className="col">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="form-control"
+                          name="sgst"
+                          placeholder="SGST %"
+                        />
+                        <label>SGST (%)</label>
+                      </div>
+                    </div>
 
-  <div className="col">
-    <div className="form-floating form-floating-outline">
-      <input
-        type="number"
-        step="0.01"
-        className="form-control"
-        name="igst"
-        placeholder="IGST %"
-      />
-      <label>IGST (%)</label>
-    </div>
-  </div>
-</div>
+                    <div className="col">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="form-control"
+                          name="igst"
+                          placeholder="IGST %"
+                        />
+                        <label>IGST (%)</label>
+                      </div>
+                    </div>
+                  </div>
                   <div className="row gx-5 mt-4">
                     <div className="col">
                       <div className="form-floating form-floating-outline">

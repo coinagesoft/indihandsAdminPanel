@@ -9,7 +9,7 @@ dotenv.config();
 //   host: "localhost",   // 🔥 IMPORTANT (not live server)
 //   user: "root",
 //   password: "NewPassword123!", // or "" if none
-//   database: "indihand_backup",     // ✅ your imported schema
+//   database: "indihand_backup",     
 //   waitForConnections: true,
 //   connectionLimit: 10,
 //   queueLimit: 0
@@ -35,13 +35,7 @@ export const db = mysql.createPool({
 //   queueLimit: 0
 // })
 
-// Test connection
-(async () => {
-  try {
-    const connection = await db.getConnection();
-    console.log('✅ DB Connected Successfully!');
-    connection.release();
-  } catch (err) {
-    console.error('❌ DB Connection Failed:', err.message);
-  }
-})();
+
+
+
+export default db;

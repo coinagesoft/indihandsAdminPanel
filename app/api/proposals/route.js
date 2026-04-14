@@ -207,7 +207,7 @@ const finalGstin = isSelf ? null : gstin || null;
           billing_address, shipping_address, gstin, company_name,
           subtotal, cgst_total, sgst_total, igst_total, grand_total,
           status, place)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, 'Pending', ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, 'Pending', ?)`,
         [
           rfqId,
           companyId,
@@ -223,6 +223,7 @@ const finalGstin = isSelf ? null : gstin || null;
           sgst_total,
           igst_total,
           grand_total,
+           'Pending',
           place || null,
         ]
       );
