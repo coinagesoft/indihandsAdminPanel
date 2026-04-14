@@ -838,7 +838,8 @@ else {
       totalTax,
       grandTotal,
       formattedDate,
-        isInterState
+        isInterState,
+         isSEZ 
     });
 
     /* ================= PDFSHIFT ================= */
