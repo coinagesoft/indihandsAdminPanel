@@ -1,5 +1,5 @@
 // app/api/auth/login/route.js
-import { db } from "../../../db";
+import db from "../../../db";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../../../../lib/auth"; // same token function
 
