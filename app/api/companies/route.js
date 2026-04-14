@@ -24,7 +24,8 @@ export async function GET() {
         login_email AS loginEmail,
         password_hash,
         phones,
-        emails
+        emails,
+        sez_type
       FROM company_branches
       ORDER BY id DESC
     `);

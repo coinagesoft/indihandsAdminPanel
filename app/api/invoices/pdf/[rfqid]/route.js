@@ -31,7 +31,7 @@ function buildHTML(data){
  const {
     invoice,proposal, sender, computedItems, charges: computedCharges,
     subtotal, cgstTotal, sgstTotal, igstTotal,
-    totalTax, grandTotal, formattedDate
+    totalTax, grandTotal, formattedDate, isSEZ
   } = data;
 
 
@@ -99,6 +99,8 @@ const shippingAddress = proposal.shipping_address || billingAddress;
 
   const clientStateName = stateMap[clientStateCode] || "";
   const senderStateName = stateMap[senderStateCode] || "";
+
+  const isIGST = isSEZ || (clientStateCode !== senderStateCode);
 const itemRows = computedItems.map((x,i)=>`
 <tr>
 <td>${i+1}</td>
@@ -109,14 +111,14 @@ const itemRows = computedItems.map((x,i)=>`
 <td>${x.amount.toFixed(2)}</td>
 <td>${x.amount.toFixed(2)}</td>
 
-<td>${x.sgst>0 ? (x.sgst_rate||0) : ""}</td>
-<td>${x.sgst.toFixed(2)}</td>
+<td>${isIGST ? "0" : (x.sgst_rate || 0)}</td>
+<td>${isIGST ? "0.00" : x.sgst.toFixed(2)}</td>
 
-<td>${x.cgst>0 ? (x.cgst_rate||0) : ""}</td>
-<td>${x.cgst.toFixed(2)}</td>
+<td>${isIGST ? "0" : (x.cgst_rate || 0)}</td>
+<td>${isIGST ? "0.00" : x.cgst.toFixed(2)}</td>
 
-<td>${x.igst>0 ? (x.igstRate||0) : ""}</td>
-<td>${x.igst.toFixed(2)}</td>
+<td>${isIGST ? (x.igstRate || 0) : "0"}</td>
+<td>${isIGST ? x.igst.toFixed(2) : "0.00"}</td>
 
 <td>${x.total.toFixed(2)}</td>
 </tr>
@@ -630,6 +632,7 @@ export async function GET(req, { params }) {
   ELSE c.company_name
 END AS company,
         cb.gstin,
+              cb.sez_type,
         r.client_name,
         r.client_phone,
           r.billing_type
@@ -665,6 +668,7 @@ if (!invoice)
  const clientStateCode = invoice.buyer_gstin?.substring(0, 2) || "";
 const senderStateCode = invoice.seller_gstin?.substring(0, 2) || "";
 const isInterState = clientStateCode !== senderStateCode;
+const isSEZ = proposal.sez_type?.toLowerCase() === "sez";
 
     /* ================= ITEMS ================= */
     const [items] = await db.query(`
@@ -727,12 +731,15 @@ const unitDiscount = disc
     (+i.igst_rate || 0) ||
     ((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
 
-  if (isInterState) {
-    ig = taxable * igstRate / 100;
-  } else {
-    cg = taxable * (+i.cgst_rate || 0) / 100;
-    sg = taxable * (+i.sgst_rate || 0) / 100;
-  }
+if (isInterState || isSEZ) {
+  // ✅ ONLY IGST
+  ig = taxable * igstRate / 100;
+  cg = 0;
+  sg = 0;
+} else {
+  cg = taxable * (+i.cgst_rate || 0) / 100;
+  sg = taxable * (+i.sgst_rate || 0) / 100;
+}
 
   itemSubtotal += taxable;
   cgstTotal += cg;
@@ -757,18 +764,20 @@ const unitDiscount = disc
     /* ================= CALCULATE CHARGES ================= */
     let chargeSubtotal = 0;
 
-    const computedCharges = allCharges.map(c => {
+  const computedCharges = allCharges.map(c => {
   const amt = +c.amount || 0;
   const taxRate = +c.taxPercent || 0;
 
   let cg = 0, sg = 0, ig = 0;
-
-  if (isInterState) {
-    ig = amt * taxRate / 100;
-  } else {
-    cg = amt * (taxRate / 2) / 100;
-    sg = amt * (taxRate / 2) / 100;
-  }
+if (isInterState || isSEZ) {
+  // ✅ ONLY IGST
+  ig = amt * taxRate / 100;
+  cg = 0;
+  sg = 0;
+} else {
+  cg = amt * (taxRate / 2) / 100;
+  sg = amt * (taxRate / 2) / 100;
+}
 
   chargeSubtotal += amt;
   cgstTotal += cg;
@@ -836,7 +845,8 @@ const unitDiscount = disc
   igstTotal,
   totalTax,
   grandTotal,
-  formattedDate
+  formattedDate,
+   isSEZ 
 });
 
     /* ================= PDFSHIFT ================= */
