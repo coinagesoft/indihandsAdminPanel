@@ -42,10 +42,6 @@ async function generateNextProposalNumber() {
 
 
 
-
-
-
-
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -58,13 +54,22 @@ export async function POST(req) {
       billing_address,
       shipping_address,
       place,
+      gstin,
+      company_name,
       items = [],
-      charges = []   // ⭐ NEW
+      charges = []   
     } = body;
 
     const safeCharges = Array.isArray(charges) ? charges : [];
+const [[rfqRow]] = await db.query(
+  `SELECT billing_type FROM rfqs WHERE id=?`,
+  [rfqId]
+);
 
-    /* ---------- validations ---------- */
+const isSelf = rfqRow?.billing_type === "self";
+const finalGstin = isSelf ? null : gstin || null;
+
+/* ---------- validations ---------- */
     if (!rfqId || !companyId || !branchId) {
       return Response.json(
         { message: "rfqId, companyId, branchId are required" },
@@ -165,7 +170,7 @@ export async function POST(req) {
       await db.query(
         `UPDATE proposals
          SET company_id=?, branch_id=?, proposal_date=?,
-             billing_address=?, shipping_address=?,
+             billing_address=?, shipping_address=?,gstin=?,company_name=?,
              subtotal=?, cgst_total=?, sgst_total=?, igst_total=?, grand_total=?,
              status='Pending',
              place=?
@@ -176,6 +181,8 @@ export async function POST(req) {
           proposal_date,
           billing_address || null,
           shipping_address || null,
+          finalGstin,
+          company_name || null,
           subtotal,
           cgst_total,
           sgst_total,
@@ -197,10 +204,10 @@ export async function POST(req) {
       const [result] = await db.query(
         `INSERT INTO proposals
          (rfq_id, company_id, branch_id, proposal_number, proposal_date,
-          billing_address, shipping_address,
+          billing_address, shipping_address, gstin, company_name,
           subtotal, cgst_total, sgst_total, igst_total, grand_total,
           status, place)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, 'Pending', ?)`,
         [
           rfqId,
           companyId,
@@ -209,6 +216,8 @@ export async function POST(req) {
           proposal_date,
           billing_address || null,
           shipping_address || null,
+          finalGstin,
+          company_name || null,
           subtotal,
           cgst_total,
           sgst_total,

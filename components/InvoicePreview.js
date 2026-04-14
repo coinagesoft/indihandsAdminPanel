@@ -50,6 +50,7 @@ const Page = ({ onBack, rfqId }) => {
         proposal_date: header.date,
         billing_address: header.billingAddress,
         shipping_address: header.shippingAddress,
+        company_name: header.company,
         items: items.map((x) => ({
           productId: x.productId,
           quantity: x.qty,

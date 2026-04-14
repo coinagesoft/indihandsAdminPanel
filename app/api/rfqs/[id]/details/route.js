@@ -233,9 +233,9 @@ export async function GET(req, { params }) {
         r.notes,
         r.client_name,
         r.client_phone,
-        r.client_email,
-
-        c.company_name AS company,
+r.client_email,
+r.billing_type,
+      COALESCE(p.company_name, c.company_name) AS company,
         c.company_email AS companyEmail,
 
         cb.gstin,
@@ -247,17 +247,25 @@ export async function GET(req, { params }) {
       FROM rfqs r
       JOIN companies c ON c.id = r.company_id
       JOIN company_branches cb ON cb.id = r.branch_id
+      LEFT JOIN proposals p ON p.rfq_id = r.id
       WHERE r.id = ?
       LIMIT 1
       `,
       [rfqId]
     );
 
+
+
+
     if (headerRows.length === 0) {
       return Response.json({ message: "RFQ not found" }, { status: 404 });
     }
 
     const header = headerRows[0];
+
+
+const proposalCompany = header.company; // COALESCE already
+const hasProposalCompany = proposalCompany && proposalCompany.includes("(");
 
     /* ================= GST STATE LOGIC (DYNAMIC) ================= */
 
@@ -286,6 +294,19 @@ export async function GET(req, { params }) {
     );
 
     let items = [];
+
+    let proposalData = null;
+
+if (proposalRow) {
+  const [[p]] = await db.query(
+    `SELECT billing_address, shipping_address 
+     FROM proposals 
+     WHERE id=?`,
+    [proposalRow.id]
+  );
+
+  proposalData = p;
+}
 
     /* ================= CASE 1: PROPOSAL EXISTS ================= */
 
@@ -431,29 +452,72 @@ export async function GET(req, { params }) {
     }
 
     /* ================= RESPONSE ================= */
+// ✅ variables OUTSIDE
+const clientName = header.client_name || "";
+const companyName = header.company || "";
+const address =
+  proposalData?.billing_address || header.billing_address || "";
 
-    return Response.json(
-      {
-        header: {
-          rfqId: header.rfqId,
-          companyId: header.companyId,
-          branchId: header.branchId,
-          customerName: header.customerName || header.company,
-          clientName: header.client_name || "",
-          clientPhone: header.client_phone || "",
-          clientEmail: header.client_email || "",
-          company: header.company,
-          gstin: header.gstin || "",
-          billing_address: header.billing_address || "",
-          shipping_address: header.shipping_address || "",
-          submittedAt: header.submittedAt,
-          status: header.status,
-          notes: header.notes || "",
-        },
-        items,
-      },
-      { status: 200 }
-    );
+const shippingAddress =
+  proposalData?.shipping_address || header.shipping_address || "";
+
+// 📍 extract location
+const location = address.includes(",")
+  ? address.split(",").pop().trim()
+  : address;
+
+const isSelf = header.billing_type === "self";
+const pureCompany = proposalCompany.includes("(")
+  ? proposalCompany.split("(").pop().replace(")", "").trim()
+  : proposalCompany;
+// ✅ response
+return Response.json(
+  {
+    header: {
+      rfqId: header.rfqId,
+      companyId: header.companyId,
+      branchId: header.branchId,
+
+      // ✅ NAME
+      customerName: isSelf
+        ? `${clientName} (${companyName})`
+        : header.customerName || companyName,
+
+      clientName,
+      clientPhone: header.client_phone || "",
+      clientEmail: header.client_email || "",
+
+company: isSelf
+  ? (hasProposalCompany
+      ? proposalCompany   // ✅ already formatted → use directly
+      : (clientName
+          ? `${clientName} (${proposalCompany})`
+          : proposalCompany))
+  : proposalCompany,
+
+      // ✅ GSTIN
+      gstin: isSelf ? "" : header.gstin || "",
+
+      // ✅ BILLING
+   billing_address: isSelf
+  ? `${pureCompany}, ${location}`
+  : address,
+
+shipping_address: isSelf
+  ? `${pureCompany}, ${location}`
+  : shippingAddress,
+
+
+
+      submittedAt: header.submittedAt,
+      status: header.status,
+      notes: header.notes || "",
+    },
+
+    items,
+  },
+  { status: 200 }
+);
   } catch (err) {
     console.error("GET /api/rfqs/[rfqId]/details error:", err);
     return Response.json({ message: "Server error" }, { status: 500 });
