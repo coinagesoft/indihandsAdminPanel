@@ -359,9 +359,9 @@ basePrice: x["Base Price"]?.toString().trim() || "",
               {Object.keys(p).map((key) => (
                 key !== "__row" && (
                   <td key={key}>
-                    {p[key] !== undefined && p[key] !== ""
-                      ? p[key].toString()
-                      : "-"}
+                    {p[key] !== undefined && p[key] !== null && p[key] !== ""
+  ? p[key].toString()
+  : "-"}
                   </td>
                 )
               ))}
