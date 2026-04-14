@@ -5,15 +5,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 
-export const db = mysql.createPool({
-  host: "localhost",   // 🔥 IMPORTANT (not live server)
-  user: "root",
-  password: "NewPassword123!", // or "" if none
-  database: "indihand_backup",     
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+// export const db = mysql.createPool({
+//   host: "localhost",   // 🔥 IMPORTANT (not live server)
+//   user: "root",
+//   password: "NewPassword123!", // or "" if none
+//   database: "indihand_backup",     
+//   waitForConnections: true,
+//   connectionLimit: 10,
+//   queueLimit: 0
+// });
 
 // export const db = mysql.createPool({
 //   host: "46.28.45.124",
@@ -25,15 +25,15 @@ export const db = mysql.createPool({
 //   queueLimit: 0
 // });
 
-// export const db = mysql.createPool({
-//   host: "217.21.74.127",
-//   user: "u856729253_indihandsport",
-//   password: "oPSOg3#a2P>",
-//   database: "u856729253_Indihands",
-//   waitForConnections: true,
-//   connectionLimit: 10,
-//   queueLimit: 0
-// })
+export const db = mysql.createPool({
+  host: "217.21.74.127",
+  user: "u856729253_indihandsport",
+  password: "oPSOg3#a2P>",
+  database: "u856729253_Indihands",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+})
 
 
 
