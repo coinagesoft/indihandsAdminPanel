@@ -29,7 +29,7 @@ import { db } from "../../../../db";
 //         cb.contact_person AS customerName,
 //         cb.billing_address,
 //         cb.shipping_address
-        
+
 //       FROM rfqs r
 //       JOIN companies c ON c.id = r.company_id
 //       JOIN company_branches cb ON cb.id = r.branch_id
@@ -173,7 +173,7 @@ import { db } from "../../../../db";
 //       qty,
 //       rate,
 //       basePrice,
-      
+
 //       discount: Number(discountPercent.toFixed(2)), // ONLY %
 //     cgst: Number(x.cgst_rate ?? 0),
 // sgst: Number(x.sgst_rate ?? 0),
@@ -239,6 +239,7 @@ r.billing_type,
         c.company_email AS companyEmail,
 
         cb.gstin,
+        cb.sez_type,
         cb.branch_name AS branchName,
         cb.contact_person AS customerName,
         cb.billing_address,
@@ -263,9 +264,9 @@ r.billing_type,
 
     const header = headerRows[0];
 
-
-const proposalCompany = header.company; // COALESCE already
-const hasProposalCompany = proposalCompany && proposalCompany.includes("(");
+    const sezType = header.sez_type || "NONE";
+    const proposalCompany = header.company; // COALESCE already
+    const hasProposalCompany = proposalCompany && proposalCompany.includes("(");
 
     /* ================= GST STATE LOGIC (DYNAMIC) ================= */
 
@@ -285,6 +286,7 @@ const hasProposalCompany = proposalCompany && proposalCompany.includes("(");
     const clientStateCode = header.gstin?.substring(0, 2) || "";
 
     const isInterState = senderStateCode !== clientStateCode;
+    const isSEZ = sezType === "SEZ";
 
     /* ================= CHECK PROPOSAL ================= */
 
@@ -297,16 +299,16 @@ const hasProposalCompany = proposalCompany && proposalCompany.includes("(");
 
     let proposalData = null;
 
-if (proposalRow) {
-  const [[p]] = await db.query(
-    `SELECT billing_address, shipping_address 
+    if (proposalRow) {
+      const [[p]] = await db.query(
+        `SELECT billing_address, shipping_address 
      FROM proposals 
      WHERE id=?`,
-    [proposalRow.id]
-  );
+        [proposalRow.id]
+      );
 
-  proposalData = p;
-}
+      proposalData = p;
+    }
 
     /* ================= CASE 1: PROPOSAL EXISTS ================= */
 
@@ -364,11 +366,14 @@ if (proposalRow) {
           rate,
           basePrice,
           discount: Number(discountPercent.toFixed(2)),
-
           // ✅ STATE-BASED TAX
-          cgst: isInterState ? 0 : cgstRate,
-          sgst: isInterState ? 0 : sgstRate,
-          igst: isInterState ? igstRate : 0,
+          cgst: isSEZ ? 0 : isInterState ? 0 : cgstRate,
+          sgst: isSEZ ? 0 : isInterState ? 0 : sgstRate,
+          igst: isSEZ
+            ? igstRate   // ✅ APPLY IGST
+            : isInterState
+              ? igstRate
+              : 0,
         };
       });
     }
@@ -418,8 +423,8 @@ if (proposalRow) {
           x.quotedPrice != null
             ? Number(x.quotedPrice)
             : x.customPrice != null
-            ? Number(x.customPrice)
-            : basePrice;
+              ? Number(x.customPrice)
+              : basePrice;
 
         const discountPerUnit =
           basePrice > rate ? basePrice - rate : 0;
@@ -444,80 +449,80 @@ if (proposalRow) {
           discount: Number(discountPercent.toFixed(2)),
 
           // ✅ STATE-BASED TAX
-          cgst: isInterState ? 0 : cgstRate,
-          sgst: isInterState ? 0 : sgstRate,
-          igst: isInterState ? igstRate : 0,
+          cgst: isSEZ ? 0 : isInterState ? 0 : cgstRate,
+          sgst: isSEZ ? 0 : isInterState ? 0 : sgstRate,
+         igst: isSEZ ? igstRate : isInterState ? igstRate : 0,
         };
       });
     }
 
     /* ================= RESPONSE ================= */
-// ✅ variables OUTSIDE
-const clientName = header.client_name || "";
-const companyName = header.company || "";
-const address =
-  proposalData?.billing_address || header.billing_address || "";
+    // ✅ variables OUTSIDE
+    const clientName = header.client_name || "";
+    const companyName = header.company || "";
+    const address =
+      proposalData?.billing_address || header.billing_address || "";
 
-const shippingAddress =
-  proposalData?.shipping_address || header.shipping_address || "";
+    const shippingAddress =
+      proposalData?.shipping_address || header.shipping_address || "";
 
-// 📍 extract location
-const location = address.includes(",")
-  ? address.split(",").pop().trim()
-  : address;
+    // 📍 extract location
+    const location = address.includes(",")
+      ? address.split(",").pop().trim()
+      : address;
 
-const isSelf = header.billing_type === "self";
-const pureCompany = proposalCompany.includes("(")
-  ? proposalCompany.split("(").pop().replace(")", "").trim()
-  : proposalCompany;
-// ✅ response
-return Response.json(
-  {
-    header: {
-      rfqId: header.rfqId,
-      companyId: header.companyId,
-      branchId: header.branchId,
+    const isSelf = header.billing_type === "self";
+    const pureCompany = proposalCompany.includes("(")
+      ? proposalCompany.split("(").pop().replace(")", "").trim()
+      : proposalCompany;
+    // ✅ response
+    return Response.json(
+      {
+        header: {
+          rfqId: header.rfqId,
+          companyId: header.companyId,
+          branchId: header.branchId,
 
-      // ✅ NAME
-      customerName: isSelf
-        ? `${clientName} (${companyName})`
-        : header.customerName || companyName,
+          // ✅ NAME
+          customerName: isSelf
+            ? `${clientName} (${companyName})`
+            : header.customerName || companyName,
 
-      clientName,
-      clientPhone: header.client_phone || "",
-      clientEmail: header.client_email || "",
+          clientName,
+          clientPhone: header.client_phone || "",
+          clientEmail: header.client_email || "",
 
-company: isSelf
-  ? (hasProposalCompany
-      ? proposalCompany   // ✅ already formatted → use directly
-      : (clientName
-          ? `${clientName} (${proposalCompany})`
-          : proposalCompany))
-  : proposalCompany,
+          company: isSelf
+            ? (hasProposalCompany
+              ? proposalCompany   // ✅ already formatted → use directly
+              : (clientName
+                ? `${clientName} (${proposalCompany})`
+                : proposalCompany))
+            : proposalCompany,
 
-      // ✅ GSTIN
-      gstin: isSelf ? "" : header.gstin || "",
+          // ✅ GSTIN
+          gstin: isSelf ? "" : header.gstin || "",
 
-      // ✅ BILLING
-   billing_address: isSelf
-  ? `${pureCompany}, ${location}`
-  : address,
+          // ✅ BILLING
+          billing_address: isSelf
+            ? `${pureCompany}, ${location}`
+            : address,
 
-shipping_address: isSelf
-  ? `${pureCompany}, ${location}`
-  : shippingAddress,
+          shipping_address: isSelf
+            ? `${pureCompany}, ${location}`
+            : shippingAddress,
 
 
 
-      submittedAt: header.submittedAt,
-      status: header.status,
-      notes: header.notes || "",
-    },
+          submittedAt: header.submittedAt,
+          status: header.status,
+          notes: header.notes || "",
+        },
 
-    items,
-  },
-  { status: 200 }
-);
+        items,
+      },
+      { status: 200 }
+    );
   } catch (err) {
     console.error("GET /api/rfqs/[rfqId]/details error:", err);
     return Response.json({ message: "Server error" }, { status: 500 });

@@ -11,6 +11,7 @@ const EMPTY_BRANCH = {
   id: null,
   branchName: "",
   gstin: "",
+  sez_type: "NONE",
   shippingAddress: "",
   billingAddress: "",
   contactPerson: "",
@@ -354,7 +355,7 @@ const Page = () => {
 
                     <div className="col-6"><b>Shipping:</b> {b.shippingAddress}</div>
                     <div className="col-6"><b>Billing:</b> {b.billingAddress}</div>
-                    {/* <div className="col-md-6"><b>Password:</b> {b.password_hash}</div> */}
+                    <div className="col-md-6"><b>SEZ Type:</b> {b.sez_type}</div>
                   </div>
 
                   <div className="d-flex gap-2 mt-2">
@@ -596,7 +597,20 @@ const Page = () => {
                       }
                     />
                   </div>
-
+                  <div className="col-md-6">
+                    <label className="form-label mb-1">SEZ Type</label>
+                    <select
+                      className="form-select"
+                      value={newBranch.sez_type || "NONE"}
+                      onChange={(e) =>
+                        setNewBranch({ ...newBranch, sez_type: e.target.value })
+                      }
+                    >
+                      <option value="NONE">None</option>
+                      <option value="NON_SEZ">Non-SEZ</option>
+                      <option value="SEZ">SEZ</option>
+                    </select>
+                  </div>
                   {/* Password */}
 
 
@@ -773,7 +787,20 @@ const Page = () => {
                       />
                     </div>
 
-
+                    <div className="col-md-6">
+                      <label className="form-label mb-1">SEZ Type</label>
+                      <select
+                        className="form-select"
+                        value={editingBranch.sez_type || "NONE"}
+                        onChange={(e) =>
+                          setEditingBranch({ ...editingBranch, sez_type: e.target.value })
+                        }
+                      >
+                        <option value="NONE">None</option>
+                        <option value="NON_SEZ">Non-SEZ</option>
+                        <option value="SEZ">SEZ</option>
+                      </select>
+                    </div>
 
                     {/* Phones */}
                     {/* <div className="col-12 mt-2">

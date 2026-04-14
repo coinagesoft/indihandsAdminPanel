@@ -22,14 +22,16 @@ function numberToWords(num){
   };
   return inWords(Math.round(num))+" Only";
 }
+
 /* ================= FORMAT DATE ================= */
+
 
 function buildHTML(data) {
 
   const {
     proposal, sender, computedItems, charges: computedCharges,
     subtotal, cgstTotal, sgstTotal, igstTotal,
-    totalTax, grandTotal, formattedDate,  isInterState
+    totalTax, grandTotal, formattedDate,  isInterState , isSEZ
   } = data;
 
 const isSelf = proposal.billing_type === "self";
@@ -103,9 +105,9 @@ const displayCompany = isSelf
 
 
 const itemRows = computedItems.map((x, i) => {
-const sgstRate = isInterState ? 0 : (x.sgst_rate || 0);
-const cgstRate = isInterState ? 0 : (x.cgst_rate || 0);
-const igstRate = isInterState ? (x.igstRate || 0) : 0;
+const sgstRate = (isInterState || isSEZ) ? 0 : (x.sgst_rate || 0);
+const cgstRate = (isInterState || isSEZ) ? 0 : (x.cgst_rate || 0);
+const igstRate = (isInterState || isSEZ) ? (x.igstRate || 0) : 0;
 
   return `
 <tr>
@@ -132,9 +134,9 @@ const igstRate = isInterState ? (x.igstRate || 0) : 0;
 }).join("");
 
 const chargeRows = computedCharges.map(c => {
-const sgstRate = isInterState ? 0 : c.taxPercent / 2;
-const cgstRate = isInterState ? 0 : c.taxPercent / 2;
-const igstRate = isInterState ? c.taxPercent : 0;
+const sgstRate = (isInterState || isSEZ) ? 0 : c.taxPercent / 2;
+const cgstRate = (isInterState || isSEZ) ? 0 : c.taxPercent / 2;
+const igstRate = (isInterState || isSEZ) ? c.taxPercent : 0;
 
   return `
 <tr>
@@ -629,6 +631,7 @@ export async function GET(req, { params }) {
         p.billing_address,
         c.company_name AS company,
         cb.gstin,
+        cb.sez_type,
         r.client_name,
         r.client_phone,
         r.billing_type
@@ -651,6 +654,8 @@ export async function GET(req, { params }) {
     const [[sender]] = await db.query(`SELECT * FROM company_info LIMIT 1`);
 
     /* ================= STATE LOGIC ================= */
+    const sezType = proposal.sez_type || "NONE";
+const isSEZ = (sezType || "").toUpperCase() === "SEZ";
     const clientStateCode = proposal.gstin?.substring(0, 2) || "";
     const senderStateCode = sender.gstin?.substring(0, 2) || "";
     const isInterState = clientStateCode !== senderStateCode;
@@ -716,12 +721,16 @@ const unitDiscount = disc
     (+i.igst_rate || 0) ||
     ((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
 
-  if (isInterState) {
-    ig = taxable * igstRate / 100;
-  } else {
-    cg = taxable * (+i.cgst_rate || 0) / 100;
-    sg = taxable * (+i.sgst_rate || 0) / 100;
-  }
+if (isSEZ) {
+  ig = taxable * igstRate / 100;
+} 
+else if (isInterState) {
+  ig = taxable * igstRate / 100;
+} 
+else {
+  cg = taxable * (+i.cgst_rate || 0) / 100;
+  sg = taxable * (+i.sgst_rate || 0) / 100;
+}
 
   itemSubtotal += taxable;
   cgstTotal += cg;
@@ -752,12 +761,16 @@ const unitDiscount = disc
 
   let cg = 0, sg = 0, ig = 0;
 
-  if (isInterState) {
-    ig = amt * taxRate / 100;
-  } else {
-    cg = amt * (taxRate / 2) / 100;
-    sg = amt * (taxRate / 2) / 100;
-  }
+if (isSEZ) {
+  ig = amt * taxRate / 100;
+}
+else if (isInterState) {
+  ig = amt * taxRate / 100;
+}
+else {
+  cg = amt * (taxRate / 2) / 100;
+  sg = amt * (taxRate / 2) / 100;
+}
 
   chargeSubtotal += amt;
   cgstTotal += cg;

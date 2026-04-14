@@ -26,6 +26,7 @@ export async function POST(req, { params }) {
       emails = [],
       loginEmail,
       password,
+       sez_type
     } = body;
 
     /* ================= VALIDATIONS ================= */
@@ -86,8 +87,8 @@ const identifier = loginEmail.trim().toLowerCase(); // ✅ normalize
     const [branchResult] = await db.query(
       `INSERT INTO company_branches
       (company_id, branch_name, phones, emails, gstin, contact_person,
-       shipping_address, billing_address, login_email, password_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       shipping_address, billing_address, login_email, password_hash ,sez_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? , ?)`,
       [
         companyId,
         branchName.trim(),
@@ -99,6 +100,7 @@ const identifier = loginEmail.trim().toLowerCase(); // ✅ normalize
         billingAddress || null,
         loginEmail.trim(),
         passwordHash,
+        sez_type || "NONE"
       ]
     );
 

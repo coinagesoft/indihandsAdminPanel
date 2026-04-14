@@ -23,6 +23,7 @@ export async function PATCH(req, { params }) {
       emails = [],
       loginEmail,
       password, // optional
+      sez_type
     } = body;
 
     /* ================= FETCH EXISTING ================= */
@@ -78,6 +79,7 @@ export async function PATCH(req, { params }) {
       shippingAddress || null,
       billingAddress || null,
       loginEmail?.trim() || oldEmail,
+       sez_type || "NONE" 
     ];
 
     let branchPasswordSQL = "";
@@ -92,7 +94,7 @@ export async function PATCH(req, { params }) {
       `
       UPDATE company_branches
       SET branch_name=?, phones=?, emails=?, gstin=?, contact_person=?,
-          shipping_address=?, billing_address=?, login_email=?
+          shipping_address=?, billing_address=?, login_email=? , sez_type=?  
           ${branchPasswordSQL}
       WHERE id=?
       `,
