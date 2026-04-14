@@ -12,6 +12,7 @@ export async function GET(req) {
 
     let query = `
       SELECT
+       id,
         product_name,
         sku,
         barcode,
@@ -22,6 +23,9 @@ export async function GET(req) {
         stock_qty,
         base_price,
         status,
+        cgst_rate,
+        sgst_rate,
+        igst_rate,
         featured_image
       FROM products
       WHERE 1=1
@@ -45,6 +49,7 @@ export async function GET(req) {
     const sheet = workbook.addWorksheet("Products");
 
     sheet.columns = [
+       { header: "ID", key: "id", width: 10 },   // 🔥 ADD
       { header: "Product Name", key: "product_name", width: 25 },
       { header: "SKU", key: "sku", width: 15 },
       { header: "Barcode", key: "barcode", width: 15 },
@@ -55,6 +60,9 @@ export async function GET(req) {
       { header: "Stock Qty", key: "stock_qty", width: 12 },
       { header: "Base Price", key: "base_price", width: 12 },
       { header: "Status", key: "status", width: 12 },
+      { header: "CGST", key: "cgst_rate", width: 10 },
+      { header: "SGST", key: "sgst_rate", width: 10 },
+      { header: "IGST", key: "igst_rate", width: 10 },
       { header: "Featured Image", key: "featured_image", width: 35 },
     ];
 

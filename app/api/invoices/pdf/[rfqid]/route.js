@@ -83,7 +83,19 @@ function buildHTML(data){
 
 const senderStateCode =
   (invoice.seller_gstin || sender.gstin || "").substring(0, 2);
+const isSelf = proposal.billing_type === "self";
 
+// company (NO re-format if already present)
+const companyName = proposal.company || "";
+
+// clean company for address
+const pureCompany = companyName.includes("(")
+  ? companyName.split("(").pop().replace(")", "").trim()
+  : companyName;
+
+// billing / shipping (proposal first)
+const billingAddress = proposal.billing_address || "";
+const shippingAddress = proposal.shipping_address || billingAddress;
 
   const clientStateName = stateMap[clientStateCode] || "";
   const senderStateName = stateMap[senderStateCode] || "";
@@ -142,7 +154,7 @@ return `
 <style>
 @page{
   size:A4;
-  margin:0;   /* ⭐ KEY */
+  margin:0;   
 }
 
 body{
@@ -480,19 +492,19 @@ ${sender.website || ""}
 <table class="party">
 <td>
 <div class="title">Bill to Party</div>
-Name: ${proposal.company}<br>
-Address: ${proposal.billing_address}<br><br>
+Name: ${companyName}<br>
+Address: ${billingAddress}<br>
 
-GSTIN: ${proposal.gstin}<br>
+GSTIN: ${isSelf ? "" : (proposal.gstin || "")}<br>
 State: ${clientStateName} &nbsp;&nbsp;&nbsp; Code: ${clientStateCode}
 </td>
 
 <td>
 <div class="title">Ship to Party</div>
-Name: ${proposal.company}<br>
-Address: ${proposal.shipping_address || proposal.billing_address}<br><br>
+Name: ${companyName}<br>
+Address: ${shippingAddress}<br>
 
-GSTIN: ${proposal.gstin}<br>
+GSTIN: ${isSelf ? "" : (proposal.gstin || "")}<br>
 State: ${clientStateName} &nbsp;&nbsp;&nbsp; Code: ${clientStateCode}
 </td>
 </table>
@@ -613,10 +625,14 @@ export async function GET(req, { params }) {
         p.proposal_number,
         p.proposal_date,
         p.billing_address,
-        c.company_name AS company,
+       CASE 
+  WHEN r.billing_type = 'self' THEN p.company_name
+  ELSE c.company_name
+END AS company,
         cb.gstin,
         r.client_name,
-        r.client_phone
+        r.client_phone,
+          r.billing_type
       FROM proposals p
       JOIN rfqs r ON r.id = p.rfq_id
       JOIN companies c ON c.id = r.company_id
@@ -659,13 +675,22 @@ const isInterState = clientStateCode !== senderStateCode;
         pi.cgst_rate,
         pi.sgst_rate,
         pi.igst_rate,
-        pr.product_name description,
+         CASE 
+      WHEN cpp.prefix IS NOT NULL AND cpp.prefix != ''
+      THEN CONCAT(cpp.prefix, ' | ', pr.product_name)
+      ELSE pr.product_name
+    END AS description,
         pr.hsn
       FROM proposal_items pi
       JOIN products pr ON pr.id = pi.product_id
+
+        LEFT JOIN company_product_pricing cpp
+    ON cpp.product_id = pr.id
+    AND cpp.company_id = ?
+
       WHERE pi.proposal_id = ?
       ORDER BY pi.id
-    `, [proposal.id]);
+    `,  [proposal.company_id, proposal.id] );
 
     /* ================= CHARGES ================= */
     const [companyCharges] = await db.query(`

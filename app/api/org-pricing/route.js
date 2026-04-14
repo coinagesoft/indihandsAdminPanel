@@ -2,7 +2,7 @@ import { db } from "../../db";
 
 export async function GET() {
   try {
-    // ✅ Companies (gstin comes from company_branches)
+    // ✅ Companies
     const [companies] = await db.query(`
       SELECT 
         c.id,
@@ -29,14 +29,23 @@ export async function GET() {
       ORDER BY id DESC
     `);
 
-    // ✅ Pricing
-    const [pricing] = await db.query(`
+    // ✅ Pricing (FIXED 🔥)
+    const [pricingRaw] = await db.query(`
       SELECT 
         company_id AS companyId,
         product_id AS productId,
-        custom_price AS price
+        custom_price AS price,
+        prefix                     -- ✅ ADDED
       FROM company_product_pricing
     `);
+
+    // ✅ Normalize data (important for UI)
+    const pricing = pricingRaw.map((p) => ({
+      companyId: p.companyId,
+      productId: p.productId,
+      price: p.price == null ? "" : Number(p.price),
+      prefix: p.prefix || "",   // ✅ ADDED
+    }));
 
     return Response.json(
       { companies, products, pricing },

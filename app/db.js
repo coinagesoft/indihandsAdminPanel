@@ -5,6 +5,16 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 
+// export const db = mysql.createPool({
+//   host: "localhost",   // 🔥 IMPORTANT (not live server)
+//   user: "root",
+//   password: "NewPassword123!", // or "" if none
+//   database: "indihand_backup",     // ✅ your imported schema
+//   waitForConnections: true,
+//   connectionLimit: 10,
+//   queueLimit: 0
+// });
+
 export const db = mysql.createPool({
   host: "46.28.45.124",
   user: "u144125849_Indicat",

@@ -20,6 +20,12 @@ export async function PATCH(req, { params }) {
       status,
       featuredImage,
       images,
+      company_id,     // ✅ NEW
+      name_prefix,
+      cgst_rate,
+sgst_rate,
+igst_rate,
+      
     } = data;
 
 
@@ -47,8 +53,13 @@ await db.query(
     stock_qty = ?, 
     base_price = ?, 
     status = ?, 
-    featured_image = ?
-   WHERE id = ?`,
+    featured_image = ?,
+    company_id = ?,     
+    name_prefix = ? ,
+      cgst_rate = ?, 
+  sgst_rate = ?, 
+  igst_rate = ?
+    WHERE id = ?`,
   [
     name,
     sku,
@@ -61,6 +72,11 @@ await db.query(
     price,
     status,
     featuredImageUrl,
+       company_id || null,  
+   name_prefix?.trim() || null,
+ Number(cgst_rate ?? 0),
+Number(sgst_rate ?? 0),
+Number(igst_rate ?? 0),
     productId,
   ]
 );

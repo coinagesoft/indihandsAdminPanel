@@ -132,7 +132,7 @@ const Page = () => {
     }
     return [];
   };
-  
+
   const openEditModal = (product) => {
     setSelectedProduct({
       ...product,
@@ -216,7 +216,10 @@ const Page = () => {
         status: selectedProduct.status,
         description: selectedProduct.description,
         featuredImage: featuredImageUrl,
-        images: finalGallery, // ✅ always array
+        images: finalGallery,
+        cgst_rate: selectedProduct.cgst_rate === "" ? null : Number(selectedProduct.cgst_rate),
+        sgst_rate: selectedProduct.sgst_rate === "" ? null : Number(selectedProduct.sgst_rate),
+        igst_rate: selectedProduct.igst_rate === "" ? null : Number(selectedProduct.igst_rate),
       };
 
       const res = await fetchWithLoader(`/api/products/${selectedProduct.id}`, {
@@ -319,10 +322,10 @@ const Page = () => {
 
       setAlreadyAssignedCatalogs(data.catalogIds || []);
 
-      setSelectedProduct({
-        ...product,
-        catalogs: [], // ✅ user selection empty initially (NOT same as assigned)
-      });
+     setSelectedProduct({
+  ...product,
+  catalogs: data.catalogIds || [], // ✅ preload
+});
 
       setIsAssignModalOpen(true);
       setNewCatalogName("");
@@ -339,17 +342,18 @@ const Page = () => {
     setIsAssignModalOpen(false);
     setNewCatalogName("");
   };
-  const toggleCatalogSelection = (catalogId) => {
-    setSelectedProduct((prev) => {
-      const isAssigned = prev.catalogs.includes(catalogId);
-      return {
-        ...prev,
-        catalogs: isAssigned
-          ? prev.catalogs.filter((id) => id !== catalogId)
-          : [...prev.catalogs, catalogId],
-      };
-    });
-  };
+const toggleCatalogSelection = (catalogId) => {
+  setSelectedProduct((prev) => {
+    const exists = prev.catalogs.includes(catalogId);
+
+    return {
+      ...prev,
+      catalogs: exists
+        ? prev.catalogs.filter((id) => id !== catalogId) // uncheck
+        : [...prev.catalogs, catalogId], // check
+    };
+  });
+};
 
   const fetchCatalogs = async () => {
     try {
@@ -368,29 +372,46 @@ const Page = () => {
 
 
 
-  const saveCatalogAssignment = async () => {
-    try {
-      if (!selectedProduct?.id) return;
+const saveCatalogAssignment = async () => {
+  try {
+    if (!selectedProduct?.id) return;
 
-      // ✅ assign product to all selected catalogs
-      for (const catalogId of selectedProduct.catalogs) {
-        await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productIds: [selectedProduct.id] }),
-        });
-      }
+    const selected = selectedProduct.catalogs;
+    const already = alreadyAssignedCatalogs;
 
-      showSuccess("Product assigned to catalogs");
+    // 🔥 1. Assign (new)
+    const toAssign = selected.filter((id) => !already.includes(id));
 
-      closeAssignModal();
-      await fetchCatalogs(); // optional
+    // 🔥 2. Unassign (removed)
+    const toUnassign = already.filter((id) => !selected.includes(id));
 
-    } catch (err) {
-      console.error("Assign product error:", err);
-      showError("❌ " + err.message);
+    // ✅ Assign API
+    for (const catalogId of toAssign) {
+      await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productIds: [selectedProduct.id] }),
+      });
     }
-  };
+
+    // ✅ Unassign API
+    for (const catalogId of toUnassign) {
+      await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: selectedProduct.id }),
+      });
+    }
+
+    showSuccess("✅ Catalog updated (assign + unassign)");
+
+    closeAssignModal();
+
+  } catch (err) {
+    console.error("Toggle assign error:", err);
+    showError("❌ " + err.message);
+  }
+};
 
   const createNewCatalog = async () => {
     try {
@@ -421,26 +442,26 @@ const Page = () => {
     }
   };
 
-const handleEditPriceChange = (e) => {
-  const value = e.target.value;
+  const handleEditPriceChange = (e) => {
+    const value = e.target.value;
 
-  if (value === "") {
-    setSelectedProduct((prev) => ({
-      ...prev,
-      price: "",
-    }));
-    return;
-  }
+    if (value === "") {
+      setSelectedProduct((prev) => ({
+        ...prev,
+        price: "",
+      }));
+      return;
+    }
 
-const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
+    const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
 
-  if (regex.test(value)) {
-    setSelectedProduct((prev) => ({
-      ...prev,
-      price: value,
-    }));
-  }
-};
+    if (regex.test(value)) {
+      setSelectedProduct((prev) => ({
+        ...prev,
+        price: value,
+      }));
+    }
+  };
 
   const changePage = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -470,6 +491,7 @@ const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
 
         const res = await fetchWithLoader(`/api/products?${params.toString()}`);
         const data = await res.json();
+        console.log("DB PRODUCTS:", data);
         setProducts(data.products);
         setTotalPages(data.pagination.totalPages);
       } catch (err) {
@@ -567,6 +589,9 @@ const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
                   <th>Stock</th>
                   <th>SKU</th>
                   <th>Price</th>
+                  <th>CGST %</th>
+                  <th>SGST %</th>
+                  <th>IGST %</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -608,6 +633,9 @@ const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
                       <td>{p.stock}</td>
                       <td>{p.sku || "-"}</td>
                       <td>Rs.{p.price}</td>
+                      <td>{p.cgst_rate ?? 0}%</td>
+                      <td>{p.sgst_rate ?? 0}%</td>
+                      <td>{p.igst_rate ?? 0}%</td>
                       <td>
                         <span className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"}`}>
                           {p.status}
@@ -679,22 +707,24 @@ const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
 
               <div className="d-flex flex-column gap-2">
 
-                {catalogs
-                  .filter((cat) => !alreadyAssignedCatalogs.includes(cat.id))
-                  .map((cat) => (
-                    <div key={cat.id} className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={selectedProduct?.catalogs?.includes(cat.id)}
-                        onChange={() => toggleCatalogSelection(cat.id)}
-                        id={`cat-${cat.id}`}
-                      />
-                      <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
-                        {cat.name}
-                      </label>
-                    </div>
-                  ))}
+              {catalogs.map((cat) => {
+const isChecked = selectedProduct?.catalogs?.includes(cat.id);
+
+  return (
+    <div key={cat.id} className="form-check">
+      <input
+        className="form-check-input"
+        type="checkbox"
+        checked={isChecked}
+        onChange={() => toggleCatalogSelection(cat.id)}
+        id={`cat-${cat.id}`}
+      />
+      <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
+        {cat.name}
+      </label>
+    </div>
+  );
+})}
 
 
               </div>
@@ -907,11 +937,57 @@ const regex = /^\d*\.?\d*(-\d*\.?\d*)?$/;
                             }}
 
                           >
+
+
                             <option value="Available">Available</option>
                             <option value="Out of Stock">Out of Stock</option>
                           </select>
                         </div>
+                        {/* ================= TAX ROW ================= */}
+                        <div className="col-md-4">
+                          <label className="form-label">CGST (%)</label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            value={selectedProduct.cgst_rate || ""}
+                            onChange={(e) =>
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                cgst_rate: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
 
+                        <div className="col-md-4">
+                          <label className="form-label">SGST (%)</label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            value={selectedProduct.sgst_rate || ""}
+                            onChange={(e) =>
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                sgst_rate: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+
+                        <div className="col-md-4">
+                          <label className="form-label">IGST (%)</label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            value={selectedProduct.igst_rate || ""}
+                            onChange={(e) =>
+                              setSelectedProduct({
+                                ...selectedProduct,
+                                igst_rate: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
                         <div className="col-md-4"></div> {/* spacer for alignment */}
 
 

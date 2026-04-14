@@ -29,9 +29,23 @@ function buildHTML(data) {
   const {
     proposal, sender, computedItems, charges: computedCharges,
     subtotal, cgstTotal, sgstTotal, igstTotal,
-    totalTax, grandTotal, formattedDate
+    totalTax, grandTotal, formattedDate,  isInterState
   } = data;
 
+const isSelf = proposal.billing_type === "self";
+
+const companyName = proposal.company || "";
+const clientName = proposal.client_name || "";
+
+const hasFormatted = companyName.includes("(");
+
+const displayCompany = isSelf
+  ? (hasFormatted
+      ? companyName
+      : (clientName
+          ? `${clientName} (${companyName})`
+          : companyName))
+  : companyName;
 
 /* ================= STATE LOGIC ================= */
 
@@ -89,9 +103,9 @@ function buildHTML(data) {
 
 
 const itemRows = computedItems.map((x, i) => {
-const sgstRate = x.igst > 0 ? 0 : (x.sgst_rate || 0);
-const cgstRate = x.igst > 0 ? 0 : (x.cgst_rate || 0);
-const igstRate = x.igst > 0 ? (x.igstRate || 0) : 0;
+const sgstRate = isInterState ? 0 : (x.sgst_rate || 0);
+const cgstRate = isInterState ? 0 : (x.cgst_rate || 0);
+const igstRate = isInterState ? (x.igstRate || 0) : 0;
 
   return `
 <tr>
@@ -118,9 +132,9 @@ const igstRate = x.igst > 0 ? (x.igstRate || 0) : 0;
 }).join("");
 
 const chargeRows = computedCharges.map(c => {
-  const sgstRate = c.igst > 0 ? 0 : c.taxPercent / 2;
-  const cgstRate = c.igst > 0 ? 0 : c.taxPercent / 2;
-  const igstRate = c.igst > 0 ? c.taxPercent : 0;
+const sgstRate = isInterState ? 0 : c.taxPercent / 2;
+const cgstRate = isInterState ? 0 : c.taxPercent / 2;
+const igstRate = isInterState ? c.taxPercent : 0;
 
   return `
 <tr>
@@ -425,7 +439,7 @@ th{
 
   <div class="hdr-text">
   <b>Registered Office</b><br>
-  ${sender.address_line1 || ""}<br>
+${sender.address_line1 || ""}<br>
 ${sender.city || ""}, ${sender.state || ""} - ${sender.pincode || ""}<br>
 ${sender.email || ""} | ${sender.phone || ""}<br>
 ${sender.website || ""}
@@ -453,9 +467,9 @@ State: ${senderStateName} | State Code: ${senderStateCode}
 <div class="sec">
 Contact Person: ${proposal.client_name}<br>
 Contact Number: ${proposal.client_phone}<br>
-Company name: ${proposal.company}<br>
+Company name: ${displayCompany}<br>
 Address: ${proposal.billing_address}<br>
-<b>GSTIN: ${proposal.gstin || ""}</b><br>
+<b>GSTIN: ${isSelf ? "" : (proposal.gstin || "")}</b><br>
 State: ${clientStateName} | State Code: ${clientStateCode}</div>
 
 <table>
@@ -616,11 +630,12 @@ export async function GET(req, { params }) {
         c.company_name AS company,
         cb.gstin,
         r.client_name,
-        r.client_phone
+        r.client_phone,
+        r.billing_type
       FROM proposals p
       JOIN rfqs r ON r.id = p.rfq_id
       JOIN companies c ON c.id = r.company_id
-      JOIN company_branches cb ON cb.id = r.branch_id
+        JOIN company_branches cb ON cb.id = r.branch_id
       WHERE p.id = ?
     `, [proposalId]);
 
@@ -649,13 +664,22 @@ export async function GET(req, { params }) {
         pi.cgst_rate,
         pi.sgst_rate,
         pi.igst_rate,
-        pr.product_name description,
+       CASE 
+  WHEN cpp.prefix IS NOT NULL AND cpp.prefix != ''
+  THEN CONCAT(cpp.prefix, ' | ', pr.product_name)
+  ELSE pr.product_name
+END AS description,
         pr.hsn
       FROM proposal_items pi
       JOIN products pr ON pr.id = pi.product_id
+ 
+      LEFT JOIN company_product_pricing cpp
+  ON cpp.product_id = pr.id
+  AND cpp.company_id = ?
+
       WHERE pi.proposal_id = ?
       ORDER BY pi.id
-    `, [proposal.id]);
+    `,  [proposal.company_id, proposal.id] );
 
     /* ================= CHARGES ================= */
     const [companyCharges] = await db.query(`
@@ -800,7 +824,8 @@ const unitDiscount = disc
       igstTotal,
       totalTax,
       grandTotal,
-      formattedDate
+      formattedDate,
+        isInterState
     });
 
     /* ================= PDFSHIFT ================= */

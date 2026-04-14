@@ -98,10 +98,6 @@ export async function DELETE(req, context) {
   }
 }
 
-
-
-
-
 export async function GET(req, context) {
   try {
     const { params } = context;      // ✅ params promise आहे

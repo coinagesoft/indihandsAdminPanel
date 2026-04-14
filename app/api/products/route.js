@@ -42,7 +42,10 @@ export async function POST(req) {
       images,
       hsn,
       size,
-      weight
+      weight,
+        cgst_rate,
+  sgst_rate,
+  igst_rate
     } = data;
 
 
@@ -50,8 +53,8 @@ export async function POST(req) {
 
     const [result] = await db.query(
       `INSERT INTO products 
-  (product_name, sku, barcode, description, hsn, size, weight, stock_qty,  base_price, status, featured_image)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  (product_name, sku, barcode, description, hsn, size, weight, stock_qty, base_price, status, featured_image,cgst_rate, sgst_rate , igst_rate)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         product_name,
         sku,
@@ -64,6 +67,9 @@ export async function POST(req) {
         price,
         status,
         featuredImage || null,
+Number(cgst_rate ?? 0),
+Number(sgst_rate ?? 0),
+Number(igst_rate ?? 0)
       ]
     );
 
@@ -133,6 +139,9 @@ export async function GET(req) {
         p.base_price AS price,
         p.status,
         p.featured_image AS featureImage,
+  p.cgst_rate,
+  p.sgst_rate,
+  p.igst_rate,
 
         COALESCE(
           (
@@ -154,6 +163,9 @@ export async function GET(req) {
     // ✅ FIX: Ensure images is always an array
     const formattedProducts = products.map((p) => ({
       ...p,
+ cgst_rate: Number(p.cgst_rate ?? 0),
+sgst_rate: Number(p.sgst_rate ?? 0),
+igst_rate: Number(p.igst_rate ?? 0),
       images:
         typeof p.images === "string"
           ? JSON.parse(p.images)
