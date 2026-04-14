@@ -31,13 +31,12 @@ const Page = () => {
   const [charges, setCharges] = useState([]);
   const [mode, setMode] = useState("edit");
   // "edit" | "preview"
-  const readonlyFields = [
-    "quotationNo",
-    "clientName",
-    "clientEmail",
-    "company",
-    "gstin",
-  ];
+const readonlyFields = [
+  "quotationNo",
+  "clientName",
+  "clientEmail",
+  "gstin"
+];
   /* ================= HANDLERS ================= */
   const handleHeaderChange = (e) => {
     setHeader({ ...header, [e.target.name]: e.target.value });
@@ -95,6 +94,8 @@ const Page = () => {
         place: header.place,
         billing_address: header.billingAddress,
         shipping_address: header.shippingAddress,
+        gstin: header.gstin,
+        company_name: header.company,
         items: items.map(x => ({
           productId: x.productId,
           quantity: x.qty,
@@ -345,7 +346,7 @@ const Page = () => {
                     </div>
 
                     {/* HEADER */}
-                    <div className="row g-3 mb-4">
+                    <div className="row g-3 mb-6">
                       {[
                         ["quotationNo", "Quotation No"],
                         ["date", "Date", "date"],
@@ -353,7 +354,6 @@ const Page = () => {
                         ["clientEmail", "Customer Email"],
                         ["company", "Company"],
                         ["gstin", "GSTIN"],
-                        ["place", "Place of Supply"],
                       ].map(([name, label, type = "text"]) => (
                         <div className="col-md-6" key={name}>
                           <label className="form-label">{label}</label>
@@ -367,6 +367,28 @@ const Page = () => {
                           />
                         </div>
                       ))}
+
+                      <div className="col-md-6">
+  <label className="form-label">Billing Address</label>
+  <textarea
+    className="form-control"
+    name="billingAddress"
+    value={header.billingAddress}
+    onChange={handleHeaderChange}
+    rows={3}
+  />
+</div>
+
+<div className="col-md-6">
+  <label className="form-label">Shipping Address</label>
+  <textarea
+    className="form-control"
+    name="shippingAddress"
+    value={header.shippingAddress}
+    onChange={handleHeaderChange}
+    rows={3}
+  />
+</div>
                     </div>
 
                     {/* ITEMS TABLE */}

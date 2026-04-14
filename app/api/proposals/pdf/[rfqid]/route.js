@@ -32,6 +32,20 @@ function buildHTML(data) {
     totalTax, grandTotal, formattedDate,  isInterState
   } = data;
 
+const isSelf = proposal.billing_type === "self";
+
+const companyName = proposal.company || "";
+const clientName = proposal.client_name || "";
+
+const hasFormatted = companyName.includes("(");
+
+const displayCompany = isSelf
+  ? (hasFormatted
+      ? companyName
+      : (clientName
+          ? `${clientName} (${companyName})`
+          : companyName))
+  : companyName;
 
 /* ================= STATE LOGIC ================= */
 
@@ -425,7 +439,7 @@ th{
 
   <div class="hdr-text">
   <b>Registered Office</b><br>
-  ${sender.address_line1 || ""}<br>
+${sender.address_line1 || ""}<br>
 ${sender.city || ""}, ${sender.state || ""} - ${sender.pincode || ""}<br>
 ${sender.email || ""} | ${sender.phone || ""}<br>
 ${sender.website || ""}
@@ -453,9 +467,9 @@ State: ${senderStateName} | State Code: ${senderStateCode}
 <div class="sec">
 Contact Person: ${proposal.client_name}<br>
 Contact Number: ${proposal.client_phone}<br>
-Company name: ${proposal.company}<br>
+Company name: ${displayCompany}<br>
 Address: ${proposal.billing_address}<br>
-<b>GSTIN: ${proposal.gstin || ""}</b><br>
+<b>GSTIN: ${isSelf ? "" : (proposal.gstin || "")}</b><br>
 State: ${clientStateName} | State Code: ${clientStateCode}</div>
 
 <table>
@@ -616,11 +630,12 @@ export async function GET(req, { params }) {
         c.company_name AS company,
         cb.gstin,
         r.client_name,
-        r.client_phone
+        r.client_phone,
+        r.billing_type
       FROM proposals p
       JOIN rfqs r ON r.id = p.rfq_id
       JOIN companies c ON c.id = r.company_id
-      JOIN company_branches cb ON cb.id = r.branch_id
+        JOIN company_branches cb ON cb.id = r.branch_id
       WHERE p.id = ?
     `, [proposalId]);
 
