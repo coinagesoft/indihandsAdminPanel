@@ -71,6 +71,7 @@ export async function POST(req) {
         po_date=?,
         transport_mode=?,
         vehicle_number=?,
+        challan_number=?,
         challan_date=?,
         reverse_charge=?,
         billing_address=?,
@@ -84,7 +85,8 @@ export async function POST(req) {
         data.po_date || null,
         data.transport_mode || null,
         data.vehicle_number || null,
-        data.invoice_date,
+         data.challan_number || null,
+        data.challan_date || null,
         data.reverse_charge || false,
         proposal.billing_address,
         proposal.shipping_address,
@@ -147,8 +149,8 @@ export async function POST(req) {
       transport_mode: data.transport_mode || null,
       vehicle_number: data.vehicle_number || null,
 
-      challan_number: invoiceNo,
-      challan_date: data.invoice_date,
+      challan_number: data.challan_number || null,
+      challan_date: data.challan_date || null,
       reverse_charge: data.reverse_charge || false,
 
       subtotal: proposal.subtotal,

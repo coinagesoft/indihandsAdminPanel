@@ -23,7 +23,8 @@ function numberToWords(num){
 }
 function formatDate(d){
   if(!d) return "";
-  return new Date(d).toLocaleDateString("en-IN");
+  const [y,m,day] = d.split("-");
+  return `${day}-${m}-${y}`;
 }
 /* ================= HTML TEMPLATE ================= */
 function buildHTML(data){
@@ -31,7 +32,7 @@ function buildHTML(data){
  const {
     invoice,proposal, sender, computedItems, charges: computedCharges,
     subtotal, cgstTotal, sgstTotal, igstTotal,
-    totalTax, grandTotal, formattedDate, isSEZ
+    totalTax, grandTotal, isSEZ
   } = data;
 
 
@@ -415,11 +416,7 @@ body{
   }
 
   <div class="hdr-text">
-  <b>Registered Office</b><br>
-  ${sender.address_line1 || ""}<br>
-${sender.city || ""}, ${sender.state || ""} - ${sender.pincode || ""}<br>
-${sender.email || ""} | ${sender.phone || ""}<br>
-${sender.website || ""}
+   
 </div>
   </div>
 
@@ -442,7 +439,7 @@ ${sender.website || ""}
 
 <tr>
 <td class="label">Invoice Date:</td>
-<td class="value">${formattedDate}</td>
+<td class="value">${formatDate(invoice.invoice_date)}</td>
 
 <td class="label">Vehicle number:</td>
 <td class="value">${invoice.vehicle_number || ""}</td>
@@ -648,7 +645,26 @@ END AS company,
 
     /* ================= FETCH INVOICE ================= */
 const [[invoice]] = await db.query(`
-  SELECT *
+  SELECT 
+    id,
+    invoice_number,
+
+    DATE_FORMAT(invoice_date, '%Y-%m-%d') as invoice_date,
+    DATE_FORMAT(supply_date, '%Y-%m-%d') as supply_date,
+
+    place_of_supply,
+    po_number,
+    DATE_FORMAT(po_date, '%Y-%m-%d') as po_date,
+
+    transport_mode,
+    vehicle_number,
+
+    challan_number,
+    DATE_FORMAT(challan_date, '%Y-%m-%d') as challan_date,
+
+    buyer_gstin,
+    seller_gstin
+
   FROM invoices
   WHERE proposal_id = ?
 `, [proposalId]);
@@ -656,12 +672,7 @@ const [[invoice]] = await db.query(`
 if (!invoice)
 
   return Response.json({ message: "Invoice not found" }, { status: 404 });
-    const formattedDate = new Date(proposal.proposal_date)
-  .toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  });
+
     const [[sender]] = await db.query(`SELECT * FROM company_info LIMIT 1`);
 
     /* ================= STATE LOGIC ================= */
@@ -845,7 +856,6 @@ if (isInterState || isSEZ) {
   igstTotal,
   totalTax,
   grandTotal,
-  formattedDate,
    isSEZ 
 });
 
