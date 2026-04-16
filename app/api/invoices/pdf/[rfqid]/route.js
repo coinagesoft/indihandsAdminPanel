@@ -224,12 +224,13 @@ body{
 
 /* ===== MAIN BOX ===== */
 .box{
+  margin-top: 30px; 
   border:1px solid #8c8c8c;
 }
 
 /* title strip */
 .strip{
-  background:#d8c7ad;
+  background:#f2f2f2;
   text-align:center;
   font-weight:700;
   font-size:12px;
@@ -418,6 +419,7 @@ body{
   <div class="hdr-text">
    
 </div>
+
   </div>
 
 </div>
