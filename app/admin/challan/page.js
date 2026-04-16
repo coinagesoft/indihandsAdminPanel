@@ -109,11 +109,17 @@ export default function CreateInvoice() {
     });
 
     const data = await res.json();
-    if (res.ok) {
-      showSuccess("Invoice saved");
+    console.log("SAVE RESPONSE:", data);
+  
 
-      // RESET
-   setInvoiceId(data.id); 
+if (res.ok) {
+  showSuccess("Invoice saved");
+
+  // ✅ FIX HERE
+  if (data && data.invoice_id) {
+    setInvoiceId(data.invoice_id);
+  }
+
     } else {
       showError("Error saving invoice");
     }
