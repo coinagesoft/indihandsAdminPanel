@@ -13,6 +13,7 @@ const Page = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmMsg, setConfirmMsg] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const fetchWithLoader = useFetchWithLoader();
 
   /* ===================== CATALOG MODAL STATE ===================== */
@@ -298,13 +299,53 @@ const Page = () => {
     fetchAllProducts();
   }, []);
 
-  const totalCatPages = Math.ceil(catalogProducts.length / catItemsPerPage);
+  // const totalCatPages = Math.ceil(catalogProducts.length / catItemsPerPage);
 
-  const paginatedCatalogProducts = catalogProducts.slice(
-    (catPage - 1) * catItemsPerPage,
-    catPage * catItemsPerPage
-  );
+ const filteredProducts = catalogProducts.filter((p) =>
+  p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
+const totalCatPages = Math.ceil(filteredProducts.length / catItemsPerPage);
+
+const paginatedCatalogProducts = filteredProducts.slice(
+  (catPage - 1) * catItemsPerPage,
+  catPage * catItemsPerPage
+);
+
+
+  
+const getPagination = (current, total) => {
+  const delta = 1; // how many pages around current
+  const range = [];
+  const rangeWithDots = [];
+
+  for (let i = 1; i <= total; i++) {
+    if (
+      i === 1 ||
+      i === total ||
+      (i >= current - delta && i <= current + delta)
+    ) {
+      range.push(i);
+    }
+  }
+
+  let prev;
+  for (let i of range) {
+    if (prev) {
+      if (i - prev === 2) {
+        rangeWithDots.push(prev + 1);
+      } else if (i - prev > 2) {
+        rangeWithDots.push("...");
+      }
+    }
+    rangeWithDots.push(i);
+    prev = i;
+  }
+
+  return rangeWithDots;
+};
+  const pages = getPagination(catPage, totalCatPages);
   /* ===================== UI ===================== */
   return (
     <ProtectedRoute>
@@ -427,12 +468,33 @@ const Page = () => {
 
         {/* ===================== PRODUCTS IN CATALOG ===================== */}
         <div className="card">
-          <div className="card-header d-flex justify-content-between">
-            <h5 className="mb-0">
-              Products in "{selectedCatalog?.name || "Select Catalog"}"
-            </h5>
-            <button className="btn btn-orange btn-sm" onClick={openAddExistingProductsModal}>Add Product to Catalog</button>
-          </div>
+        <div className="card-header d-flex justify-content-between align-items-center">
+  <h5 className="mb-0">
+    Products in "{selectedCatalog?.name || "Select Catalog"}"
+  </h5>
+
+  <div className="d-flex gap-2">
+    {/* 🔍 SEARCH INPUT */}
+    <input
+      type="text"
+      className="form-control form-control-sm"
+      placeholder="Search product..."
+      style={{ width: "220px" }}
+      value={searchTerm}
+      onChange={(e) => {
+        setSearchTerm(e.target.value);
+        setCatPage(1); // reset pagination on search
+      }}
+    />
+
+    <button
+      className="btn btn-orange btn-sm"
+      onClick={openAddExistingProductsModal}
+    >
+      Add Product to Catalog
+    </button>
+  </div>
+</div>
           <div className="table-responsive">
             <table className="table table-striped">
               <thead>
@@ -447,62 +509,82 @@ const Page = () => {
                 </tr>
               </thead>
               <tbody>
-                {paginatedCatalogProducts.map((p, index) => (
-                  <tr key={p.id}>
-                    <td>{(catPage - 1) * catItemsPerPage + index + 1}</td>
-                    <td>{p.name}</td>
-                    <td>{p.stock}</td>
-                    <td>{p.sku}</td>
-                    <td>₹{p.price}</td>
-                    <td>
-                      <span className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"}`}>
-                        {p.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => removeProductFromCatalog(p.id)}
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+              {paginatedCatalogProducts.length > 0 ? (
+  paginatedCatalogProducts.map((p, index) => (
+    <tr key={p.id}>
+      <td>{(catPage - 1) * catItemsPerPage + index + 1}</td>
+      <td>{p.name}</td>
+      <td>{p.stock}</td>
+      <td>{p.sku}</td>
+      <td>₹{p.price}</td>
+      <td>
+        <span className={`badge ${p.status === "Available" ? "bg-success" : "bg-danger"}`}>
+          {p.status}
+        </span>
+      </td>
+      <td>
+        <button
+          className="btn btn-sm btn-outline-danger"
+          onClick={() => removeProductFromCatalog(p.id)}
+        >
+          Remove
+        </button>
+      </td>
+    </tr>
+  ))
+) : (
+  <tr>
+    <td colSpan="7" className="text-center py-4 text-muted">
+      {searchTerm
+        ? "No matching product found in this catalog"
+        : "No products found in this catalog"}
+    </td>
+  </tr>
+)}
 
               </tbody>
             </table>
           </div>
 
           {totalCatPages > 1 && (
-            <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2 flex-wrap">
-              <button
-                className="btn btn-outline-secondary btn-sm"
-                disabled={catPage === 1}
-                onClick={() => setCatPage((prev) => prev - 1)}
-              >
-                Prev
-              </button>
+          <div className="d-flex justify-content-center align-items-center mt-3 mb-2 gap-2"
+     style={{ overflowX: "auto" }}>
 
-              {Array.from({ length: totalCatPages }, (_, i) => (
-                <button
-                  key={i}
-                  className={`btn btn-sm ${catPage === i + 1 ? "btn-primary" : "btn-outline-primary"
-                    }`}
-                  onClick={() => setCatPage(i + 1)}
-                >
-                  {i + 1}
-                </button>
-              ))}
+  {/* Prev */}
+  <button
+    className="btn btn-outline-secondary btn-sm"
+    disabled={catPage === 1}
+    onClick={() => setCatPage((prev) => prev - 1)}
+  >
+    Prev
+  </button>
 
-              <button
-                className="btn btn-outline-secondary btn-sm"
-                disabled={catPage === totalCatPages}
-                onClick={() => setCatPage((prev) => prev + 1)}
-              >
-                Next
-              </button>
-            </div>
+  {/* Pages */}
+  {pages.map((p, index) =>
+    p === "..." ? (
+      <span key={index} className="px-2">...</span>
+    ) : (
+      <button
+        key={index}
+        className={`btn btn-sm ${
+          catPage === p ? "btn-primary" : "btn-outline-primary"
+        }`}
+        onClick={() => setCatPage(p)}
+      >
+        {p}
+      </button>
+    )
+  )}
+
+  {/* Next */}
+  <button
+    className="btn btn-outline-secondary btn-sm"
+    disabled={catPage === totalCatPages}
+    onClick={() => setCatPage((prev) => prev + 1)}
+  >
+    Next
+  </button>
+</div>
           )}
 
         </div>

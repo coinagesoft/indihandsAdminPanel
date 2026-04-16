@@ -443,9 +443,9 @@ th{
 ${sender.address_line1 || ""}<br>
 ${sender.city || ""}, ${sender.state || ""} - ${sender.pincode || ""}<br>
 ${sender.email || ""} | ${sender.phone || ""}<br>
-${sender.website || ""}
+${sender.website || ""} 
 </div>
-  </div>
+</div>
 
 </div>
 
