@@ -157,7 +157,7 @@ const Page = () => {
       if (!selectedProduct?.id) return;
       // 🔐 FINAL INVENTORY vs STATUS VALIDATION (EDIT)
 
-      const stockQty = Number(selectedProduct.stock);
+     const stockQty = Number(selectedProduct.stock || 0);
       const statusVal = selectedProduct.status;
 
       // Out of Stock but stock > 0 ❌
@@ -322,10 +322,10 @@ const Page = () => {
 
       setAlreadyAssignedCatalogs(data.catalogIds || []);
 
-     setSelectedProduct({
-  ...product,
-  catalogs: data.catalogIds || [], // ✅ preload
-});
+      setSelectedProduct({
+        ...product,
+        catalogs: data.catalogIds || [], // ✅ preload
+      });
 
       setIsAssignModalOpen(true);
       setNewCatalogName("");
@@ -342,18 +342,18 @@ const Page = () => {
     setIsAssignModalOpen(false);
     setNewCatalogName("");
   };
-const toggleCatalogSelection = (catalogId) => {
-  setSelectedProduct((prev) => {
-    const exists = prev.catalogs.includes(catalogId);
+  const toggleCatalogSelection = (catalogId) => {
+    setSelectedProduct((prev) => {
+      const exists = prev.catalogs.includes(catalogId);
 
-    return {
-      ...prev,
-      catalogs: exists
-        ? prev.catalogs.filter((id) => id !== catalogId) // uncheck
-        : [...prev.catalogs, catalogId], // check
-    };
-  });
-};
+      return {
+        ...prev,
+        catalogs: exists
+          ? prev.catalogs.filter((id) => id !== catalogId) // uncheck
+          : [...prev.catalogs, catalogId], // check
+      };
+    });
+  };
 
   const fetchCatalogs = async () => {
     try {
@@ -372,46 +372,46 @@ const toggleCatalogSelection = (catalogId) => {
 
 
 
-const saveCatalogAssignment = async () => {
-  try {
-    if (!selectedProduct?.id) return;
+  const saveCatalogAssignment = async () => {
+    try {
+      if (!selectedProduct?.id) return;
 
-    const selected = selectedProduct.catalogs;
-    const already = alreadyAssignedCatalogs;
+      const selected = selectedProduct.catalogs;
+      const already = alreadyAssignedCatalogs;
 
-    // 🔥 1. Assign (new)
-    const toAssign = selected.filter((id) => !already.includes(id));
+      // 🔥 1. Assign (new)
+      const toAssign = selected.filter((id) => !already.includes(id));
 
-    // 🔥 2. Unassign (removed)
-    const toUnassign = already.filter((id) => !selected.includes(id));
+      // 🔥 2. Unassign (removed)
+      const toUnassign = already.filter((id) => !selected.includes(id));
 
-    // ✅ Assign API
-    for (const catalogId of toAssign) {
-      await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productIds: [selectedProduct.id] }),
-      });
+      // ✅ Assign API
+      for (const catalogId of toAssign) {
+        await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productIds: [selectedProduct.id] }),
+        });
+      }
+
+      // ✅ Unassign API
+      for (const catalogId of toUnassign) {
+        await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId: selectedProduct.id }),
+        });
+      }
+
+      showSuccess("✅ Catalog updated (assign + unassign)");
+
+      closeAssignModal();
+
+    } catch (err) {
+      console.error("Toggle assign error:", err);
+      showError("❌ " + err.message);
     }
-
-    // ✅ Unassign API
-    for (const catalogId of toUnassign) {
-      await fetchWithLoader(`/api/catalogs/${catalogId}/products`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: selectedProduct.id }),
-      });
-    }
-
-    showSuccess("✅ Catalog updated (assign + unassign)");
-
-    closeAssignModal();
-
-  } catch (err) {
-    console.error("Toggle assign error:", err);
-    showError("❌ " + err.message);
-  }
-};
+  };
 
   const createNewCatalog = async () => {
     try {
@@ -707,24 +707,24 @@ const saveCatalogAssignment = async () => {
 
               <div className="d-flex flex-column gap-2">
 
-              {catalogs.map((cat) => {
-const isChecked = selectedProduct?.catalogs?.includes(cat.id);
+                {catalogs.map((cat) => {
+                  const isChecked = selectedProduct?.catalogs?.includes(cat.id);
 
-  return (
-    <div key={cat.id} className="form-check">
-      <input
-        className="form-check-input"
-        type="checkbox"
-        checked={isChecked}
-        onChange={() => toggleCatalogSelection(cat.id)}
-        id={`cat-${cat.id}`}
-      />
-      <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
-        {cat.name}
-      </label>
-    </div>
-  );
-})}
+                  return (
+                    <div key={cat.id} className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleCatalogSelection(cat.id)}
+                        id={`cat-${cat.id}`}
+                      />
+                      <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
+                        {cat.name}
+                      </label>
+                    </div>
+                  );
+                })}
 
 
               </div>
@@ -895,18 +895,27 @@ const isChecked = selectedProduct?.catalogs?.includes(cat.id);
                           <input
                             type="number"
                             className="form-control form-control-sm"
-                            value={selectedProduct.stock}
-                            disabled={selectedProduct.status === "Out of Stock"}
+                            value={selectedProduct.stock ?? ""}
                             onChange={(e) => {
-                              const qty = Number(e.target.value);
+                              const value = e.target.value;
+
+                              // allow empty while typing
+                              if (value === "") {
+                                setSelectedProduct({
+                                  ...selectedProduct,
+                                  stock: "",
+                                });
+                                return;
+                              }
+
+                              const qty = Number(value);
 
                               setSelectedProduct({
                                 ...selectedProduct,
                                 stock: qty,
-                                status: qty === 0 ? "Out of Stock" : "Available",
+                                status: qty <= 0 ? "Out of Stock" : "Available",
                               });
                             }}
-
                           />
                         </div>
 

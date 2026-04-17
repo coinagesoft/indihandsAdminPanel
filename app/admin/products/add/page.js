@@ -263,8 +263,12 @@ const Page = () => {
       const result = await res.json();
 
       console.log("excel data", result)
-      if (!res.ok) return showError("❌ " + result.message);
-      showError(result.message);
+
+if (!res.ok) {
+  return showError(result.message || "Import failed");
+}
+
+showSuccess(result.message || "Products imported successfully");
     };
 
     reader.readAsBinaryString(excelFile);
