@@ -233,7 +233,13 @@ export async function POST(req) {
     
     
     for (const p of products) {
- const stockVal = parseNumber(getVal(p, ["stockQty", "stock_qty"])); // ✅ MOVE HERE
+const rawStock = getVal(p, ["stockQty", "stock_qty"]);
+
+const stockVal =
+  rawStock !== null && rawStock !== ""
+    ? parseNumber(rawStock)
+    : null;
+
 
   const rawId = getVal(p, ["id"]);
   const id = rawId ? Number(rawId) : null;
@@ -264,10 +270,10 @@ export async function POST(req) {
       addField("description", getVal(p, ["description"]));
 
       const stock = getVal(p, ["stockQty", "stock_qty"]);
-      if (stock !== null && stock !== "") {
-        fields.push("stock_qty = ?");
-        values.push(parseNumber(stock));
-      }
+    if (stockVal !== null) {
+  fields.push("stock_qty = ?");
+  values.push(stockVal);
+}
 
    const price = getVal(p, ["basePrice", "base_price"]);
 
@@ -276,28 +282,36 @@ if (price !== null && price !== "") {
   values.push(price.toString().trim()); // ✅ string store
 }
 
-      // ================= 🔥 TAX (ALWAYS UPDATE) =================
+      // ================= 🔥 TAX SAFE UPDATE =================
 
-      const cgst = parseNumber(getVal(p, ["cgst_rate", "cgst", "cgst %", "CGST"]));
-      fields.push("cgst_rate = ?");
-      values.push(cgst);
+const rawCgst = getVal(p, ["cgst_rate", "cgst", "cgst %", "CGST"]);
+if (rawCgst !== null && rawCgst !== "") {
+  fields.push("cgst_rate = ?");
+  values.push(parseNumber(rawCgst));
+}
 
-      const sgst = parseNumber(getVal(p, ["sgst_rate", "sgst", "sgst %", "SGST"]));
-      fields.push("sgst_rate = ?");
-      values.push(sgst);
+const rawSgst = getVal(p, ["sgst_rate", "sgst", "sgst %", "SGST"]);
+if (rawSgst !== null && rawSgst !== "") {
+  fields.push("sgst_rate = ?");
+  values.push(parseNumber(rawSgst));
+}
 
-      const igst = parseNumber(getVal(p, ["igst_rate", "igst", "igst %", "IGST"]));
-      fields.push("igst_rate = ?");
-      values.push(igst);
+const rawIgst = getVal(p, ["igst_rate", "igst", "igst %", "IGST"]);
+if (rawIgst !== null && rawIgst !== "") {
+  fields.push("igst_rate = ?");
+  values.push(parseNumber(rawIgst));
+}
 
     // ================= UPDATE =================
 if (id) {
 
-  let finalStatus = "Out of Stock";
-  if (stockVal > 0) finalStatus = "Available";
+ if (stockVal !== null) {
+  const finalStatus =
+    stockVal > 0 ? "Available" : "Out of Stock";
 
   fields.push("status = ?");
   values.push(finalStatus);
+}
 
   if (fields.length > 0) {
     values.push(id);
