@@ -253,7 +253,19 @@ body{
   line-height:15px;
   border-bottom:1px dotted #b5b5b5;
 }
+.info-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  border-bottom:1px dotted #b5b5b5;
+}
 
+.info-row .sec{
+  border-bottom:none;
+}
+
+.info-row .sec:first-child{
+  border-right:1px dotted #b5b5b5;
+}
 /* ================= TABLE ================= */
 
 :root{
@@ -447,6 +459,7 @@ ${sender.website || ""}
 </div>
 </div>
 
+
 </div>
 
 
@@ -456,6 +469,8 @@ ${sender.website || ""}
 <div class="box">
 
 <div class="strip">Quotation</div>
+
+<div class="info-row">
 
 <div class="sec">
 Quotation No: ${proposal.proposal_number}<br>
@@ -472,7 +487,7 @@ Company name: ${displayCompany}<br>
 Address: ${proposal.billing_address}<br>
 <b>GSTIN: ${isSelf ? "" : (proposal.gstin || "")}</b><br>
 State: ${clientStateName} | State Code: ${clientStateCode}</div>
-
+</div>
 <table>
 <thead>
 <tr>
@@ -548,7 +563,7 @@ Contact: ${sender.phone || ""} | ${sender.email || ""}
 
   <div style="text-align:center;">
     <img 
-      src="https://res.cloudinary.com/dxb1whlam/image/upload/v1776313892/MTDS_Pvt_Ltd_Stamp_filter_utzqag.png"
+      src="https://res.cloudinary.com/dxb1whlam/image/upload/v1776402154/MTDS_Stamp_NoBG_ywlept.png"
       style="width:120px; display:block; margin:0 auto 8px auto;"
     />
   </div>

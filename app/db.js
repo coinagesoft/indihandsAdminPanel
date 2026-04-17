@@ -6,7 +6,7 @@ dotenv.config();
 
 
 // export const db = mysql.createPool({
-//   host: "localhost",   // 🔥 IMPORTANT (not live server)
+//   host: "localhost",   //  IMPORTANT (not live server)
 //   user: "root",
 //   password: "NewPassword123!", // or "" if none
 //   database: "indihand_backup",     
@@ -15,25 +15,25 @@ dotenv.config();
 //   queueLimit: 0
 // });
 
-export const db = mysql.createPool({
-  host: "46.28.45.124",
-  user: "u144125849_Indicat",
-  password: "wozvis-fipnez-kyvCe4",
-  database: "u144125849_catalog",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-
 // export const db = mysql.createPool({
-//   host: "217.21.74.127",
-//   user: "u856729253_indihandsport",
-//   password: "oPSOg3#a2P>",
-//   database: "u856729253_Indihands",
+//   host: "46.28.45.124",
+//   user: "u144125849_Indicat",
+//   password: "wozvis-fipnez-kyvCe4",
+//   database: "u144125849_catalog",
 //   waitForConnections: true,
 //   connectionLimit: 10,
 //   queueLimit: 0
-// })
+// });
+
+export const db = mysql.createPool({
+  host: "217.21.74.127",
+  user: "u856729253_indihandsport",
+  password: "oPSOg3#a2P>",
+  database: "u856729253_Indihands",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+})
 
 
 
