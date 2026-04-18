@@ -1,10 +1,11 @@
 import { db } from "../../../../db";
 
+
 export async function GET(req, { params }) {
   try {
-   const {rfqId} = await params;
+    const { rfqId } = await params;
 
-    if (!rfqId || Number.isNaN(rfqId)) {
+    if (!rfqId || Number.isNaN(Number(rfqId))) {
       return Response.json(
         {
           success: false,
@@ -17,7 +18,10 @@ export async function GET(req, { params }) {
 
     /* 1️⃣ Find proposal by RFQ */
     const [[proposal]] = await db.query(
-      `SELECT id FROM proposals WHERE rfq_id = ? LIMIT 1`,
+      `SELECT id 
+       FROM proposals 
+       WHERE rfq_id = ? 
+       LIMIT 1`,
       [rfqId]
     );
 
@@ -30,16 +34,17 @@ export async function GET(req, { params }) {
       });
     }
 
-    /* 2️⃣ Fetch proposal override charges */
+    /* 2️⃣ Fetch proposal charges */
     const [charges] = await db.query(
       `SELECT
-         id,
-         label,
-         amount,
-         tax_percent AS taxPercent
-       FROM proposal_charges
-       WHERE proposal_id = ?
-       ORDER BY id ASC`,
+        id,
+        label,
+        amount,
+        tax_percent AS taxPercent,
+        hsn_code AS hsnCode
+      FROM proposal_charges
+      WHERE proposal_id = ?
+      ORDER BY id ASC`,
       [proposal.id]
     );
 

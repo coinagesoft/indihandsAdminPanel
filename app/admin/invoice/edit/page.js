@@ -105,7 +105,12 @@ const readonlyFields = [
           sgst_rate: x.sgst,
           igst_rate: x.igst,
         })),
-        charges: charges
+        charges: charges.map(c => ({
+  label: c.label,
+  amount: c.amount,
+  taxPercent: c.taxPercent,
+  hsnCode: c.hsnCode
+}))
 
 
       };
@@ -217,6 +222,7 @@ const readonlyFields = [
         label: c.label,
         amount: Number(c.amount),
         taxPercent: Number(c.taxPercent || 0),
+        hsnCode: c.hsnCode || c.hsn_code || ""
       }))
     );
 
@@ -249,7 +255,7 @@ const readonlyFields = [
   const addCharge = () => {
     setCharges([
       ...charges,
-      { label: "New Charge", amount: 0, taxPercent: 0 }
+      { label: "", amount: 0, taxPercent: 0 , hsnCode: ""}
     ]);
   };
 
@@ -503,7 +509,8 @@ const readonlyFields = [
                         <table className="table table-sm align-middle">
                           <thead>
                             <tr>
-                              <th>Charge</th>
+                              <th >Charge</th>
+                              <th>HSN Code</th>
                               <th style={{ width: 120 }}>Amount</th>
                               <th style={{ width: 100 }}>Tax %</th>
                               <th style={{ width: 120 }}>Total</th>
@@ -518,18 +525,28 @@ const readonlyFields = [
 
                               return (
                                 <tr key={i}>
-                                  <td>
+                                  <td className="px-0">
                                     <input
                                       className="form-control form-control-sm"
                                       value={c.label}
+                                      placeholder="Charge Name"
                                       onChange={(e) =>
                                         updateCharge(i, "label", e.target.value)
                                       }
                                     />
                                   </td>
 
-
-                                  <td>
+<td>
+  <input
+    className="form-control form-control-sm"
+    value={c.hsnCode || ""}
+    onChange={(e) =>
+      updateCharge(i, "hsnCode", e.target.value)
+    }
+    placeholder="HSN"
+  />
+</td>
+                                  <td className="px-0">
                                     <input
                                       type="number"
                                       min="0"
@@ -541,7 +558,7 @@ const readonlyFields = [
                                     />
                                   </td>
 
-                                  <td>
+                                  <td className="">
                                     <input
                                       type="number"
                                       min="0"
@@ -553,7 +570,7 @@ const readonlyFields = [
                                     />
                                   </td>
 
-                                  <td className="fw-semibold">
+                                  <td className="fw-semibold ">
                                     ₹ {total.toFixed(2)}
                                   </td>
 

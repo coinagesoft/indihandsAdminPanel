@@ -12,7 +12,7 @@ export async function GET() {
         p.company_id,
         p.branch_id,
         p.rfq_id,
-
+        
         r.rfq_number,
         r.client_name,
         r.client_email,
