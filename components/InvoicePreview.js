@@ -194,6 +194,7 @@ useEffect(() => {
         label: c.label,
         amount: Number(c.amount),
         taxPercent: Number(c.taxPercent || 0),
+         hsnCode: c.hsnCode || c.hsn_code || ""
       }))
     );
 
@@ -259,6 +260,7 @@ const handleRfqSelect = async (e) => {
       label: c.label,
       amount: Number(c.amount),
       taxPercent: Number(c.taxPercent || 0),
+      hsnCode: c.hsnCode || c.hsn_code || ""
     }))
   );
 
@@ -522,25 +524,44 @@ const handleRfqSelect = async (e) => {
               </div>
             </div>
 
-            {charges.length > 0 && (
-              <div className="mb-3">
-                <h6>Additional Charges</h6>
-                <ul className="mb-0">
-                  {charges.map((c, i) => {
-                    const tax = (Number(c.amount || 0) * Number(c.taxPercent || 0)) / 100;
-                    const total = Number(c.amount || 0) + tax;
+        {charges.length > 0 && (
+  <div className="mb-3">
+    <h6>Additional Charges</h6>
 
-                    return (
-                      <li key={i}>
-                        {c.label}: ₹ {total.toFixed(2)}
-                        {c.taxPercent > 0 && ` (${c.taxPercent}% tax)`}
-                      </li>
-                    );
-                  })}
+    <div className="table-responsive">
+      <table className="table table-bordered table-sm">
+        <thead className="table-light">
+          <tr>
+            <th>Charge</th>
+            <th>HSN Code</th>
+            <th>Amount</th>
+            <th>Tax %</th>
+            <th>Total</th>
+          </tr>
+        </thead>
 
-                </ul>
-              </div>
-            )}
+        <tbody>
+          {charges.map((c, i) => {
+            const amt = Number(c.amount || 0);
+            const tax =
+              (amt * Number(c.taxPercent || 0)) / 100;
+            const total = amt + tax;
+
+            return (
+              <tr key={i}>
+                <td>{c.label}</td>
+                <td>{c.hsnCode || "-"}</td>
+                <td>₹ {amt.toFixed(2)}</td>
+                <td>{c.taxPercent || 0}%</td>
+                <td>₹ {total.toFixed(2)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
 
 
             {/* Totals */}

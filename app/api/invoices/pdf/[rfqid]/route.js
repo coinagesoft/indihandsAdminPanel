@@ -4,109 +4,109 @@ export const dynamic = "force-dynamic";
 import { db } from "../../../../db";
 
 /* ================= NUMBER TO WORDS ================= */
-function numberToWords(num){
-  if(!num) return "Zero Only";
-  const a=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine",
-  "Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen",
-  "Seventeen","Eighteen","Nineteen"];
-  const b=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+function numberToWords(num) {
+  if (!num) return "Zero Only";
+  const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+    "Seventeen", "Eighteen", "Nineteen"];
+  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
 
-  const inWords=n=>{
-    if(n<20) return a[n];
-    if(n<100) return b[Math.floor(n/10)]+" "+a[n%10];
-    if(n<1000) return a[Math.floor(n/100)]+" Hundred "+inWords(n%100);
-    if(n<100000) return inWords(Math.floor(n/1000))+" Thousand "+inWords(n%1000);
-    if(n<10000000) return inWords(Math.floor(n/100000))+" Lakh "+inWords(n%100000);
-    return inWords(Math.floor(n/10000000))+" Crore "+inWords(n%10000000);
+  const inWords = n => {
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n / 10)] + " " + a[n % 10];
+    if (n < 1000) return a[Math.floor(n / 100)] + " Hundred " + inWords(n % 100);
+    if (n < 100000) return inWords(Math.floor(n / 1000)) + " Thousand " + inWords(n % 1000);
+    if (n < 10000000) return inWords(Math.floor(n / 100000)) + " Lakh " + inWords(n % 100000);
+    return inWords(Math.floor(n / 10000000)) + " Crore " + inWords(n % 10000000);
   };
-  return inWords(Math.round(num))+" Only";
+  return inWords(Math.round(num)) + " Only";
 }
-function formatDate(d){
-  if(!d) return "";
-  const [y,m,day] = d.split("-");
+function formatDate(d) {
+  if (!d) return "";
+  const [y, m, day] = d.split("-");
   return `${day}-${m}-${y}`;
 }
 /* ================= HTML TEMPLATE ================= */
-function buildHTML(data){
+function buildHTML(data) {
 
- const {
-    invoice,proposal, sender, computedItems, charges: computedCharges,
+  const {
+    invoice, proposal, sender, computedItems, charges: computedCharges,
     subtotal, cgstTotal, sgstTotal, igstTotal,
     totalTax, grandTotal, isSEZ
   } = data;
 
 
-/* ================= STATE LOGIC ================= */
+  /* ================= STATE LOGIC ================= */
 
   const stateMap = {
-    "01":"Jammu and Kashmir",
-    "02":"Himachal Pradesh",
-    "03":"Punjab",
-    "04":"Chandigarh",
-    "05":"Uttarakhand",
-    "06":"Haryana",
-    "07":"Delhi",
-    "08":"Rajasthan",
-    "09":"Uttar Pradesh",
-    "10":"Bihar",
-    "11":"Sikkim",
-    "12":"Arunachal Pradesh",
-    "13":"Nagaland",
-    "14":"Manipur",
-    "15":"Mizoram",
-    "16":"Tripura",
-    "17":"Meghalaya",
-    "18":"Assam",
-    "19":"West Bengal",
-    "20":"Jharkhand",
-    "21":"Odisha",
-    "22":"Chhattisgarh",
-    "23":"Madhya Pradesh",
-    "24":"Gujarat",
-    "25":"Daman and Diu",
-    "26":"Dadra and Nagar Haveli",
-    "27":"Maharashtra",
-    "28":"Andhra Pradesh",
-    "29":"Karnataka",
-    "30":"Goa",
-    "31":"Lakshadweep",
-    "32":"Kerala",
-    "33":"Tamil Nadu",
-    "34":"Puducherry",
-    "35":"Andaman and Nicobar Islands",
-    "36":"Telangana",
-    "37":"Andhra Pradesh (New)",
-    "38":"Ladakh"
+    "01": "Jammu and Kashmir",
+    "02": "Himachal Pradesh",
+    "03": "Punjab",
+    "04": "Chandigarh",
+    "05": "Uttarakhand",
+    "06": "Haryana",
+    "07": "Delhi",
+    "08": "Rajasthan",
+    "09": "Uttar Pradesh",
+    "10": "Bihar",
+    "11": "Sikkim",
+    "12": "Arunachal Pradesh",
+    "13": "Nagaland",
+    "14": "Manipur",
+    "15": "Mizoram",
+    "16": "Tripura",
+    "17": "Meghalaya",
+    "18": "Assam",
+    "19": "West Bengal",
+    "20": "Jharkhand",
+    "21": "Odisha",
+    "22": "Chhattisgarh",
+    "23": "Madhya Pradesh",
+    "24": "Gujarat",
+    "25": "Daman and Diu",
+    "26": "Dadra and Nagar Haveli",
+    "27": "Maharashtra",
+    "28": "Andhra Pradesh",
+    "29": "Karnataka",
+    "30": "Goa",
+    "31": "Lakshadweep",
+    "32": "Kerala",
+    "33": "Tamil Nadu",
+    "34": "Puducherry",
+    "35": "Andaman and Nicobar Islands",
+    "36": "Telangana",
+    "37": "Andhra Pradesh (New)",
+    "38": "Ladakh"
   };
 
- const clientStateCode =
-  (invoice.buyer_gstin || proposal.gstin || "").substring(0, 2);
+  const clientStateCode =
+    (invoice.buyer_gstin || proposal.gstin || "").substring(0, 2);
 
-const senderStateCode =
-  (invoice.seller_gstin || sender.gstin || "").substring(0, 2);
-const isSelf = proposal.billing_type === "self";
+  const senderStateCode =
+    (invoice.seller_gstin || sender.gstin || "").substring(0, 2);
+  const isSelf = proposal.billing_type === "self";
 
-// company (NO re-format if already present)
-const companyName = proposal.company || "";
+  // company (NO re-format if already present)
+  const companyName = proposal.company || "";
 
-// clean company for address
-const pureCompany = companyName.includes("(")
-  ? companyName.split("(").pop().replace(")", "").trim()
-  : companyName;
+  // clean company for address
+  const pureCompany = companyName.includes("(")
+    ? companyName.split("(").pop().replace(")", "").trim()
+    : companyName;
 
-// billing / shipping (proposal first)
-const billingAddress = proposal.billing_address || "";
-const shippingAddress = proposal.shipping_address || billingAddress;
+  // billing / shipping (proposal first)
+  const billingAddress = proposal.billing_address || "";
+  const shippingAddress = proposal.shipping_address || billingAddress;
 
   const clientStateName = stateMap[clientStateCode] || "";
   const senderStateName = stateMap[senderStateCode] || "";
 
   const isIGST = isSEZ || (clientStateCode !== senderStateCode);
-const itemRows = computedItems.map((x,i)=>`
+  const itemRows = computedItems.map((x, i) => `
 <tr>
-<td>${i+1}</td>
-<td class="left">${x.description||""}</td>
-<td>${x.hsn||""}</td>
+<td>${i + 1}</td>
+<td class="left">${x.description || ""}</td>
+<td>${x.hsn || ""}</td>
 <td>${x.qty}</td>
 <td>${x.rate.toFixed(2)}</td>
 <td>${x.amount.toFixed(2)}</td>
@@ -125,30 +125,30 @@ const itemRows = computedItems.map((x,i)=>`
 </tr>
 `).join("");
 
-const chargeRows = computedCharges.map(c=>`
+const chargeRows = computedCharges.map(c => `
 <tr>
 <td></td>
 <td class="left">${c.label}</td>
-<td></td>
+<td>${c.hsnCode || ""}</td>
 <td></td>
 <td></td>
 <td>${c.amount.toFixed(2)}</td>
 <td>${c.amount.toFixed(2)}</td>
 
-<td></td>
+<td>${(c.sgst > 0 ? (c.taxPercent / 2).toFixed(2) : "0")}</td>
 <td>${c.sgst.toFixed(2)}</td>
 
-<td></td>
+<td>${(c.cgst > 0 ? (c.taxPercent / 2).toFixed(2) : "0")}</td>
 <td>${c.cgst.toFixed(2)}</td>
 
-<td></td>
+<td>${(c.igst > 0 ? c.taxPercent.toFixed(2) : "0")}</td>
 <td>${c.igst.toFixed(2)}</td>
 
 <td>${c.total.toFixed(2)}</td>
 </tr>
 `).join("");
 
-return `
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -410,11 +410,10 @@ body{
 
   <!-- RIGHT BLOCK -->
   <div class="hdr-right">
-     ${
-    sender.logo
+     ${sender.logo
       ? `<img src="${sender.logo}">`
       : `<div style="height:60px;"></div>`
-  }
+    }
 
   <div class="hdr-text">
    
@@ -646,7 +645,7 @@ END AS company,
       return Response.json({ message: "Proposal not found" }, { status: 404 });
 
     /* ================= FETCH INVOICE ================= */
-const [[invoice]] = await db.query(`
+    const [[invoice]] = await db.query(`
   SELECT 
     id,
     invoice_number,
@@ -671,17 +670,17 @@ const [[invoice]] = await db.query(`
   WHERE proposal_id = ?
 `, [proposalId]);
 
-if (!invoice)
+    if (!invoice)
 
-  return Response.json({ message: "Invoice not found" }, { status: 404 });
+      return Response.json({ message: "Invoice not found" }, { status: 404 });
 
     const [[sender]] = await db.query(`SELECT * FROM company_info LIMIT 1`);
 
     /* ================= STATE LOGIC ================= */
- const clientStateCode = invoice.buyer_gstin?.substring(0, 2) || "";
-const senderStateCode = invoice.seller_gstin?.substring(0, 2) || "";
-const isInterState = clientStateCode !== senderStateCode;
-const isSEZ = proposal.sez_type?.toLowerCase() === "sez";
+    const clientStateCode = invoice.buyer_gstin?.substring(0, 2) || "";
+    const senderStateCode = invoice.seller_gstin?.substring(0, 2) || "";
+    const isInterState = clientStateCode !== senderStateCode;
+    const isSEZ = proposal.sez_type?.toLowerCase() === "sez";
 
     /* ================= ITEMS ================= */
     const [items] = await db.query(`
@@ -707,7 +706,7 @@ const isSEZ = proposal.sez_type?.toLowerCase() === "sez";
 
       WHERE pi.proposal_id = ?
       ORDER BY pi.id
-    `,  [proposal.company_id, proposal.id] );
+    `, [proposal.company_id, proposal.id]);
 
     /* ================= CHARGES ================= */
     const [companyCharges] = await db.query(`
@@ -717,9 +716,13 @@ const isSEZ = proposal.sez_type?.toLowerCase() === "sez";
     `, [proposal.company_id]);
 
     const [proposalCharges] = await db.query(`
-      SELECT label,amount,tax_percent taxPercent
-      FROM proposal_charges
-      WHERE proposal_id=?
+     SELECT 
+  label,
+  amount,
+  tax_percent AS taxPercent,
+  hsn_code AS hsnCode
+FROM proposal_charges
+WHERE proposal_id=?
     `, [proposal.id]);
 
     const allCharges = proposalCharges.length ? proposalCharges : companyCharges;
@@ -730,83 +733,84 @@ const isSEZ = proposal.sez_type?.toLowerCase() === "sez";
     let sgstTotal = 0;
     let igstTotal = 0;
 
-const computedItems = items.map(i => {
-  const qty = +i.qty || 0;
-  const rate = +i.rate || 0;
-  const disc = +i.discount || 0;
-const baseAmount = qty * rate;
-const taxable = baseAmount; 
-  let cg = 0, sg = 0, ig = 0;
-const unitDiscount = disc
-  ? (rate / (1 - disc / 100)) - rate
-  : 0;
-    const igstRate =
-    (+i.igst_rate || 0) ||
-    ((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
+    const computedItems = items.map(i => {
+      const qty = +i.qty || 0;
+      const rate = +i.rate || 0;
+      const disc = +i.discount || 0;
+      const baseAmount = qty * rate;
+      const taxable = baseAmount;
+      let cg = 0, sg = 0, ig = 0;
+      const unitDiscount = disc
+        ? (rate / (1 - disc / 100)) - rate
+        : 0;
+      const igstRate =
+        (+i.igst_rate || 0) ||
+        ((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
 
-if (isInterState || isSEZ) {
-  // ✅ ONLY IGST
-  ig = taxable * igstRate / 100;
-  cg = 0;
-  sg = 0;
-} else {
-  cg = taxable * (+i.cgst_rate || 0) / 100;
-  sg = taxable * (+i.sgst_rate || 0) / 100;
-}
+      if (isInterState || isSEZ) {
+        // ✅ ONLY IGST
+        ig = taxable * igstRate / 100;
+        cg = 0;
+        sg = 0;
+      } else {
+        cg = taxable * (+i.cgst_rate || 0) / 100;
+        sg = taxable * (+i.sgst_rate || 0) / 100;
+      }
 
-  itemSubtotal += taxable;
-  cgstTotal += cg;
-  sgstTotal += sg;
-  igstTotal += ig;
+      itemSubtotal += taxable;
+      cgstTotal += cg;
+      sgstTotal += sg;
+      igstTotal += ig;
 
-  return {
-    ...i,
-    qty,
-    rate,
-    discount: disc,
-    amount: taxable,
-    baseAmount,
-    unitDiscount,
-    cgst: cg,
-    sgst: sg,
-    igst: ig,
-    igstRate,   // ⭐ ADD
-    total: taxable + cg + sg + ig
-  };
-});
+      return {
+        ...i,
+        qty,
+        rate,
+        discount: disc,
+        amount: taxable,
+        baseAmount,
+        unitDiscount,
+        cgst: cg,
+        sgst: sg,
+        igst: ig,
+        igstRate,   // ⭐ ADD
+        total: taxable + cg + sg + ig
+      };
+    });
     /* ================= CALCULATE CHARGES ================= */
     let chargeSubtotal = 0;
 
-  const computedCharges = allCharges.map(c => {
-  const amt = +c.amount || 0;
-  const taxRate = +c.taxPercent || 0;
+    const computedCharges = allCharges.map(c => {
+      const amt = +c.amount || 0;
+      const taxRate = +c.taxPercent || 0;
 
-  let cg = 0, sg = 0, ig = 0;
-if (isInterState || isSEZ) {
-  // ✅ ONLY IGST
-  ig = amt * taxRate / 100;
-  cg = 0;
-  sg = 0;
-} else {
-  cg = amt * (taxRate / 2) / 100;
-  sg = amt * (taxRate / 2) / 100;
-}
+      let cg = 0, sg = 0, ig = 0;
+      if (isInterState || isSEZ) {
+        // ✅ ONLY IGST
+        ig = amt * taxRate / 100;
+        cg = 0;
+        sg = 0;
+      } else {
+        cg = amt * (taxRate / 2) / 100;
+        sg = amt * (taxRate / 2) / 100;
+      }
 
-  chargeSubtotal += amt;
-  cgstTotal += cg;
-  sgstTotal += sg;
-  igstTotal += ig;
+      chargeSubtotal += amt;
+      cgstTotal += cg;
+      sgstTotal += sg;
+      igstTotal += ig;
 
-  return {
-    label: c.label,
-    amount: amt,
-     taxPercent: taxRate, 
-    cgst: cg,
-    sgst: sg,
-    igst: ig,
-    total: amt + cg + sg + ig
-  };
-});
+      return {
+        label: c.label,
+        hsnCode: c.hsnCode || "",
+        amount: amt,
+        taxPercent: taxRate,
+        cgst: cg,
+        sgst: sg,
+        igst: ig,
+        total: amt + cg + sg + ig
+      };
+    });
 
     const subtotal = itemSubtotal + chargeSubtotal;
     const totalTax = cgstTotal + sgstTotal + igstTotal;
@@ -833,7 +837,7 @@ if (isInterState || isSEZ) {
       <tr>
         <td></td>
         <td>${c.label}</td>
-        <td></td>
+        <td>${c.hsnCode || ""}</td>
         <td></td>
         <td></td>
         <td></td>
@@ -846,20 +850,20 @@ if (isInterState || isSEZ) {
     `).join("");
 
     /* ================= HTML ================= */
-  const html = buildHTML({
-  invoice,
-  proposal,
-  sender,
-  computedItems,
-  charges: computedCharges,
-  subtotal,
-  cgstTotal,
-  sgstTotal,
-  igstTotal,
-  totalTax,
-  grandTotal,
-   isSEZ 
-});
+    const html = buildHTML({
+      invoice,
+      proposal,
+      sender,
+      computedItems,
+      charges: computedCharges,
+      subtotal,
+      cgstTotal,
+      sgstTotal,
+      igstTotal,
+      totalTax,
+      grandTotal,
+      isSEZ
+    });
 
     /* ================= PDFSHIFT ================= */
     const pdfRes = await fetch("https://api.pdfshift.io/v3/convert/pdf", {
@@ -878,7 +882,7 @@ if (isInterState || isSEZ) {
     });
 
     const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
-const invoiceNo = invoice.invoice_number || `INV-${invoice.id}`;
+    const invoiceNo = invoice.invoice_number || `INV-${invoice.id}`;
     return new Response(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",

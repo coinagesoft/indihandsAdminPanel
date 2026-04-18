@@ -260,21 +260,22 @@ const finalGstin = isSelf ? null : gstin || null;
       [proposalId]
     );
 
-    for (const ch of safeCharges) {
-      if (!ch.label) continue;
+   for (const ch of safeCharges) {
+  if (!ch.label) continue;
 
-      await db.query(
-        `INSERT INTO proposal_charges
-         (proposal_id, label, amount, tax_percent)
-         VALUES (?, ?, ?, ?)`,
-        [
-          proposalId,
-          ch.label,
-          Number(ch.amount || 0),
-          Number(ch.taxPercent || 0),
-        ]
-      );
-    }
+  await db.query(
+    `INSERT INTO proposal_charges
+     (proposal_id, label, amount, tax_percent, hsn_code)
+     VALUES (?, ?, ?, ?, ?)`,
+    [
+      proposalId,
+      ch.label,
+      Number(ch.amount || 0),
+      Number(ch.taxPercent || 0),
+      ch.hsnCode || ch.hsn_code || null,
+    ]
+  );
+}
 
     /* ---------- response ---------- */
     return Response.json({
