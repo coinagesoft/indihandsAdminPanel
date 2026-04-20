@@ -141,7 +141,8 @@ const igstRate = (isInterState || isSEZ) ? c.taxPercent : 0;
 <tr>
 <td></td>
 <td class="tdl">${c.label}</td>
-<td></td><td></td><td></td><td></td>
+<td class="tr">${c.hsnCode || ""}</td>
+<td></td><td></td><td></td>
 
 <td class="tr">${c.amount.toFixed(2)}</td>
 
@@ -706,11 +707,15 @@ END AS description,
       WHERE company_id=?
     `, [proposal.company_id]);
 
-    const [proposalCharges] = await db.query(`
-      SELECT label,amount,tax_percent taxPercent
-      FROM proposal_charges
-      WHERE proposal_id=?
-    `, [proposal.id]);
+const [proposalCharges] = await db.query(`
+  SELECT 
+    label,
+    amount,
+    tax_percent AS taxPercent,
+    hsn_code AS hsnCode
+  FROM proposal_charges
+  WHERE proposal_id=?
+`, [proposal.id]);
 
     const allCharges = proposalCharges.length ? proposalCharges : companyCharges;
 
@@ -793,6 +798,7 @@ else {
   return {
     label: c.label,
     amount: amt,
+      hsnCode: c.hsnCode || "",
      taxPercent: taxRate, 
     cgst: cg,
     sgst: sg,
@@ -826,7 +832,7 @@ else {
       <tr>
         <td></td>
         <td>${c.label}</td>
-        <td></td>
+     <td>${c.hsnCode || ""}</td>
         <td></td>
         <td></td>
         <td></td>
