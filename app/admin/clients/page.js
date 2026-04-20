@@ -178,7 +178,7 @@ const Page = () => {
 
     showSuccess(" Branch updated");
     await fetchCompanies();
-    setEditingBranch({ ...editingBranch, password: "" }); // ✅ ADD
+    setEditingBranch({ ...editingBranch, password: "" }); 
     const modal = bootstrap.Modal.getInstance(branchEditModalRef.current);
     modal?.hide();
 
