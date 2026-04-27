@@ -224,7 +224,7 @@ body{
 
 /* ===== MAIN BOX ===== */
 .box{
-  margin-top: 30px; 
+  margin-top: 60px; 
   border:1px solid #8c8c8c;
 }
 
