@@ -1,13 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import PreviewPage from '../../../../components/InvoicePreview.js'
 import ProtectedRoute from '../../../../components/ProtectedRoute.js'
 import { showSuccess, showError } from "../../../../lib/toast.js";
 import { useConfirm } from "../../../../components/ConfirmDialog.js";
 import { useFetchWithLoader } from "../../../../lib/fetchWithLoader.js";
 
-const Page = () => {
+const PageInner = () => {
   /* ================= HEADER ================= */
   const [header, setHeader] = useState({
     quotationNo: "",
@@ -807,4 +808,11 @@ useEffect(() => {
   );
 };
 
-export default Page;
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PageInner />
+    </Suspense>
+  );
+}
