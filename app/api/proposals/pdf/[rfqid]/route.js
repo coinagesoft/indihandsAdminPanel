@@ -34,7 +34,7 @@ function buildHTML(data) {
     totalTax, grandTotal, formattedDate,  isInterState , isSEZ
   } = data;
 
-const isSelf = proposal.billing_type === "self";
+const isSelf = proposal.billing_type === "Self";
 
 const companyName = proposal.company || "";
 const clientName = proposal.client_name || "";
@@ -109,15 +109,34 @@ const sgstRate = (isInterState || isSEZ) ? 0 : (x.sgst_rate || 0);
 const cgstRate = (isInterState || isSEZ) ? 0 : (x.cgst_rate || 0);
 const igstRate = (isInterState || isSEZ) ? (x.igstRate || 0) : 0;
 
+const getCityFromAddress = (address) => {
+  if (!address) return "";
+
+  const parts = address.split(",").map(p => p.trim()).filter(Boolean);
+
+  if (parts.length >= 3) {
+    return parts[parts.length - 3]; // city
+  }
+
+  if (parts.length >= 2) {
+    return parts[1];
+  }
+
+  return parts[0] || "";
+};
+
+const city = getCityFromAddress(proposal.billing_address);
+const displayAddress = isSelf ? city : proposal.billing_address;
   return `
 <tr>
 <td class="tr">${i + 1}</td>
 <td class="tdl">${x.description}</td>
 <td class="tr">${x.hsn ?? ""}</td>
 <td class="tr">${x.qty}</td>
-<td class="tr">${x.rate.toFixed(2)}</td>
+<td class="tr">${x.basePrice.toFixed(2)}</td>
 <td class="tr">${x.unitDiscount.toFixed(2)}</td>
-<td class="tr">${x.baseAmount.toFixed(2)}</td>
+<td class="tr">${x.rate.toFixed(2)}</td>
+<td class="tr">${x.totalAmount.toFixed(2)}</td>
 
 <td class="tr">${sgstRate}</td>
 <td class="tr">${x.sgst.toFixed(2)}</td>
@@ -142,7 +161,7 @@ const igstRate = (isInterState || isSEZ) ? c.taxPercent : 0;
 <td></td>
 <td class="tdl">${c.label}</td>
 <td class="tr">${c.hsnCode || ""}</td>
-<td></td><td></td><td></td>
+<td></td><td></td><td></td><td></td>
 
 <td class="tr">${c.amount.toFixed(2)}</td>
 
@@ -494,10 +513,11 @@ State: ${clientStateName} | State Code: ${clientStateCode}</div>
 <tr>
 <th>S.No</th>
 <th>Product Description</th>
-<th>HSN</th>
+<th>HSN / SAC Code</th>
 <th>Qty</th>
 <th>Cost</th>
-<th>Disc Amt</th>
+<th>Disc</th>
+<th>Discounted Cost</th>
 <th>Amt</th>
 <th>SGST</th>
 <th>Amt</th>
@@ -513,7 +533,7 @@ ${itemRows}
 ${chargeRows}
 <tr class="tbold">
 <td colspan="6">Total</td>
-<td class="tr">${subtotal.toFixed(2)}</td>
+<td class="tr"></td><td>${subtotal.toFixed(2)}</td>
 <td class="tr"></td><td>${cgstTotal.toFixed(2)}</td>
 <td class="tr"></td><td>${sgstTotal.toFixed(2)}</td>
 <td class="tr"></td><td>${igstTotal.toFixed(2)}</td>
@@ -683,6 +703,7 @@ const isSEZ = (sezType || "").toUpperCase() === "SEZ";
         pi.cgst_rate,
         pi.sgst_rate,
         pi.igst_rate,
+        pr.base_price,
        CASE 
   WHEN cpp.prefix IS NOT NULL AND cpp.prefix != ''
   THEN CONCAT(cpp.prefix, ' | ', pr.product_name)
@@ -729,16 +750,17 @@ const computedItems = items.map(i => {
   const qty = +i.qty || 0;
   const rate = +i.rate || 0;
   const disc = +i.discount || 0;
-const baseAmount = qty * rate;
-const taxable = baseAmount; 
-  let cg = 0, sg = 0, ig = 0;
+const totalAmount = qty * rate;
+const taxable = totalAmount; 
+let cg = 0, sg = 0, ig = 0;
 const unitDiscount = disc
-  ? (rate / (1 - disc / 100)) - rate
-  : 0;
-    const igstRate =
-    (+i.igst_rate || 0) ||
-    ((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
+? (rate / (1 - disc / 100)) - rate
+: 0;
+const igstRate =
+(+i.igst_rate || 0) ||
+((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
 
+const basePrice = +i.base_price || 0;
 if (isSEZ) {
   ig = taxable * igstRate / 100;
 } 
@@ -761,7 +783,8 @@ else {
     rate,
     discount: disc,
     amount: taxable,
-    baseAmount,
+    totalAmount,
+    basePrice,
     unitDiscount,
     cgst: cg,
     sgst: sg,

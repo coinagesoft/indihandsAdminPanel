@@ -3,9 +3,10 @@ import { db } from "../../../../db";
 export async function GET(req, { params }) {
   const { proposalId } = await params;
 
-  const [[row]] = await db.query(
+  const [rows] = await db.query(
     `SELECT 
       id,
+      invoice_type,
       invoice_number,
 
       DATE_FORMAT(invoice_date, '%Y-%m-%d') as invoice_date,
@@ -17,18 +18,15 @@ export async function GET(req, { params }) {
 
       transport_mode,
       vehicle_number,
-
       challan_number,
       DATE_FORMAT(challan_date, '%Y-%m-%d') as challan_date,
-
       reverse_charge
 
      FROM invoices 
-     WHERE proposal_id = ? 
-     ORDER BY id DESC 
-     LIMIT 1`,
+     WHERE proposal_id = ?
+     ORDER BY id DESC`,
     [proposalId]
   );
 
-  return Response.json(row || {});
+  return Response.json(rows);
 }

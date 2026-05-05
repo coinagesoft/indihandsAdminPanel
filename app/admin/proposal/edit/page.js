@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-
+import { useSearchParams } from "next/navigation";
 import PreviewPage from '../../../../components/InvoicePreview.js'
 import ProtectedRoute from '../../../../components/ProtectedRoute.js'
 import { showSuccess, showError } from "../../../../lib/toast.js";
@@ -30,13 +30,16 @@ const Page = () => {
   const [saving, setSaving] = useState(false);
   const [charges, setCharges] = useState([]);
   const [mode, setMode] = useState("edit");
+  const searchParams = useSearchParams();
+  const [rfqSearch, setRfqSearch] = useState("");
+  const rfqIdFromUrl = searchParams.get("rfqId");
   // "edit" | "preview"
-const readonlyFields = [
-  "quotationNo",
-  "clientName",
-  "clientEmail",
-  "gstin"
-];
+  const readonlyFields = [
+    "quotationNo",
+    "clientName",
+    "clientEmail",
+    "gstin"
+  ];
   /* ================= HANDLERS ================= */
   const handleHeaderChange = (e) => {
     setHeader({ ...header, [e.target.name]: e.target.value });
@@ -77,6 +80,17 @@ const readonlyFields = [
     setItems(updated);
   };
 
+  const filteredRfqs = acceptedRfqs.filter(r => {
+    const s = rfqSearch.toLowerCase();
+
+    if (!s) return true;
+
+    return (
+      (r.rfqNumber || "").toLowerCase().includes(s) ||
+      (r.company || "").toLowerCase().includes(s)
+    );
+  });
+
   const handleSaveProposal = async () => {
     if (!selectedRfq) return showError("Please select RFQ first");
     if (!header.companyId || !header.branchId)
@@ -106,11 +120,11 @@ const readonlyFields = [
           igst_rate: x.igst,
         })),
         charges: charges.map(c => ({
-  label: c.label,
-  amount: c.amount,
-  taxPercent: c.taxPercent,
-  hsnCode: c.hsnCode
-}))
+          label: c.label,
+          amount: c.amount,
+          taxPercent: c.taxPercent,
+          hsnCode: c.hsnCode
+        }))
 
 
       };
@@ -255,11 +269,73 @@ const readonlyFields = [
   const addCharge = () => {
     setCharges([
       ...charges,
-      { label: "", amount: 0, taxPercent: 0 , hsnCode: ""}
+      { label: "Delivery Charge", amount: 0, taxPercent: 18, hsnCode: "996812" }
     ]);
   };
 
+  const loadRfqById = async (rfqId) => {
+    try {
+      setSelectedRfq(rfqId);
 
+      const res = await fetchWithLoader(`/api/rfqs/${rfqId}/details`);
+      const data = await res.json();
+
+      if (!res.ok) return showError("❌ " + data.message);
+
+      const companyId = data.header.companyId;
+
+      // charges logic (same as your existing)
+      let loadedCharges = [];
+
+      const proposalChargesRes = await fetchWithLoader(
+        `/api/proposals/${rfqId}/charges`
+      );
+      const proposalChargesData = await proposalChargesRes.json();
+
+      if (proposalChargesData.success && proposalChargesData.charges?.length) {
+        loadedCharges = proposalChargesData.charges;
+      } else {
+        const companyRes = await fetchWithLoader(
+          `/api/companies/${companyId}/charges`
+        );
+        const companyData = await companyRes.json();
+        loadedCharges = companyData.charges || [];
+      }
+
+      setCharges(
+        loadedCharges.map(c => ({
+          label: c.label,
+          amount: Number(c.amount),
+          taxPercent: Number(c.taxPercent || 0),
+          hsnCode: c.hsnCode || ""
+        }))
+      );
+ const selected = acceptedRfqs.find((x) => x.id == rfqId);
+      // ✅ header
+      setHeader(prev => ({
+        ...prev,
+        quotationNo: selected?.proposalNumber || "",
+        date: new Date().toISOString().slice(0, 10),
+
+        companyId,
+        branchId: data.header.branchId,
+
+        clientName: data.header.clientName,
+        clientPhone: data.header.clientPhone,
+        clientEmail: data.header.clientEmail,
+
+        company: data.header.company,
+        gstin: data.header.gstin,
+        billingAddress: data.header.billing_address,
+        shippingAddress: data.header.shipping_address,
+      }));
+
+      setItems(data.items || []);
+
+    } catch (err) {
+      showError("❌ Failed to load RFQ");
+    }
+  };
 
 
   /* ================= CALCULATIONS ================= */
@@ -307,7 +383,27 @@ const readonlyFields = [
     fetchAcceptedRfqs();
   }, []);
 
+  useEffect(() => {
+    if (rfqIdFromUrl) {
+      loadRfqById(rfqIdFromUrl);
+    }
+  }, [rfqIdFromUrl]);
 
+useEffect(() => {
+  if (!rfqSearch) return;
+
+  if (filteredRfqs.length === 1) {
+    const rfq = filteredRfqs[0];
+
+    // ✅ prevent duplicate calls
+    if (rfq.id !== selectedRfq) {
+      setSelectedRfq(rfq.id);
+      loadRfqById(rfq.id);
+    }
+  } else {
+    setSelectedRfq("");
+  }
+}, [rfqSearch]);
 
   const fetchAcceptedRfqs = async () => {
     const res = await fetchWithLoader("/api/proposals/accepted-rfqs");
@@ -337,13 +433,31 @@ const readonlyFields = [
                     {/* RFQ */}
                     <div className="mb-4">
                       <label className="form-label">Select Accepted RFQ</label>
+
+                      {/* 🔍 SEARCH */}
+                      <input
+                        type="text"
+                        className="form-control mb-2"
+                        placeholder="Search by RFQ No.... "
+                        value={rfqSearch}
+                        onChange={(e) => setRfqSearch(e.target.value)}
+                      />
+
+                      {/* DROPDOWN */}
                       <select
                         className="form-select"
-                        value={selectedRfq}
-                        onChange={handleRfqSelect}
+                        value={selectedRfq || ""}
+                        onChange={(e) => loadRfqById(e.target.value)}
                       >
                         <option value="">-- Select RFQ --</option>
-                        {acceptedRfqs.map((r) => (
+
+                        {rfqIdFromUrl && !acceptedRfqs.some(r => r.id == rfqIdFromUrl) && (
+                          <option value={rfqIdFromUrl}>
+                            RFQ #{rfqIdFromUrl} (from list)
+                          </option>
+                        )}
+
+                        {filteredRfqs.map((r) => (
                           <option key={r.id} value={r.id}>
                             {r.rfqNumber} — {r.company}
                           </option>
@@ -375,26 +489,26 @@ const readonlyFields = [
                       ))}
 
                       <div className="col-md-6">
-  <label className="form-label">Billing Address</label>
-  <textarea
-    className="form-control"
-    name="billingAddress"
-    value={header.billingAddress}
-    onChange={handleHeaderChange}
-    rows={3}
-  />
-</div>
+                        <label className="form-label">Billing Address</label>
+                        <textarea
+                          className="form-control"
+                          name="billingAddress"
+                          value={header.billingAddress}
+                          onChange={handleHeaderChange}
+                          rows={3}
+                        />
+                      </div>
 
-<div className="col-md-6">
-  <label className="form-label">Shipping Address</label>
-  <textarea
-    className="form-control"
-    name="shippingAddress"
-    value={header.shippingAddress}
-    onChange={handleHeaderChange}
-    rows={3}
-  />
-</div>
+                      <div className="col-md-6">
+                        <label className="form-label">Shipping Address</label>
+                        <textarea
+                          className="form-control"
+                          name="shippingAddress"
+                          value={header.shippingAddress}
+                          onChange={handleHeaderChange}
+                          rows={3}
+                        />
+                      </div>
                     </div>
 
                     {/* ITEMS TABLE */}
@@ -418,7 +532,7 @@ const readonlyFields = [
                           <tr>
                             <th className="text-center">#</th>
                             <th>Description</th>
-                            <th className="text-center">HSN</th>
+                            <th className="text-center">HSN/SAC </th>
                             <th className="text-center">Qty</th>
                             <th className="text-end">Rate</th>
                             <th className="text-end">Disc %</th>
@@ -510,7 +624,7 @@ const readonlyFields = [
                           <thead>
                             <tr>
                               <th >Charge</th>
-                              <th>HSN Code</th>
+                              <th>HSN/SAC</th>
                               <th style={{ width: 120 }}>Amount</th>
                               <th style={{ width: 100 }}>Tax %</th>
                               <th style={{ width: 120 }}>Total</th>
@@ -536,16 +650,16 @@ const readonlyFields = [
                                     />
                                   </td>
 
-<td>
-  <input
-    className="form-control form-control-sm"
-    value={c.hsnCode || ""}
-    onChange={(e) =>
-      updateCharge(i, "hsnCode", e.target.value)
-    }
-    placeholder="HSN"
-  />
-</td>
+                                  <td>
+                                    <input
+                                      className="form-control form-control-sm"
+                                      value={c.hsnCode || ""}
+                                      onChange={(e) =>
+                                        updateCharge(i, "hsnCode", e.target.value)
+                                      }
+                                      placeholder="HSN/SAC"
+                                    />
+                                  </td>
                                   <td className="px-0">
                                     <input
                                       type="number"

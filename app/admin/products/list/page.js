@@ -540,7 +540,7 @@ const Page = () => {
                 <label className="form-label">Search</label>
                 <input
                   className="form-control"
-                  placeholder="Product name or SKU"
+                  placeholder="Search by Product name or barcode"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
