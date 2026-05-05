@@ -227,13 +227,7 @@ setCompanyInfo({
           Users
         </button>
 
-        <button
-          type="button"
-          className={`settings-tab ${activeTab === "pricing" ? "active" : ""}`}
-          onClick={() => setActiveTab("pricing")}
-        >
-          Pricing Defaults
-        </button>
+        
       </div>
 
       <div className="tab-content">
@@ -421,91 +415,7 @@ setCompanyInfo({
           </div>
         )}
 
-        {/* ✅ Pricing */}
-        {activeTab === "pricing" && (
-          <div>
-            <h5>Pricing & Proposal Defaults</h5>
-            <div className="row g-3">
-              <div className="col-12 col-md-6">
-                <label className="form-label">SGST Rate (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  className="form-control"
-                  value={pricingDefaults.sgstRate}
-                  onChange={(e) =>
-                    setPricingDefaults({
-                      ...pricingDefaults,
-                      sgstRate: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
-
-              <div className="col-12 col-md-6">
-                <label className="form-label">CGST Rate (%)</label>
-                <input
-                  type="number"
-                   min="0"
-                  className="form-control"
-                  value={pricingDefaults.cgstRate}
-                  onChange={(e) =>
-                    setPricingDefaults({
-                      ...pricingDefaults,
-                      cgstRate: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
-
-              <div className="col-12 col-md-6">
-                <label className="form-label">IGST Rate (%)</label>
-                <input
-                  type="number"
-                   min="0"
-                  className="form-control"
-                  value={pricingDefaults.igstRate}
-                  onChange={(e) =>
-                    setPricingDefaults({
-                      ...pricingDefaults,
-                      igstRate: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
-
-              {/* <div className="col-12 col-md-6">
-                <label className="form-label">Delivery Charges</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={pricingDefaults.deliveryCharges}
-                  onChange={(e) =>
-                    setPricingDefaults({
-                      ...pricingDefaults,
-                      deliveryCharges: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
-
-              <div className="col-12 col-md-6">
-                <label className="form-label">Branding Charges</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={pricingDefaults.brandingCharges}
-                  onChange={(e) =>
-                    setPricingDefaults({
-                      ...pricingDefaults,
-                      brandingCharges: Number(e.target.value),
-                    })
-                  }
-                />
-              </div> */}
-            </div>
-          </div>
-        )}
+     
       </div>
 
       {/* ✅ Save Button */}

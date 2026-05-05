@@ -37,14 +37,18 @@ const menuItems = [
     title: "Proposal",
     icon: "ri-article-line",
     children: [
-      { title: "Edit Proposal", path: "/admin/invoice/edit" },
-      { title: "Proposal History", path: "/admin/proposal" },
+      { title: "Edit Proposal", path: "/admin/proposal/edit" },
+      { title: "Proposal List", path: "/admin/proposalHistory" },
     ],
   },
   {
     title: "Invoice",
     icon: "ri-receipt-line",
-    path: "/admin/challan",
+       children: [
+      { title: "Create Invoice", path: "/admin/invoice/create" },
+      { title: "Invoice List", path: "/admin/invoice/list" },
+    ],
+
   },
   {
     title: "Settings",

@@ -1,12 +1,15 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
-import  ProtectedRoute from '../../../components/ProtectedRoute'
+import { Suspense } from "react";
+import ProtectedRoute from '../../../components/ProtectedRoute'
 import { showSuccess, showError } from "../../../lib/toast";
 import { useFetchWithLoader } from "../../../lib/fetchWithLoader";
+import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 const RFQ_STATUSES = ["Submitted", "Under Review", "Accepted", "Rejected"];
 
-const RFQPage = () => {
+const RFQPageInner = () => {
   const [organizations, setOrganizations] = useState([]);
   const [rfqs, setRfqs] = useState([]);
   const [selectedOrg, setSelectedOrg] = useState("all");
@@ -14,8 +17,10 @@ const RFQPage = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState("all");
   const [statusLoading, setStatusLoading] = useState(null);
+  const searchParams = useSearchParams();
+  const rfqIdFromUrl = searchParams.get("rfqId");
   const fetchWithLoader = useFetchWithLoader();
-
+  const router = useRouter();
   /* ---------------- API ---------------- */
 
   useEffect(() => {
@@ -26,7 +31,7 @@ const RFQPage = () => {
     try {
       const res = await fetchWithLoader("/api/rfqs");
       const data = await res.json();
-      console.log("rfq",data)
+      console.log("rfq", data)
       if (!res.ok) throw new Error(data.message || "Failed to load RFQs");
 
       setOrganizations(data.organizations || []);
@@ -61,38 +66,38 @@ const RFQPage = () => {
   // };
 
   const updateStatus = async (rfqId, status) => {
-  const key = `${rfqId}-${status}`;
-  setStatusLoading(key);
+    const key = `${rfqId}-${status}`;
+    setStatusLoading(key);
 
-  try {
-    const res = await fetchWithLoader(`/api/rfqs/${rfqId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
+    try {
+      const res = await fetchWithLoader(`/api/rfqs/${rfqId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Update failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Update failed");
 
-    if (data.emailSent) {
-      showSuccess(` Status "${status}" & email sent`);
-    } else if (data.emailError) {
-      showError(` Status updated but email failed`);
-    } else {
-      showSuccess(`Status updated`);
+      if (data.emailSent) {
+        showSuccess(` Status "${status}" & email sent`);
+      } else if (data.emailError) {
+        showError(` Status updated but email failed`);
+      } else {
+        showSuccess(`Status updated`);
+      }
+
+      setRfqs(prev =>
+        prev.map(r => (r.id === rfqId ? { ...r, status } : r))
+      );
+
+    } catch (e) {
+      showError("❌ " + e.message);
+    } finally {
+      setStatusLoading(null);
     }
 
-    setRfqs(prev =>
-      prev.map(r => (r.id === rfqId ? { ...r, status } : r))
-    );
-
-  } catch (e) {
-    showError("❌ " + e.message);
-  } finally {
-    setStatusLoading(null);
-  }
-
-};
+  };
   /* ---------------- FILTER HELPERS ---------------- */
 
   const allProducts = useMemo(() => {
@@ -144,49 +149,49 @@ const RFQPage = () => {
 
   return (
     <ProtectedRoute>
-    <div className="container-xxl container-p-y">
-      <h4 className="mb-4 text-primary">RFQ Management</h4>
+      <div className="container-xxl container-p-y">
+        <h4 className="mb-4 text-primary">RFQ Management</h4>
 
-      {/* Filters */}
-      <div className="row mb-4 g-3">
-        <div className="col-md-3">
-          <label className="form-label">Organization</label>
-          <select
-            className="form-select"
-            value={selectedOrg}
-            onChange={(e) => {
-              setSelectedOrg(e.target.value);
-              setSelectedBranch("all");
-            }}
-          >
-            <option value="all">All Organizations</option>
-            {organizations.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Filters */}
+        <div className="row mb-4 g-3">
+          <div className="col-md-3">
+            <label className="form-label">Organization</label>
+            <select
+              className="form-select"
+              value={selectedOrg}
+              onChange={(e) => {
+                setSelectedOrg(e.target.value);
+                setSelectedBranch("all");
+              }}
+            >
+              <option value="all">All Organizations</option>
+              {organizations.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="col-md-3">
-          <label className="form-label">Branch</label>
-          <select
-            className="form-select"
-            value={selectedBranch}
-            onChange={(e) => setSelectedBranch(e.target.value)}
-            disabled={selectedOrg === "all"}
-          >
-            <option value="all">All Branches</option>
-            {availableBranches.map((b) => (
-              <option key={b.id} value={b.name}>
-                {b.name}
-              </option>
-            ))}
+          <div className="col-md-3">
+            <label className="form-label">Branch</label>
+            <select
+              className="form-select"
+              value={selectedBranch}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+              disabled={selectedOrg === "all"}
+            >
+              <option value="all">All Branches</option>
+              {availableBranches.map((b) => (
+                <option key={b.id} value={b.name}>
+                  {b.name}
+                </option>
+              ))}
 
-          </select>
-        </div>
+            </select>
+          </div>
 
-        {/* <div className="col-md-3">
+          {/* <div className="col-md-3">
           <label className="form-label">Product</label>
           <select
             className="form-select"
@@ -202,133 +207,150 @@ const RFQPage = () => {
           </select>
         </div> */}
 
-        <div className="col-md-3">
-          <label className="form-label">Status</label>
-          <select
-            className="form-select"
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-          >
-            <option value="all">All Status</option>
-            {RFQ_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+          <div className="col-md-3">
 
-      {filteredRfqs.length === 0 && (
-        <p className="text-muted">No RFQs match selected filters.</p>
-      )}
-
-      {filteredRfqs.map((rfq) => (
-        <div key={rfq.id} className="card mb-4 shadow-sm">
-          <div className="card-header d-flex justify-content-between">
-            <strong>
-              {rfq.rfqNumber} — {rfq.orgName} ({rfq.branch})
-            </strong>
-            <span className={`badge ${statusBadgeClass(rfq.status)}`}>
-              {rfq.status}
-            </span>
+            <label className="form-label">Status</label>
+            <select
+              className="form-select"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              {RFQ_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
           </div>
+        </div>
 
-          <div className="card-body">
-            <p className="text-muted">Submitted at: {rfq.submittedAt}</p>
-  {/* ✅ CLIENT DETAILS */}
-  <div className="mb-3 row">
-    <div className="col-4"><strong>Client Name:</strong> {rfq.clientName || "-"}</div>
-    <div className="col-3"><strong>Phone:</strong> {rfq.clientPhone || "-"}</div>
-    <div className="col-5"><strong>Email:</strong> {rfq.clientEmail || "-"}</div>
-  </div>
-            <div className="table-responsive">
-              <table className="table table-bordered">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                     <th>HSN</th>
-                    <th>Code</th>
-                    <th>Qty</th>
-                    <th>Rate</th>
-                    <th>Total Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rfq.products.map((p) => (
-                    <tr key={p.id}>
-                      <td>{p.name}</td>
-                       <td>{p.hsn || "-"}</td>
-                      <td>{p.code || "-"}</td>
-                      <td>{p.quantity}</td>
-                      <td>{p.rate}</td>
-                      <td>{p.totalAmount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {filteredRfqs.length === 0 && (
+          <p className="text-muted">No RFQs match selected filters.</p>
+        )}
+
+        {filteredRfqs.map((rfq) => (
+          <div key={rfq.id} className="card mb-4 shadow-sm">
+            <div className="card-header d-flex justify-content-between">
+              <strong>
+                {rfq.rfqNumber} — {rfq.orgName} ({rfq.branch})
+              </strong>
+
+              <span className={`badge ${statusBadgeClass(rfq.status)}`}>
+                {rfq.status}
+              </span>
             </div>
 
-          {rfq.status !== "Accepted" && rfq.status !== "Rejected" && (
-  <div className="d-flex gap-2 mt-3">
+            <div className="card-body">
+              <p className="text-muted">Submitted at: {rfq.submittedAt}</p>
+              {/* ✅ CLIENT DETAILS */}
+              <div className="mb-3 row">
+                <div className="col-4"><strong>Client Name:</strong> {rfq.clientName || "-"}</div>
+                <div className="col-3"><strong>Phone:</strong> {rfq.clientPhone || "-"}</div>
+                <div className="col-5"><strong>Email:</strong> {rfq.clientEmail || "-"}</div>
+              </div>
+              <div className="table-responsive">
+                <table className="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>HSN</th>
+                      <th>Code</th>
+                      <th>Qty</th>
+                      <th>Rate</th>
+                      <th>Total Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rfq.products.map((p) => (
+                      <tr key={p.id}>
+                        <td>{p.name}</td>
+                        <td>{p.hsn || "-"}</td>
+                        <td>{p.code || "-"}</td>
+                        <td>{p.quantity}</td>
+                        <td>{p.rate}</td>
+                        <td>{p.totalAmount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+           {rfq.status === "Accepted" && (
+  <div className="d-flex gap-2 mt-2">
 
-    {/* UNDER REVIEW */}
-    {rfq.status === "Submitted" && (
-      <button
-        className="btn btn-warning btn-sm"
-        disabled={statusLoading === `${rfq.id}-Under Review`}
-        onClick={() => updateStatus(rfq.id, "Under Review")}
-      >
-        {statusLoading === `${rfq.id}-Under Review` ? (
-          <>
-            <span className="spinner-border spinner-border-sm me-1"></span>
-            updating status...
-          </>
-        ) : (
-          "Mark Under Review"
-        )}
-      </button>
-    )}
-
-    {/* ACCEPT */}
+    {/* CREATE PROPOSAL */}
     <button
-      className="btn btn-success btn-sm"
-      disabled={statusLoading === `${rfq.id}-Accepted`}
-      onClick={() => updateStatus(rfq.id, "Accepted")}
+      className="btn btn-orange btn-sm"
+      onClick={() =>
+        router.push(`/admin/proposal/edit?rfqId=${rfq.id}`)
+      }
     >
-      {statusLoading === `${rfq.id}-Accepted` ? (
-        <>
-          <span className="spinner-border spinner-border-sm me-1"></span>
-            updating status...
-        </>
-      ) : (
-        "Accept"
-      )}
+      Create Proposal
     </button>
 
-    {/* REJECT */}
+    {/* ✅ CANCEL RFQ */}
     <button
-      className="btn btn-danger btn-sm"
+      className="btn btn-outline-danger btn-sm"
       disabled={statusLoading === `${rfq.id}-Rejected`}
-      onClick={() => updateStatus(rfq.id, "Rejected")}
+      onClick={() => {
+        if (confirm("Cancel this RFQ? Stock will be restored.")) {
+          updateStatus(rfq.id, "Rejected");
+        }
+      }}
     >
-      {statusLoading === `${rfq.id}-Rejected` ? (
-        <>
-          <span className="spinner-border spinner-border-sm me-1"></span>
-             updating status...
-        </>
-      ) : (
-        "Reject"
-      )}
+      Cancel RFQ
     </button>
+
   </div>
 )}
+               <div className="d-flex gap-2 mt-3">
+
+  {/* Submitted → Under Review */}
+  {rfq.status === "Submitted" && (
+    <button
+      className="btn btn-warning btn-sm"
+      disabled={statusLoading === `${rfq.id}-Under Review`}
+      onClick={() => updateStatus(rfq.id, "Under Review")}
+    >
+      Mark Under Review
+    </button>
+  )}
+
+  {/* Accept + Reject (only before Accepted/Rejected) */}
+  {rfq.status !== "Accepted" && rfq.status !== "Rejected" && (
+    <>
+      <button
+        className="btn btn-success btn-sm"
+        disabled={statusLoading === `${rfq.id}-Accepted`}
+        onClick={() => updateStatus(rfq.id, "Accepted")}
+      >
+        Accept
+      </button>
+
+      <button
+        className="btn btn-danger btn-sm"
+        disabled={statusLoading === `${rfq.id}-Rejected`}
+        onClick={() => updateStatus(rfq.id, "Rejected")}
+      >
+        Reject
+      </button>
+    </>
+  )}
+
+
+</div>
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
     </ProtectedRoute>
   );
 };
 
-export default RFQPage;
+export default function RFQPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RFQPageInner />
+    </Suspense>
+  );
+}

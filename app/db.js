@@ -15,6 +15,7 @@ dotenv.config();
 //   queueLimit: 0
 // });
 
+
 export const db = mysql.createPool({
   host: "46.28.45.124",
   user: "u144125849_Indicat",

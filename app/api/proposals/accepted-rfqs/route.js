@@ -14,7 +14,8 @@ export async function GET() {
         cb.contact_person AS customerName,
         p.place AS place,
         p.id AS proposalId,        
-        p.proposal_number AS proposalNumber
+        p.proposal_number AS proposalNumber,
+        p.status AS proposalStatus 
       FROM rfqs r
       JOIN companies c ON c.id = r.company_id
       JOIN company_branches cb ON cb.id = r.branch_id
@@ -34,6 +35,7 @@ export async function GET() {
       place: x.place || "",
       proposalId: x.proposalId || null,  
       proposalNumber: x.proposalNumber || "",
+      proposalStatus: x.proposalStatus || "Pending",
       branchName: x.branchName,
     }));
 

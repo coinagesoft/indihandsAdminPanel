@@ -16,6 +16,7 @@ export async function GET(req, { params }) {
       /* branch */
       b.branch_name,
       b.gstin,
+      b.sez_type AS branch_sez_type,
       b.billing_address AS branch_billing_address,
       b.shipping_address AS branch_shipping_address,
 

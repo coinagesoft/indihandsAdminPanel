@@ -111,10 +111,19 @@ export async function GET(req) {
     let where = `WHERE 1=1`;
     let values = [];
 
-    if (search) {
-      where += ` AND (p.product_name LIKE ? OR p.sku LIKE ?)`;
-      values.push(`%${search}%`, `%${search}%`);
-    }
+  if (search) {
+  where += ` AND (
+    p.product_name LIKE ? 
+    OR p.sku LIKE ? 
+    OR p.barcode LIKE ?
+  )`;
+
+  values.push(
+    `%${search}%`,
+    `%${search}%`,
+    `%${search}%`
+  );
+}
 
 
 
