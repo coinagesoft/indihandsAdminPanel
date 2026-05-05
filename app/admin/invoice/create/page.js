@@ -1,5 +1,7 @@
 "use client";
+
 import { useState, useEffect } from "react";
+import { Suspense } from "react";
 import ProtectedRoute from '../../../../components/ProtectedRoute'
 import { showSuccess, showError } from "../../../../lib/toast";
 import ConfirmDialog from "../../../../components/ConfirmDialog";
@@ -252,7 +254,7 @@ function DeliveryLabelModal({ proposalId }) {
 }
 
 // ── Main Page ───────────────────────────────────────────────────────────────
-export default function CreateInvoice() {
+ function CreateInvoiceInner() {
   const [proposals, setProposals] = useState([]);
   const [proposalId, setProposalId] = useState("");
   const [proposal, setProposal] = useState(null);
@@ -596,5 +598,13 @@ export default function CreateInvoice() {
         </div>
       </div>
     </ProtectedRoute>
+  );
+}
+
+export default function CreateInvoice() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CreateInvoiceInner />
+    </Suspense>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
+import { Suspense } from "react";
 import ProtectedRoute from '../../../components/ProtectedRoute'
 import { showSuccess, showError } from "../../../lib/toast";
 import { useFetchWithLoader } from "../../../lib/fetchWithLoader";
@@ -8,7 +9,7 @@ import { useSearchParams } from "next/navigation";
 
 const RFQ_STATUSES = ["Submitted", "Under Review", "Accepted", "Rejected"];
 
-const RFQPage = () => {
+const RFQPageInner = () => {
   const [organizations, setOrganizations] = useState([]);
   const [rfqs, setRfqs] = useState([]);
   const [selectedOrg, setSelectedOrg] = useState("all");
@@ -346,4 +347,10 @@ const RFQPage = () => {
   );
 };
 
-export default RFQPage;
+export default function RFQPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RFQPageInner />
+    </Suspense>
+  );
+}
