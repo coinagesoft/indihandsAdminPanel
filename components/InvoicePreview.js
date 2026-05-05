@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { showSuccess, showError } from "../lib/toast";
 import { useConfirm } from "./ConfirmDialog";
 import { useFetchWithLoader } from "../lib/fetchWithLoader";
+import { useRouter } from "next/navigation";
 
 const Page = ({ onBack, rfqId }) => {
 
@@ -11,7 +12,9 @@ const Page = ({ onBack, rfqId }) => {
   const [sendingProposal, setSendingProposal] = useState(false);
   const [sendingInvoice, setSendingInvoice] = useState(false);
   const [proposalId, setProposalId] = useState(null);
+  
   const [items, setItems] = useState([]);
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [charges, setCharges] = useState([]);
   const [header, setHeader] = useState({
@@ -125,7 +128,8 @@ const Page = ({ onBack, rfqId }) => {
 
   const handleDownloadPdf = () => {
     if (!selectedRfq) return showError("Select RFQ first");
-    if (!proposalId) return showError(" Please send proposal first");
+     if (!proposalId) return showError("⚠️ Please save the proposal first before downloading PDF");
+
 
     window.open(`/api/proposals/pdf/${proposalId}`, "_blank");
   };
@@ -221,12 +225,11 @@ useEffect(() => {
   loadRfq();
 }, [rfqId, acceptedRfqs]);   // ✅ IMPORTANT
 
-  const handleDownloadInvoice = () => {
-    if (!selectedRfq) return showError("Select RFQ first");
-    if (!proposalId) return showError("Please send proposal first");
-
-    window.open(`/api/invoices/pdf/${proposalId}`, "_blank");
-  };
+const handleCreateInvoice = () => {
+  if (!selectedRfq) return showError("Please select RFQ first");
+  if (!proposalId) return showError(" Please send the proposal to the client before creating an invoice");
+  router.push(`/admin/invoice/create?proposalId=${proposalId}`);
+};
 
 
 
@@ -265,7 +268,7 @@ const handleRfqSelect = async (e) => {
   );
 
   const selected = acceptedRfqs.find(x => x.id == newId);
- console.log("selected page ",selected)
+  console.log("selected page ",selected)
   setHeader({
     quotationNo: selected?.proposalNumber || "",
     date: new Date().toISOString().slice(0, 10),
@@ -675,7 +678,6 @@ const handleRfqSelect = async (e) => {
                   background: "#fff"
                 }}
                 onClick={handleDownloadPdf}
-                disabled={!proposalId}
               >
                 Download PDF
               </button>
@@ -696,7 +698,7 @@ const handleRfqSelect = async (e) => {
               </button> */}
 
               {/* DOWNLOAD INVOICE */}
-              {/* <button
+              <button
         className="btn w-100 mb-3"
         style={{
           border: "1px solid #2e7d32",
@@ -704,11 +706,10 @@ const handleRfqSelect = async (e) => {
           borderRadius: "8px",
           background: "#fff"
         }}
-        onClick={handleDownloadInvoice}
-        disabled={!proposalId}
+        onClick={handleCreateInvoice}
       >
-        Download Invoice
-      </button> */}
+        Create Invoice
+      </button>
 
             </div>
           </div>

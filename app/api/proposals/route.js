@@ -314,7 +314,7 @@ export async function GET() {
         r.rfq_number,
         r.client_name,
         r.client_email,
-
+        r.client_phone,
         c.company_name,
         cb.branch_name,
 

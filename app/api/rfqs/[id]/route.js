@@ -84,7 +84,29 @@ export async function PATCH(req, { params }) {
 );
       }
     }
+if (prevStatus === "Accepted" && status === "Rejected") {
+  const [items] = await connection.query(
+    `
+    SELECT product_id, quantity
+    FROM rfq_products
+    WHERE rfq_id = ?
+    `,
+    [rfqId]
+  );
 
+  for (const item of items) {
+    await connection.query(
+      `
+      UPDATE products
+      SET 
+        stock_qty = stock_qty + ?,
+        status = 'Available'
+      WHERE id = ?
+      `,
+      [item.quantity, item.product_id]
+    );
+  }
+}
     /* 3️⃣ Update RFQ status */
     await connection.query(
       `UPDATE rfqs SET status = ? WHERE id = ?`,
