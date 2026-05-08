@@ -742,18 +742,20 @@ const Page = ({ onBack, rfqId }) => {
               </button> */}
 
             {/* DOWNLOAD INVOICE */}
-            <button
-              className="btn w-100 mb-3"
-              style={{
-                border: "1px solid #2e7d32",
-                color: "#2e7d32",
-                borderRadius: "8px",
-                background: "#fff"
-              }}
-              onClick={handleCreateInvoice}
-            >
-              Create Invoice
-            </button>
+           {!isB2C && (
+  <button
+    className="btn w-100 mb-3"
+    style={{
+      border: "1px solid #2e7d32",
+      color: "#2e7d32",
+      borderRadius: "8px",
+      background: "#fff"
+    }}
+    onClick={handleCreateInvoice}
+  >
+    Create Invoice
+  </button>
+)}
 
           </div>
         </div>
