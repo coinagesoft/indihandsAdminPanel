@@ -1,6 +1,4 @@
-import { db } from "../../../db";
-
-
+import { db } from "../../../../db";
 export async function GET(req) {
   try {
     const searchParams = req.nextUrl.searchParams;
@@ -14,29 +12,24 @@ export async function GET(req) {
         i.id,
         i.invoice_number,
         i.proposal_id,
-        
         i.status,
         i.grand_total,
 
         DATE_FORMAT(i.invoice_date, '%Y-%m-%d') as invoice_date,
 
-        /* from proposal */
+        /* proposal */
         p.rfq_id,
-  p.proposal_number,
-        /* from RFQ */
-        r.client_name,
+        p.proposal_number,
 
-        /* from company */
-        c.company_name
+        /* customer */
+        r.client_name
 
       FROM invoices i
+
       LEFT JOIN proposals p ON p.id = i.proposal_id
       LEFT JOIN rfqs r ON r.id = p.rfq_id
-      LEFT JOIN companies c ON c.id = p.company_id
 
-     WHERE
-  i.invoice_for = 'B2B'
-  AND i.buyer_company_id IS NOT NULL
+      WHERE i.invoice_for = 'B2C'
     `;
 
     const params = [];
@@ -46,19 +39,25 @@ export async function GET(req) {
       query += `
         AND (
           i.invoice_number LIKE ?
-          OR i.proposal_id LIKE ?
+          OR p.proposal_number LIKE ?
           OR r.client_name LIKE ?
         )
       `;
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+
+      params.push(
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`
+      );
     }
 
-    /* 📅 DATE */
+    /* 📅 FROM DATE */
     if (fromDate) {
       query += ` AND DATE(i.invoice_date) >= ?`;
       params.push(fromDate);
     }
 
+    /* 📅 TO DATE */
     if (toDate) {
       query += ` AND DATE(i.invoice_date) <= ?`;
       params.push(toDate);
@@ -71,7 +70,8 @@ export async function GET(req) {
     return Response.json(rows);
 
   } catch (err) {
-    console.error("❌ Invoice list API error:", err);
+    console.error("❌ B2C Invoice history API error:", err);
+
     return Response.json(
       { message: "Internal server error" },
       { status: 500 }

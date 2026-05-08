@@ -1,22 +1,19 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import ProtectedRoute from '../../../components/ProtectedRoute'
-import ConfirmDialog from "../../../components/ConfirmDialog";
-import { showSuccess, showError } from "../../../lib/toast";
-import { useFetchWithLoader } from "../../../lib/fetchWithLoader";
+import ProtectedRoute from '../../../../components/ProtectedRoute'
+import ConfirmDialog from "../../../../components/ConfirmDialog";
+import { showSuccess, showError } from "../../../../lib/toast";
+import { useFetchWithLoader } from "../../../../lib/fetchWithLoader";
 
 const OrgPricingPage = () => {
 
-  const [orgs, setOrgs] = useState([]);
   const [products, setProducts] = useState([]);
   const [pricing, setPricing] = useState([]);
   const fetchWithLoader = useFetchWithLoader();
-  const [selectedOrg, setSelectedOrg] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState("all");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [loading, setLoading] = useState(false);
-  const [savingOrgId, setSavingOrgId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmMsg, setConfirmMsg] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
@@ -52,23 +49,24 @@ const OrgPricingPage = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await fetchWithLoader("/api/org-pricing");
+      const res = await fetchWithLoader("/api/cust_pricing");
       const data = await res.json();
        console.log("org",data)
       if (!res.ok) {
         return showError("❌ " + (data.message || "Failed to load pricing data"));
       }
 
-      setOrgs(data.companies || []);
+    
       setProducts(data.products || []);
-      setPricing(
-        (data.pricing || []).map((x) => ({
-          orgId: x.companyId,    
-          productId: x.productId,
-          price: x.price == null ? "" : x.price,
-          prefix: x.prefix || "",
-        }))
-      );
+     setPricing(
+  (data.pricing || []).map((x) => ({
+    productId: x.productId,
+    price:
+      x.price == null
+        ? ""
+        : x.price,
+  }))
+);
     } catch (err) {
       showError("❌ " + err.message);
     } finally {
@@ -76,114 +74,154 @@ const OrgPricingPage = () => {
     }
   };
 
-  // ✅ Handle price change
-  // const handlePriceChange = (orgId, productId, value) => {
-  //   const price = value === "" ? "" : Number(value);
 
-  //   setPricing((prev) => {
-  //     const existing = prev.find((p) => p.orgId === orgId && p.productId === productId);
+const handleFieldChange = (
+  productId,
+  value
+) => {
 
-  //     if (existing) {
-  //       return prev.map((p) =>
-  //         p.orgId === orgId && p.productId === productId ? { ...p, price } : p
-  //       );
-  //     }
+  setPricing((prev) => {
 
-  //     return [...prev, { orgId, productId, price }];
-  //   });
-  // };
-
-  const handleFieldChange = (orgId, productId, field, value) => {
-    setPricing((prev) => {
-      const existing = prev.find(
-        (p) => p.orgId === orgId && p.productId === productId
-      );
-
-      if (existing) {
-        return prev.map((p) =>
-          p.orgId === orgId && p.productId === productId
-            ? { ...p, [field]: value }
-            : p
-        );
-      }
-
-      return [
-        ...prev,
-        {
-          orgId,
-          productId,
-          price: "",
-          prefix: "",
-          [field]: value,
-        },
-      ];
-    });
-  };
-
-  const getOrgPrefix = (orgId, productId) => {
-    const entry = pricing.find(
-      (p) => p.orgId === orgId && p.productId === productId
+    const existing = prev.find(
+      (p) =>
+        p.productId === productId
     );
-    return entry ? entry.prefix || "" : "";
-  };
 
-const getOrgPrice = (orgId, productId) => {
+    if (existing) {
+
+      return prev.map((p) =>
+
+        p.productId === productId
+          ? {
+              ...p,
+              price: value,
+            }
+          : p
+      );
+    }
+
+    return [
+      ...prev,
+      {
+        productId,
+        price: value,
+      },
+    ];
+  });
+};
+
+
+
+const getPrice = (
+  productId
+) => {
+
   const entry = pricing.find(
-    (p) => p.orgId === orgId && p.productId === productId
+    (p) =>
+      p.productId === productId
   );
 
-  if (!entry || entry.price === null || entry.price === undefined) {
+  if (
+    !entry ||
+    entry.price === null ||
+    entry.price === undefined
+  ) {
     return "";
   }
 
   return entry.price;
 };
 
-  const isPriceCustomized = (orgId, productId, basePrice) => {
-    const price = getOrgPrice(orgId, productId);
-    return price !== "" && Number(price) !== Number(basePrice);
-  };
+const isPriceCustomized = (
+  productId,
+  basePrice
+) => {
 
-  // ✅ Save one org pricing
-  const handleSaveOrgPricing = (orgId) => {
-    setConfirmMsg("Save pricing changes for this organization?");
+  const price =
+    getPrice(productId);
 
-    setConfirmAction(() => async () => {
+  return (
+    price !== "" &&
+    Number(price) !==
+      Number(basePrice)
+  );
+};
+
+const handleSavePricing = () => {
+
+  setConfirmMsg(
+    "Save B2C pricing changes?"
+  );
+
+  setConfirmAction(
+    () => async () => {
+
       try {
-        setSavingOrgId(orgId);
 
-        const orgPricing = pricing
-          .filter((p) => p.orgId === orgId)
-          .map((p) => ({
-            productId: p.productId,
-            price: p.price === "" ? null : Number(p.price),
-            prefix: p.prefix?.trim() || null,
-          }));
+        setLoading(true);
 
-        const res = await fetchWithLoader(`/api/org-pricing/${orgId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pricing: orgPricing }),
-        });
+        const payload = pricing.map(
+          (p) => ({
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Save failed");
+            productId:
+              p.productId,
 
-        showSuccess("Pricing saved successfully");
+            price:
+              p.price === ""
+                ? null
+                : Number(p.price),
+          })
+        );
+
+        const res =
+          await fetchWithLoader(
+            "/api/cust_pricing/save",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                pricing: payload,
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        if (!res.ok) {
+
+          throw new Error(
+            data.message ||
+            "Save failed"
+          );
+        }
+
+        showSuccess(
+          "B2C pricing saved successfully"
+        );
+
         fetchData();
+
       } catch (err) {
+
         showError(err.message);
+
       } finally {
-        setSavingOrgId(null);
+
+        setLoading(false);
       }
-    });
+    }
+  );
 
-    setConfirmOpen(true);
-  };
+  setConfirmOpen(true);
+};
 
-  // ✅ Filters
-  const filteredOrgs =
-    selectedOrg === "all" ? orgs : orgs.filter((o) => o.id === Number(selectedOrg));
+
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -208,15 +246,16 @@ const getOrgPrice = (orgId, productId) => {
       const wb = XLSX.read(e.target.result, { type: "binary" });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(ws);
+const cleaned = json.map((r) => ({
 
-      const cleaned = json.map((r) => ({
-        company_id: r["Company ID"],
-        product_id: r["Product ID"],
-        custom_price: r["Custom Price (₹)"],  // ✅ correct
-         prefix: r["Prefix Line No"],
-      }));
+  productId:
+    r["Product ID"],
 
-      const res = await fetchWithLoader("/api/org-pricing/import", {
+  price:
+    r["Custom Price (₹)"],
+}));
+
+      const res = await fetchWithLoader("/api/cust_pricing/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rows: cleaned }),
@@ -237,7 +276,7 @@ const getOrgPrice = (orgId, productId) => {
     <ProtectedRoute>
       <div className="container-xxl container-p-y">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4 className="mb-0 text-orange">Organization-Specific Pricing</h4>
+          <h4 className="mb-0 text-orange">Global B2C Pricing</h4>
           <button className="btn btn-sm btn-outline-orange" onClick={fetchData} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
           </button>
@@ -248,12 +287,8 @@ const getOrgPrice = (orgId, productId) => {
           <button
             className="btn btn-orange btn-sm mb-5"
             onClick={() => {
-              const url =
-                selectedOrg === "all"
-                  ? "/api/org-pricing/export"
-                  : `/api/org-pricing/export?companyId=${selectedOrg}`;
-
-              window.location.href = url;
+           window.location.href =
+  "/api/cust_pricing/export";
             }}
           >
             Export Pricing Excel
@@ -277,22 +312,7 @@ const getOrgPrice = (orgId, productId) => {
         </div>
 
         <div className="row mb-4 g-3 align-items-end">
-          <div className="col-md-4">
-
-            <label className="form-label">Organization</label>
-            <select
-              className="form-select"
-              value={selectedOrg}
-              onChange={(e) => setSelectedOrg(e.target.value)}
-            >
-              <option value="all">All Organizations</option>
-              {orgs.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        
 
           <div className="col-md-4">
             <label className="form-label">Product</label>
@@ -340,27 +360,29 @@ const getOrgPrice = (orgId, productId) => {
       )} */}
 
         {/* No Orgs */}
-        {!loading && filteredOrgs.length === 0 && (
+       {!loading && products.length === 0 && (
           <div className="alert alert-warning">
             No organizations found.
           </div>
         )}
 
         {/* Pricing Tables */}
-        {filteredOrgs.map((org) => (
-          <div key={org.id} className="card mb-4">
+       <div className="card mb-4">
+          <div  className="card mb-4">
             <div className="card-header bg-label-primary d-flex justify-content-between align-items-center">
               <div>
-                <h5 className="mb-0">{org.name}</h5>
+               <h5 className="mb-0">
+  Global B2C Pricing
+</h5>
                 {/* <small className="text-muted">GST: {org.gst || "-"}</small> */}
               </div>
 
               <button
                 className="btn btn-sm btn-orange"
-                onClick={() => handleSaveOrgPricing(org.id)}
-                disabled={savingOrgId === org.id}
+              onClick={handleSavePricing}
+               disabled={loading}
               >
-                {savingOrgId === org.id ? "Saving..." : "Save Pricing"}
+                {loading ? "Saving..." : "Save Pricing"}
               </button>
             </div>
 
@@ -378,13 +400,14 @@ const getOrgPrice = (orgId, productId) => {
                           <th>Product</th>
                           <th>Base Price</th>
                           <th style={{ width: 220 }}>Org Price</th>
-                          <th>Prefix Line No</th>
                         </tr>
                       </thead>
                       <tbody>
                         {paginatedProducts.map((product) => {
-                          const customized = isPriceCustomized(org.id, product.id, product.basePrice);
-
+const customized = isPriceCustomized(
+  product.id,
+  product.basePrice
+);
                           return (
                             <tr key={product.id}>
                               <td>{product.name}</td>
@@ -393,24 +416,19 @@ const getOrgPrice = (orgId, productId) => {
                                 <input
                                   type="number"
                                   className={`form-control ${customized ? "border-primary" : ""}`}
-                                  value={getOrgPrice(org.id, product.id) ?? ""}
+                                  value={getPrice(
+                                         product.id
+                                       )}
                                   onChange={(e) =>
-                                    handleFieldChange(org.id, product.id, "price", e.target.value)
+                                   handleFieldChange(
+                                     product.id,
+                                     e.target.value
+                                   )
                                   }
                                 />
                               </td>
 
-                              <td>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  placeholder="e.g. L No 1"
-                                  value={getOrgPrefix(org.id, product.id)}
-                                  onChange={(e) =>
-                                    handleFieldChange(org.id, product.id, "prefix", e.target.value)
-                                  }
-                                />
-                              </td>
+                              
 
 
                             </tr>
@@ -446,7 +464,7 @@ const getOrgPrice = (orgId, productId) => {
               )}
             </div>
           </div>
-        ))}
+        </div>
       </div>
       <ConfirmDialog
         open={confirmOpen}

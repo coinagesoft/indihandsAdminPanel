@@ -23,9 +23,9 @@ function numberToWords(num) {
 
 function getCopyLabel(type) {
   switch (type) {
-    case "duplicate":  return "Duplicate Copy";
-    case "triplicate": return "Triplicate Copy";
-    case "transport":  return "Transport Copy";
+    case "duplicate":  return "Duplicate for Transporter";
+    case "triplicate": return "Triplicate";
+    case "transport":  return "Extra";
     default:           return "Original for Recipient";
   }
 }

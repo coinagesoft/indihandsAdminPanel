@@ -19,7 +19,8 @@ export default function ProposalStatusPage() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState(true);
-
+const [activeTab, setActiveTab] =
+  useState("B2B");
   /* ================= LOAD ================= */
   useEffect(() => {
     Promise.all([
@@ -49,6 +50,11 @@ export default function ProposalStatusPage() {
   useEffect(() => {
     let data = [...list];
 
+    data = data.filter(
+  x =>
+    (x.proposal_type || "B2B")
+      === activeTab
+);
     // 🔍 SEARCH FILTER
     if (search) {
       const s = search.toLowerCase();
@@ -61,7 +67,6 @@ export default function ProposalStatusPage() {
       );
     }
 
-    // 🏢 COMPANY
     if (companyId) {
       data = data.filter(x => x.company_id == companyId);
     }
@@ -86,8 +91,32 @@ export default function ProposalStatusPage() {
     }
 
     setFiltered(data);
-  }, [search, companyId, branchId, status, fromDate, toDate, list]);
+ }, [
+  search,
+  companyId,
+  branchId,
+  status,
+  fromDate,
+  toDate,
+  list,
+  activeTab
+]);
 
+useEffect(() => {
+
+  setCompanyId("");
+
+  setBranchId("");
+
+  setSearch("");
+
+  setStatus("");
+
+  setFromDate("");
+
+  setToDate("");
+
+}, [activeTab]);
   /* ================= BADGE ================= */
   const badge = (s) => {
     if (s === "Approved") return "bg-success";
@@ -103,7 +132,35 @@ export default function ProposalStatusPage() {
       <div className="container-xxl container-p-y ">
 
         <h4 className="mb-4 text-primary">Proposal History</h4>
+      <div className="mb-3 d-flex gap-2">
 
+  <button
+    className={`btn ${
+      activeTab === "B2B"
+        ? "btn-orange"
+        : "btn-outline-orange"
+    }`}
+    onClick={() =>
+      setActiveTab("B2B")
+    }
+  >
+    Company Proposal History
+  </button>
+
+  <button
+    className={`btn ${
+      activeTab === "B2C"
+        ? "btn-orange"
+        : "btn-outline-orange"
+    }`}
+    onClick={() =>
+      setActiveTab("B2C")
+    }
+  >
+    Customer Proposal History
+  </button>
+
+</div>
         <div className="card p-3 mb-3">
 
           <div className="row g-3 align-items-end">
@@ -118,6 +175,8 @@ export default function ProposalStatusPage() {
               />
             </div>
             {/* ORG */}
+            {activeTab === "B2B" && (
+  <>
             <div className="col-md-3">
               <label className="form-label mb-1">Organization</label>
               <select
@@ -154,6 +213,8 @@ export default function ProposalStatusPage() {
                 ))}
               </select>
             </div>
+            </>
+            )}
 
 
             {/* STATUS */}
@@ -207,8 +268,17 @@ export default function ProposalStatusPage() {
                   <th style={{ width: "120px" }}>Proposal</th>
                   <th style={{ width: "150px" }}>RFQ</th>
                   <th style={{ width: "220px" }}>Client</th>
-                  <th style={{ width: "250px" }}>Company</th>
-                  <th style={{ width: "200px" }}>Branch</th>
+                 {activeTab === "B2B" && (
+  <>
+    <th style={{ width: "250px" }}>
+      Company
+    </th>
+
+    <th style={{ width: "200px" }}>
+      Branch
+    </th>
+  </>
+)}
                   <th style={{ width: "120px" }}>Date</th>
                   <th style={{ width: "120px" }}>Total</th>
                   <th style={{ width: "120px" }}>Status</th>
@@ -232,8 +302,31 @@ export default function ProposalStatusPage() {
                       </div>
                     </td>
 
-                    <td style={{ fontSize: "14px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}  >{p.company_name}</td>
-                    <td style={{ fontSize: "14px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} >{p.branch_name}</td>
+                    {activeTab === "B2B" && (
+  <>
+    <td
+      style={{
+        fontSize: "14px",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis"
+      }}
+    >
+      {p.company_name}
+    </td>
+
+    <td
+      style={{
+        fontSize: "14px",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis"
+      }}
+    >
+      {p.branch_name}
+    </td>
+  </>
+)}
 
                     <td style={{ fontSize: "14px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} >
                       {p.proposal_date
@@ -273,7 +366,11 @@ export default function ProposalStatusPage() {
 
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="text-center py-4">
+                    <td  colSpan={
+    activeTab === "B2B"
+      ? 9
+      : 7
+  } className="text-center py-4">
                       No proposals found
                     </td>
                   </tr>
@@ -285,6 +382,7 @@ export default function ProposalStatusPage() {
         </div>
 
       </div>
+      
     </ProtectedRoute>
   );
 }

@@ -55,8 +55,10 @@ export async function GET(req, { params }) {
     }
 
     /* ================= FONTS ================= */
-    const fontBold = path.join(process.cwd(), "public/fonts/Philosopher/Philosopher-Bold.ttf");
-
+const fontBold = path.join(
+  process.cwd(),
+  "public/fonts/calibri/calibri-bold.ttf"
+);
     if (!fs.existsSync(fontBold)) {
       return Response.json(
         { message: "Font file missing", error: "Ensure public/fonts/Philosopher/Philosopher-Bold.ttf exists" },
@@ -68,7 +70,7 @@ export async function GET(req, { params }) {
     const PAGE_W    = 595.28;
     const MARGIN    = 60;
     const CONTENT_W = PAGE_W - MARGIN * 2;
-    const SIZE      = 20;       // ← 20pt, bold for ALL text
+    const SIZE      = 22;       // ← 20pt, bold for ALL text
     const LINE_GAP  = 10;
 
     /* ================= DOC ================= */

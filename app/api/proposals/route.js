@@ -62,15 +62,78 @@ export async function POST(req) {
 
     const safeCharges = Array.isArray(charges) ? charges : [];
 const [[rfqRow]] = await db.query(
-  `SELECT billing_type FROM rfqs WHERE id=?`,
+  `
+  SELECT
+
+    billing_type,
+    customer_id,
+    rfq_type
+
+  FROM rfqs
+
+  WHERE id = ?
+  `,
   [rfqId]
 );
 
 const isSelf = rfqRow?.billing_type === "self";
-const finalGstin = isSelf ? null : gstin || null;
+const isB2C =
+  rfqRow?.rfq_type === "B2C";
 
+  const finalProposalType =
+  isB2C
+    ? "B2C"
+    : "B2B";
+
+    const finalCustomerId =
+
+  isB2C
+
+    ? (rfqRow?.customer_id || null)
+
+    : null;
+
+  const [[clientRow]] =
+  await db.query(
+    `
+    SELECT client_name
+
+    FROM rfqs
+
+    WHERE id = ?
+    `,
+    [rfqId]
+  );
+
+const finalCompanyName =
+
+  isB2C
+
+    ? (clientRow?.client_name || null)
+
+    : (company_name || null);
+const finalGstin =
+
+  isB2C
+
+    ? null
+
+    : (
+        isSelf
+          ? null
+          : (gstin || null)
+      );
 /* ---------- validations ---------- */
-    if (!rfqId || !companyId || !branchId) {
+   if (
+  !rfqId ||
+  (
+    !isB2C &&
+    (
+      !companyId ||
+      !branchId
+    )
+  )
+)  {
       return Response.json(
         { message: "rfqId, companyId, branchId are required" },
         { status: 400 }
@@ -169,20 +232,22 @@ const finalGstin = isSelf ? null : gstin || null;
 
       await db.query(
         `UPDATE proposals
-         SET company_id=?, branch_id=?, proposal_date=?,
+         SET company_id=?, branch_id=?, customer_id=?,proposal_type=?, proposal_date=?,
              billing_address=?, shipping_address=?,gstin=?,company_name=?,
              subtotal=?, cgst_total=?, sgst_total=?, igst_total=?, grand_total=?,
              status='Pending',
              place=?
          WHERE id=?`,
         [
-          companyId,
-          branchId,
+          companyId || null,
+          branchId || null,
+          finalCustomerId,
+          finalProposalType,
           proposal_date,
           billing_address || null,
           shipping_address || null,
           finalGstin,
-          company_name || null,
+          finalCompanyName,
           subtotal,
           cgst_total,
           sgst_total,
@@ -203,21 +268,63 @@ const finalGstin = isSelf ? null : gstin || null;
 
       const [result] = await db.query(
         `INSERT INTO proposals
-         (rfq_id, company_id, branch_id, proposal_number, proposal_date,
-          billing_address, shipping_address, gstin, company_name,
-          subtotal, cgst_total, sgst_total, igst_total, grand_total,
-          status, place)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, 'Pending', ?)`,
+        (
+  rfq_id,
+
+  company_id,
+
+  branch_id,
+
+  customer_id,
+
+  proposal_type,
+
+  proposal_number,
+
+  proposal_date,
+
+  billing_address,
+
+  shipping_address,
+
+  gstin,
+
+  company_name,
+
+  subtotal,
+
+  cgst_total,
+
+  sgst_total,
+
+  igst_total,
+
+  grand_total,
+
+  status,
+
+  place
+)
+         VALUES(
+  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?
+)`,
         [
-          rfqId,
-          companyId,
-          branchId,
-          proposal_number,
+         rfqId,
+
+companyId || null,
+
+branchId || null,
+
+finalCustomerId,
+
+finalProposalType,
+
+proposal_number,
           proposal_date,
           billing_address || null,
           shipping_address || null,
           finalGstin,
-          company_name || null,
+          finalCompanyName,
           subtotal,
           cgst_total,
           sgst_total,
@@ -298,71 +405,162 @@ const finalGstin = isSelf ? null : gstin || null;
 
 
 
-
 export async function GET() {
+
   try {
+
     const [rows] = await db.query(`
       SELECT
+
         p.id,
+
         p.proposal_number,
+
         p.proposal_date,
+
         p.status,
+
         p.company_id,
+
         p.branch_id,
+
+        p.customer_id,
+
+        p.proposal_type,
+
         p.rfq_id,
 
         r.rfq_number,
+
+        r.rfq_type,
+
         r.client_name,
+
         r.client_email,
+
         r.client_phone,
-        c.company_name,
-        cb.branch_name,
+
+        CASE
+
+          WHEN p.proposal_type = 'B2C'
+          THEN r.client_name
+
+          ELSE c.company_name
+
+        END AS company_name,
+
+        CASE
+
+          WHEN p.proposal_type = 'B2C'
+          THEN '-'
+
+          ELSE cb.branch_name
+
+        END AS branch_name,
 
         (
           IFNULL(it.subtotal,0)
+
           + IFNULL(it.cgst,0)
+
           + IFNULL(it.sgst,0)
+
           + IFNULL(it.igst,0)
+
           + IFNULL(ch.amount,0)
+
           + IFNULL(ch.tax,0)
+
         ) AS grand_total
 
       FROM proposals p
-      LEFT JOIN rfqs r ON r.id = p.rfq_id
-      LEFT JOIN companies c ON c.id = p.company_id
-      LEFT JOIN company_branches cb ON cb.id = p.branch_id
 
-      /* ===== ITEMS AGG (same as edit page) ===== */
+      LEFT JOIN rfqs r
+        ON r.id = p.rfq_id
+
+      LEFT JOIN companies c
+        ON c.id = p.company_id
+
+      LEFT JOIN company_branches cb
+        ON cb.id = p.branch_id
+
+      /* ===== ITEMS AGG ===== */
+
       LEFT JOIN (
         SELECT
+
           proposal_id,
-          SUM(quantity * rate) AS subtotal,
-          SUM((quantity * rate) * cgst_rate/100) AS cgst,
-          SUM((quantity * rate) * sgst_rate/100) AS sgst,
-          SUM((quantity * rate) * igst_rate/100) AS igst
+
+          SUM(quantity * rate)
+            AS subtotal,
+
+          SUM(
+            (quantity * rate)
+            * cgst_rate / 100
+          ) AS cgst,
+
+          SUM(
+            (quantity * rate)
+            * sgst_rate / 100
+          ) AS sgst,
+
+          SUM(
+            (quantity * rate)
+            * igst_rate / 100
+          ) AS igst
+
         FROM proposal_items
+
         GROUP BY proposal_id
-      ) it ON it.proposal_id = p.id
+
+      ) it
+        ON it.proposal_id = p.id
 
       /* ===== CHARGES AGG ===== */
+
       LEFT JOIN (
         SELECT
-          proposal_id,
-          SUM(amount) AS amount,
-          SUM(amount * tax_percent/100) AS tax
-        FROM proposal_charges
-        GROUP BY proposal_id
-      ) ch ON ch.proposal_id = p.id
 
-WHERE p.status IN ('Pending','Sent','Approved','Rejected')
+          proposal_id,
+
+          SUM(amount)
+            AS amount,
+
+          SUM(
+            amount * tax_percent / 100
+          ) AS tax
+
+        FROM proposal_charges
+
+        GROUP BY proposal_id
+
+      ) ch
+        ON ch.proposal_id = p.id
+
+      WHERE p.status IN
+      (
+        'Pending',
+        'Sent',
+        'Approved',
+        'Rejected'
+      )
+
       ORDER BY p.id DESC
     `);
 
     return Response.json(rows);
 
   } catch (err) {
-    console.error("admin proposals error:", err);
-    return Response.json({ error: "DB error" }, { status: 500 });
+
+    console.error(
+      "admin proposals error:",
+      err
+    );
+
+    return Response.json(
+      { error: "DB error" },
+      { status: 500 }
+    );
   }
 }
 
