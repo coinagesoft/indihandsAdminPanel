@@ -23,6 +23,7 @@ const PageInner = () => {
     shippingAddress: "",
     companyId: null,
     branchId: null,
+    rfqType: "",
   });
   const fetchWithLoader = useFetchWithLoader();
   const [selectedRfq, setSelectedRfq] = useState("");
@@ -41,6 +42,8 @@ const PageInner = () => {
     "clientEmail",
     "gstin"
   ];
+  const isB2C =
+  header.rfqType === "B2C";
   /* ================= HANDLERS ================= */
   const handleHeaderChange = (e) => {
     setHeader({ ...header, [e.target.name]: e.target.value });
@@ -94,8 +97,17 @@ const PageInner = () => {
 
   const handleSaveProposal = async () => {
     if (!selectedRfq) return showError("Please select RFQ first");
-    if (!header.companyId || !header.branchId)
-      return showError("companyId / branchId missing");
+ if (
+  !isB2C &&
+  (
+    !header.companyId ||
+    !header.branchId
+  )
+) {
+  return showError(
+    "companyId / branchId missing"
+  );
+}
 
 
     try {
@@ -103,8 +115,14 @@ const PageInner = () => {
 
       const payload = {
         rfqId: Number(selectedRfq),
-        companyId: header.companyId,
-        branchId: header.branchId,
+       companyId:
+  header.companyId || null,
+
+branchId:
+  header.branchId || null,
+
+rfqType:
+  header.rfqType,
         proposal_date: header.date,
         place: header.place,
         billing_address: header.billingAddress,
@@ -176,6 +194,7 @@ const PageInner = () => {
 
     window.open(`/api/proposals/pdf/${proposalId}`, "_blank");
   };
+
 
   const addItem = () => {
     setItems([
@@ -251,7 +270,8 @@ const PageInner = () => {
 
       companyId,
       branchId: data.header.branchId,
-
+      rfqType:
+  data.header.rfqType || "",
       clientName: data.header.clientName,
       clientPhone: data.header.clientPhone,
       clientEmail: data.header.clientEmail,
@@ -320,7 +340,8 @@ const PageInner = () => {
 
         companyId,
         branchId: data.header.branchId,
-
+        rfqType:
+        data.header.rfqType || "",
         clientName: data.header.clientName,
         clientPhone: data.header.clientPhone,
         clientEmail: data.header.clientEmail,
@@ -457,25 +478,46 @@ useEffect(() => {
                             RFQ #{rfqIdFromUrl} (from list)
                           </option>
                         )}
+{filteredRfqs.map((r) => {
 
-                        {filteredRfqs.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.rfqNumber} — {r.company}
-                          </option>
-                        ))}
+  const isB2C =
+    r.rfqType === "B2C";
+
+  return (
+    <option
+      key={r.id}
+      value={r.id}
+    >
+      {isB2C
+
+        ? `${r.rfqNumber} — ${r.clientName || r.customerName}`
+
+        : `${r.rfqNumber} — ${r.company}`
+      }
+    </option>
+  );
+})}
                       </select>
                     </div>
 
                     {/* HEADER */}
                     <div className="row g-3 mb-6">
-                      {[
-                        ["quotationNo", "Quotation No"],
-                        ["date", "Date", "date"],
-                        ["clientName", "Customer Name"],
-                        ["clientEmail", "Customer Email"],
-                        ["company", "Company"],
-                        ["gstin", "GSTIN"],
-                      ].map(([name, label, type = "text"]) => (
+                     {[
+  ["quotationNo", "Quotation No"],
+  ["date", "Date", "date"],
+  ["clientName", "Customer Name"],
+  ["clientEmail", "Customer Email"],
+
+  ...(
+    isB2C
+      ? []
+      : [
+          ["company", "Company"],
+          ["gstin", "GSTIN"],
+        ]
+  ),
+
+].map(([name, label, type = "text"]) => (
                         <div className="col-md-6" key={name}>
                           <label className="form-label">{label}</label>
                           <input

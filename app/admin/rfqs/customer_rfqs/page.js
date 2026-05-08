@@ -1,19 +1,22 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
 import { Suspense } from "react";
-import ProtectedRoute from '../../../components/ProtectedRoute'
-import { showSuccess, showError } from "../../../lib/toast";
-import { useFetchWithLoader } from "../../../lib/fetchWithLoader";
+import ProtectedRoute from '../../../../components/ProtectedRoute'
+import { showSuccess, showError } from "../../../../lib/toast";
+import { useFetchWithLoader } from "../../../../lib/fetchWithLoader";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 
-const RFQ_STATUSES = ["Submitted", "Under Review", "Accepted", "Rejected"];
-
+const RFQ_STATUSES = [
+  "Submitted",
+  "Under Review",
+  "Accepted",
+  "Awaiting Payment",
+  "Paid",
+  "Rejected"
+];
 const RFQPageInner = () => {
-  const [organizations, setOrganizations] = useState([]);
   const [rfqs, setRfqs] = useState([]);
-  const [selectedOrg, setSelectedOrg] = useState("all");
-  const [selectedBranch, setSelectedBranch] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState("all");
   const [statusLoading, setStatusLoading] = useState(null);
@@ -29,41 +32,17 @@ const RFQPageInner = () => {
 
   const fetchRfqs = async () => {
     try {
-      const res = await fetchWithLoader("/api/rfqs");
+      const res = await fetchWithLoader("/api/cust_rfqs");
       const data = await res.json();
       console.log("rfq", data)
       if (!res.ok) throw new Error(data.message || "Failed to load RFQs");
 
-      setOrganizations(data.organizations || []);
       setRfqs(data.rfqs || []);
     } catch (err) {
       showError("❌ " + err.message);
     }
   };
 
-  // const updateStatus = async (rfqId, status) => {
-  //   const res = await fetch(`/api/rfqs/${rfqId}`, {
-  //     method: "PATCH",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ status }),
-  //   });
-
-  //   const data = await res.json();
-  //   if (!res.ok) return alert("❌ " + data.message);
-
-  //   // Show alert based on email sent status
-  //   if (data.emailSent) {
-  //     alert(`✅ Status updated to "${status}" and email sent to client (${data.clientEmail})`);
-  //   } else if (data.emailError) {
-  //     alert(`⚠️ Status updated to "${status}" but failed to send email: ${data.emailError}`);
-  //   } else {
-  //     alert(`✅ Status updated to "${status}"`);
-  //   }
-
-  //   setRfqs((prev) =>
-  //     prev.map((r) => (r.id === rfqId ? { ...r, status } : r))
-  //   );
-  // };
 
   const updateStatus = async (rfqId, status) => {
     const key = `${rfqId}-${status}`;
@@ -110,40 +89,49 @@ const RFQPageInner = () => {
     return Array.from(map.values());
   }, [rfqs]);
 
-  const availableBranches = useMemo(() => {
-    if (selectedOrg === "all") return [];
-    const org = organizations.find((o) => o.id === Number(selectedOrg));
-    return org?.branches || [];
-  }, [selectedOrg, organizations]);
 
 
-  const filteredRfqs = rfqs.filter((rfq) => {
-    const orgMatch = selectedOrg === "all" || rfq.orgId === Number(selectedOrg);
-    const branchMatch =
-      selectedBranch === "all" || rfq.branch === selectedBranch;
-    const statusMatch =
-      selectedStatus === "all" || rfq.status === selectedStatus;
-    const productMatch =
-      selectedProduct === "all" ||
-      rfq.products.some((p) => p.id === Number(selectedProduct));
+const filteredRfqs = rfqs.filter((rfq) => {
 
-    return orgMatch && branchMatch && statusMatch && productMatch;
-  });
+  const statusMatch =
+    selectedStatus === "all" ||
+    rfq.status === selectedStatus;
 
-  const statusBadgeClass = (status) => {
-    switch (status) {
-      case "Submitted":
-        return "bg-label-primary";
-      case "Under Review":
-        return "bg-label-warning";
-      case "Accepted":
-        return "bg-label-success";
-      case "Rejected":
-        return "bg-label-danger";
-      default:
-        return "bg-label-secondary";
-    }
-  };
+  const productMatch =
+    selectedProduct === "all" ||
+
+    rfq.products.some(
+      (p) => p.id === Number(selectedProduct)
+    );
+
+  return statusMatch && productMatch;
+});
+const statusBadgeClass = (status) => {
+
+  switch (status) {
+
+    case "Submitted":
+      return "bg-label-primary";
+
+    case "Under Review":
+      return "bg-label-warning";
+
+    case "Accepted":
+      return "bg-label-info";
+
+    case "Awaiting Payment":
+      return "bg-label-warning";
+
+    case "Paid":
+      return "bg-label-success";
+
+    case "Rejected":
+      return "bg-label-danger";
+
+    default:
+      return "bg-label-secondary";
+  }
+};
 
   /* ---------------- UI ---------------- */
 
@@ -154,42 +142,7 @@ const RFQPageInner = () => {
 
         {/* Filters */}
         <div className="row mb-4 g-3">
-          <div className="col-md-3">
-            <label className="form-label">Organization</label>
-            <select
-              className="form-select"
-              value={selectedOrg}
-              onChange={(e) => {
-                setSelectedOrg(e.target.value);
-                setSelectedBranch("all");
-              }}
-            >
-              <option value="all">All Organizations</option>
-              {organizations.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="col-md-3">
-            <label className="form-label">Branch</label>
-            <select
-              className="form-select"
-              value={selectedBranch}
-              onChange={(e) => setSelectedBranch(e.target.value)}
-              disabled={selectedOrg === "all"}
-            >
-              <option value="all">All Branches</option>
-              {availableBranches.map((b) => (
-                <option key={b.id} value={b.name}>
-                  {b.name}
-                </option>
-              ))}
-
-            </select>
-          </div>
+       
 
           {/* <div className="col-md-3">
           <label className="form-label">Product</label>
@@ -233,7 +186,7 @@ const RFQPageInner = () => {
           <div key={rfq.id} className="card mb-4 shadow-sm">
             <div className="card-header d-flex justify-content-between">
               <strong>
-                {rfq.rfqNumber} — {rfq.orgName} ({rfq.branch})
+                {rfq.rfqNumber}
               </strong>
 
               <span className={`badge ${statusBadgeClass(rfq.status)}`}>
@@ -249,6 +202,7 @@ const RFQPageInner = () => {
                 <div className="col-3"><strong>Phone:</strong> {rfq.clientPhone || "-"}</div>
                 <div className="col-5"><strong>Email:</strong> {rfq.clientEmail || "-"}</div>
               </div>
+              
               <div className="table-responsive">
                 <table className="table table-bordered">
                   <thead>

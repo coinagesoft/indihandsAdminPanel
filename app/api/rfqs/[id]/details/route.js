@@ -3,211 +3,418 @@ import { db } from "../../../../db";
 
 
 export async function GET(req, { params }) {
+
   try {
+
     const { id } = await params;
+
     const rfqId = Number(id);
 
     if (!rfqId) {
-      return Response.json({ message: "Invalid rfqId" }, { status: 400 });
+
+      return Response.json(
+        {
+          message: "Invalid rfqId",
+        },
+        {
+          status: 400,
+        }
+      );
     }
 
     /* ================= HEADER ================= */
+
     const [headerRows] = await db.query(
       `
       SELECT
+
         r.id AS rfqId,
+
+        r.rfq_type,
+
         r.company_id AS companyId,
+
         r.branch_id AS branchId,
+
         r.submitted_at AS submittedAt,
+
         r.status,
+
         r.notes,
+
         r.client_name,
+
         r.client_phone,
-r.client_email,
-r.billing_type,
-      COALESCE(p.company_name, c.company_name) AS company,
+
+        r.client_email,
+
+        r.billing_type,
+
+        r.billing_address,
+
+        r.shipping_address,
+
+        COALESCE(
+          p.company_name,
+          c.company_name
+        ) AS company,
+
         c.company_email AS companyEmail,
 
         cb.gstin,
+
         cb.sez_type,
+
         cb.branch_name AS branchName,
-        cb.contact_person AS customerName,
-        cb.billing_address,
-        cb.shipping_address
+
+        cb.contact_person AS customerName
 
       FROM rfqs r
-      JOIN companies c ON c.id = r.company_id
-      JOIN company_branches cb ON cb.id = r.branch_id
-      LEFT JOIN proposals p ON p.rfq_id = r.id
+
+      LEFT JOIN companies c
+        ON c.id = r.company_id
+
+      LEFT JOIN company_branches cb
+        ON cb.id = r.branch_id
+
+      LEFT JOIN proposals p
+        ON p.rfq_id = r.id
+
       WHERE r.id = ?
+
       LIMIT 1
       `,
       [rfqId]
     );
 
-
-
-
     if (headerRows.length === 0) {
-      return Response.json({ message: "RFQ not found" }, { status: 404 });
+
+      return Response.json(
+        {
+          message: "RFQ not found",
+        },
+        {
+          status: 404,
+        }
+      );
     }
 
     const header = headerRows[0];
 
-    const sezType = header.sez_type || "NONE";
-    const proposalCompany = header.company; // COALESCE already
-    const hasProposalCompany = proposalCompany && proposalCompany.includes("(");
+    const isB2C =
+      header.rfq_type === "B2C";
 
-    /* ================= GST STATE LOGIC (DYNAMIC) ================= */
+    const sezType =
+      header.sez_type || "NONE";
 
-    // ✅ Seller GST (company)
-    const [[companyRow]] = await db.query(
-      `
-      SELECT gstin 
-      FROM company_branches 
-      WHERE company_id = ?
-      ORDER BY id ASC
-      LIMIT 1
-      `,
-      [header.companyId]
-    );
+    const proposalCompany =
+      header.company || "";
 
-    const senderStateCode = companyRow?.gstin?.substring(0, 2) || "";
-    const clientStateCode = header.gstin?.substring(0, 2) || "";
+    const hasProposalCompany =
+      proposalCompany.includes("(");
 
-    const isInterState = senderStateCode !== clientStateCode;
-    const isSEZ = sezType === "SEZ";
+    /* ================= GST LOGIC ================= */
 
-    /* ================= CHECK PROPOSAL ================= */
+    let senderStateCode = "";
 
-    const [[proposalRow]] = await db.query(
-      `SELECT id FROM proposals WHERE rfq_id=? LIMIT 1`,
-      [rfqId]
-    );
+    let clientStateCode = "";
 
-    let items = [];
+    if (!isB2C && header.companyId) {
+
+      const [[companyRow]] =
+        await db.query(
+          `
+          SELECT gstin
+
+          FROM company_branches
+
+          WHERE company_id = ?
+
+          ORDER BY id ASC
+
+          LIMIT 1
+          `,
+          [header.companyId]
+        );
+
+      senderStateCode =
+        companyRow?.gstin?.substring(0, 2) || "";
+
+      clientStateCode =
+        header.gstin?.substring(0, 2) || "";
+    }
+
+    const isInterState = isB2C
+      ? false
+      : senderStateCode !== clientStateCode;
+
+    const isSEZ = isB2C
+      ? false
+      : sezType === "SEZ";
+
+    /* ================= PROPOSAL ================= */
+
+    const [[proposalRow]] =
+      await db.query(
+        `
+        SELECT id
+
+        FROM proposals
+
+        WHERE rfq_id = ?
+
+        LIMIT 1
+        `,
+        [rfqId]
+      );
 
     let proposalData = null;
 
     if (proposalRow) {
-      const [[p]] = await db.query(
-        `SELECT billing_address, shipping_address 
-     FROM proposals 
-     WHERE id=?`,
-        [proposalRow.id]
-      );
+
+      const [[p]] =
+        await db.query(
+          `
+          SELECT
+
+            billing_address,
+
+            shipping_address
+
+          FROM proposals
+
+          WHERE id = ?
+          `,
+          [proposalRow.id]
+        );
 
       proposalData = p;
     }
 
-    /* ================= CASE 1: PROPOSAL EXISTS ================= */
+    let items = [];
+
+    /* =====================================================
+       CASE 1 : PROPOSAL EXISTS
+    ===================================================== */
 
     if (proposalRow) {
-      const [pItems] = await db.query(
-        `
-        SELECT
-          pi.product_id AS productId,
 
-          CASE 
-            WHEN cpp.prefix IS NOT NULL AND cpp.prefix != ''
-            THEN CONCAT(cpp.prefix, ' | ', p.product_name)
-            ELSE p.product_name
-          END AS description,
+      const [pItems] =
+        await db.query(
+          `
+          SELECT
 
-          p.hsn,
-          pi.quantity AS qty,
-          pi.rate,
-          p.base_price AS basePrice,
-          pi.discount,
+            pi.product_id AS productId,
 
-          pi.cgst_rate,
-          pi.sgst_rate,
-          pi.igst_rate
+            CASE
 
-        FROM proposal_items pi
-        JOIN products p ON p.id = pi.product_id
+              WHEN r.rfq_type = 'B2B'
+               AND cpp.prefix IS NOT NULL
+               AND cpp.prefix != ''
 
-        LEFT JOIN company_product_pricing cpp
-          ON cpp.product_id = p.id
-          AND cpp.company_id = ?
+              THEN CONCAT(
+                cpp.prefix,
+                ' | ',
+                p.product_name
+              )
 
-        WHERE pi.proposal_id = ?
-        ORDER BY pi.id ASC
-        `,
-        [header.companyId, proposalRow.id]
-      );
+              ELSE p.product_name
+
+            END AS description,
+
+            p.hsn,
+
+            pi.quantity AS qty,
+
+            pi.rate,
+
+            p.base_price AS basePrice,
+
+            pi.discount,
+
+            pi.cgst_rate,
+
+            pi.sgst_rate,
+
+            pi.igst_rate
+
+          FROM proposal_items pi
+
+          JOIN products p
+            ON p.id = pi.product_id
+
+          JOIN proposals pr
+            ON pr.id = pi.proposal_id
+
+          JOIN rfqs r
+            ON r.id = pr.rfq_id
+
+          LEFT JOIN company_product_pricing cpp
+            ON cpp.product_id = p.id
+            AND cpp.company_id = r.company_id
+
+          WHERE pi.proposal_id = ?
+
+          ORDER BY pi.id ASC
+          `,
+          [proposalRow.id]
+        );
 
       items = pItems.map((x) => {
-        const qty = Number(x.qty || 1);
-        const rate = Number(x.rate || 0);
-        const basePrice = Number(x.basePrice || 0);
-        const discountPercent = Number(x.discount || 0);
 
-        const cgstRate = Number(x.cgst_rate ?? 0);
-        const sgstRate = Number(x.sgst_rate ?? 0);
-        const igstRate = Number(x.igst_rate ?? 0);
+        const qty =
+          Number(x.qty || 1);
+
+        const rate =
+          Number(x.rate || 0);
+
+        const basePrice =
+          Number(x.basePrice || 0);
+
+        const discountPercent =
+          Number(x.discount || 0);
+
+        const cgstRate =
+          Number(x.cgst_rate ?? 0);
+
+        const sgstRate =
+          Number(x.sgst_rate ?? 0);
+
+        const igstRate =
+          Number(x.igst_rate ?? 0);
 
         return {
-          productId: x.productId,
-          description: x.description,
-          hsn: x.hsn,
+
+          productId:
+            x.productId,
+
+          description:
+            x.description,
+
+          hsn:
+            x.hsn,
+
           uom: "No",
+
           qty,
+
           rate,
+
           basePrice,
-          discount: Number(discountPercent.toFixed(2)),
-          // ✅ STATE-BASED TAX
-          cgst: isSEZ ? 0 : isInterState ? 0 : cgstRate,
-          sgst: isSEZ ? 0 : isInterState ? 0 : sgstRate,
-          igst: isSEZ
-            ? igstRate   // ✅ APPLY IGST
-            : isInterState
+
+          discount:
+            Number(
+              discountPercent.toFixed(2)
+            ),
+
+          cgst:
+            isSEZ
+              ? 0
+              : isInterState
+                ? 0
+                : cgstRate,
+
+          sgst:
+            isSEZ
+              ? 0
+              : isInterState
+                ? 0
+                : sgstRate,
+
+          igst:
+            isSEZ
               ? igstRate
-              : 0,
+              : isInterState
+                ? igstRate
+                : 0,
         };
       });
     }
 
-    /* ================= CASE 2: RFQ ONLY ================= */
+    /* =====================================================
+       CASE 2 : RFQ ONLY
+    ===================================================== */
 
     else {
-      const [itemRows] = await db.query(
-        `
-        SELECT
-          rp.product_id AS productId,
 
-          CASE 
-            WHEN cpp.prefix IS NOT NULL AND cpp.prefix != ''
-            THEN CONCAT(cpp.prefix, ' | ', p.product_name)
-            ELSE p.product_name
-          END AS description,
+      const [itemRows] =
+        await db.query(
+          `
+          SELECT
 
-          p.hsn,
-          rp.quantity AS qty,
-          rp.quoted_price AS quotedPrice,
-          cpp.custom_price AS customPrice,
-          p.base_price AS basePrice,
+            rp.product_id AS productId,
 
-          p.cgst_rate,
-          p.sgst_rate,
-          p.igst_rate
+            CASE
 
-        FROM rfq_products rp
-        JOIN products p ON p.id = rp.product_id
+              WHEN r.rfq_type = 'B2B'
+               AND cpp.prefix IS NOT NULL
+               AND cpp.prefix != ''
 
-        LEFT JOIN company_product_pricing cpp
-          ON cpp.company_id = ?
-          AND cpp.product_id = rp.product_id
+              THEN CONCAT(
+                cpp.prefix,
+                ' | ',
+                p.product_name
+              )
 
-        WHERE rp.rfq_id = ?
-        ORDER BY rp.product_id ASC
-        `,
-        [header.companyId, rfqId]
-      );
+              ELSE p.product_name
+
+            END AS description,
+
+            p.hsn,
+
+            rp.quantity AS qty,
+
+            rp.quoted_price AS quotedPrice,
+
+            CASE
+
+              WHEN r.rfq_type = 'B2B'
+                THEN cpp.custom_price
+
+              WHEN r.rfq_type = 'B2C'
+                THEN custp.custom_price
+
+              ELSE NULL
+
+            END AS customPrice,
+
+            p.base_price AS basePrice,
+
+            p.cgst_rate,
+
+            p.sgst_rate,
+
+            p.igst_rate
+
+          FROM rfq_products rp
+
+          JOIN products p
+            ON p.id = rp.product_id
+
+          JOIN rfqs r
+            ON r.id = rp.rfq_id
+
+          LEFT JOIN company_product_pricing cpp
+            ON cpp.company_id = r.company_id
+            AND cpp.product_id = rp.product_id
+
+          LEFT JOIN customer_product_pricing custp
+            ON custp.product_id = rp.product_id
+
+          WHERE rp.rfq_id = ?
+
+          ORDER BY rp.product_id ASC
+          `,
+          [rfqId]
+        );
 
       items = itemRows.map((x) => {
-        const qty = Number(x.qty || 1);
-        const basePrice = Number(x.basePrice || 0);
+
+        const qty =
+          Number(x.qty || 1);
+
+        const basePrice =
+          Number(x.basePrice || 0);
 
         const rate =
           x.quotedPrice != null
@@ -217,111 +424,200 @@ r.billing_type,
               : basePrice;
 
         const discountPerUnit =
-          basePrice > rate ? basePrice - rate : 0;
+          basePrice > rate
+            ? basePrice - rate
+            : 0;
 
         const discountPercent =
           basePrice > 0
-            ? (discountPerUnit / basePrice) * 100
+            ? (
+                discountPerUnit /
+                basePrice
+              ) * 100
             : 0;
 
-        const cgstRate = Number(x.cgst_rate ?? 0);
-        const sgstRate = Number(x.sgst_rate ?? 0);
-        const igstRate = Number(x.igst_rate ?? 0);
+        const cgstRate =
+          Number(x.cgst_rate ?? 0);
+
+        const sgstRate =
+          Number(x.sgst_rate ?? 0);
+
+        const igstRate =
+          Number(x.igst_rate ?? 0);
 
         return {
-          productId: x.productId,
-          description: x.description,
-          hsn: x.hsn,
-          uom: "No",
-          qty,
-          rate,
-          basePrice,
-          discount: Number(discountPercent.toFixed(2)),
 
-          // ✅ STATE-BASED TAX
-          cgst: isSEZ ? 0 : isInterState ? 0 : cgstRate,
-          sgst: isSEZ ? 0 : isInterState ? 0 : sgstRate,
-         igst: isSEZ ? igstRate : isInterState ? igstRate : 0,
+          productId:
+            x.productId,
+
+          description:
+            x.description,
+
+          hsn:
+            x.hsn,
+
+          uom: "No",
+
+          qty,
+
+          rate,
+
+          basePrice,
+
+          discount:
+            Number(
+              discountPercent.toFixed(2)
+            ),
+
+          cgst:
+            isSEZ
+              ? 0
+              : isInterState
+                ? 0
+                : cgstRate,
+
+          sgst:
+            isSEZ
+              ? 0
+              : isInterState
+                ? 0
+                : sgstRate,
+
+          igst:
+            isSEZ
+              ? igstRate
+              : isInterState
+                ? igstRate
+                : 0,
         };
       });
     }
 
     /* ================= RESPONSE ================= */
-    // ✅ variables OUTSIDE
-    const clientName = header.client_name || "";
-    const companyName = header.company || "";
+
+    const clientName =
+      header.client_name || "";
+
+    const companyName =
+      header.company || "";
+
     const address =
-      proposalData?.billing_address || header.billing_address || "";
+      proposalData?.billing_address ||
+      header.billing_address ||
+      "";
 
     const shippingAddress =
-      proposalData?.shipping_address || header.shipping_address || "";
+      proposalData?.shipping_address ||
+      header.shipping_address ||
+      "";
 
-    // 📍 extract location
-const parts = (address || "").split(",").map(p => p.trim());
+    const isSelf =
+      header.billing_type === "Self";
 
-const location =
-  parts.length >= 3
-    ? parts[parts.length - 3]   // city
-    : parts.length >= 2
-      ? parts[1]
-      : parts[0] || "";
-
-      
-
-    const isSelf = header.billing_type === "Self";
-    const pureCompany = proposalCompany.includes("(")
-      ? proposalCompany.split("(").pop().replace(")", "").trim()
-      : proposalCompany;
-    // ✅ response
     return Response.json(
       {
         header: {
-          rfqId: header.rfqId,
-          companyId: header.companyId,
-          branchId: header.branchId,
 
-          // ✅ NAME
-          customerName: isSelf
-            ? `${clientName} (${companyName})`
-            : header.customerName || companyName,
+          rfqId:
+            header.rfqId,
+
+          rfqType:
+            header.rfq_type,
+
+          companyId:
+            header.companyId,
+
+          branchId:
+            header.branchId,
+
+          customerName:
+
+            isB2C
+
+              ? clientName
+
+              : isSelf
+
+                ? `${clientName} (${companyName})`
+
+                : (
+                    header.customerName ||
+                    companyName
+                  ),
 
           clientName,
-          clientPhone: header.client_phone || "",
-          clientEmail: header.client_email || "",
 
-          company: isSelf
-            ? (hasProposalCompany
-              ? proposalCompany   // ✅ already formatted → use directly
-              : (clientName
-                ? `${clientName} (${proposalCompany})`
-                : proposalCompany))
-            : proposalCompany,
+          clientPhone:
+            header.client_phone || "",
 
-          // ✅ GSTIN
-          gstin: isSelf ? "" : header.gstin || "",
+          clientEmail:
+            header.client_email || "",
 
-          // ✅ BILLING
-          billing_address: isSelf
-            ? ` ${location}`
-            : address,
+          company:
 
-          shipping_address: isSelf
-            ? ` ${location}`
-            : shippingAddress,
+            isB2C
 
+              ? companyName
 
+              : isSelf
 
-          submittedAt: header.submittedAt,
-          status: header.status,
-          notes: header.notes || "",
+                ? (
+                    hasProposalCompany
+
+                      ? proposalCompany
+
+                      : (
+                          clientName
+                            ? `${clientName} (${proposalCompany})`
+                            : proposalCompany
+                        )
+                  )
+
+                : proposalCompany,
+
+          gstin:
+
+            isB2C
+              ? ""
+              : (header.gstin || ""),
+
+          billing_address:
+            address,
+
+          shipping_address:
+            shippingAddress,
+
+          submittedAt:
+            header.submittedAt,
+
+          status:
+            header.status,
+
+          notes:
+            header.notes || "",
         },
 
         items,
       },
-      { status: 200 }
+      {
+        status: 200,
+      }
     );
+
   } catch (err) {
-    console.error("GET /api/rfqs/[rfqId]/details error:", err);
-    return Response.json({ message: "Server error" }, { status: 500 });
+
+    console.error(
+      "GET /api/rfqs/[rfqId]/details error:",
+      err
+    );
+
+    return Response.json(
+      {
+        message: "Server error",
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }

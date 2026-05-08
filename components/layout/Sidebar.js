@@ -23,15 +23,21 @@ const menuItems = [
     icon: "ri-building-4-line",
     path: "/admin/clients",
   },
-  {
-    title: "Company Pricing",
+   {
+    title: "Pricing",
     icon: "ri-price-tag-3-line",
-    path: "/admin/pricing",
+    children: [
+      { title: "Company Pricing", path: "/admin/pricing/company_pricing" },
+      { title: "Customer Pricing", path: "/admin/pricing/customer_pricing" },
+    ],
   },
-  {
+    {
     title: "RFQs",
     icon: "ri-file-list-3-line",
-    path: "/admin/rfqs",
+    children: [
+      { title: "Company RFQs", path: "/admin/rfqs/company_rfqs" },
+      { title: "Customer RFQs", path: "/admin/rfqs/customer_rfqs" },
+    ],
   },
   {
     title: "Proposal",

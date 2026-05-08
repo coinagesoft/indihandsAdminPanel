@@ -12,7 +12,7 @@ const Page = ({ onBack, rfqId }) => {
   const [sendingProposal, setSendingProposal] = useState(false);
   const [sendingInvoice, setSendingInvoice] = useState(false);
   const [proposalId, setProposalId] = useState(null);
-  
+
   const [items, setItems] = useState([]);
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -30,15 +30,27 @@ const Page = ({ onBack, rfqId }) => {
     shippingAddress: "",
     companyId: null,
     branchId: null,
+    rfqType: "",
   });
   const fetchWithLoader = useFetchWithLoader();
 
-
+  const isB2C =
+    header.rfqType === "B2C";
 
   /* ================= HANDLERS ================= */
   const handleSaveProposal = async () => {
     if (!selectedRfq) return showError("Please select RFQ first");
-    if (!header.companyId || !header.branchId) return showError("companyId / branchId missing");
+    if (
+      !isB2C &&
+      (
+        !header.companyId ||
+        !header.branchId
+      )
+    ) {
+      return showError(
+        "companyId / branchId missing"
+      );
+    }
 
     if (saving) return;
 
@@ -47,8 +59,14 @@ const Page = ({ onBack, rfqId }) => {
 
       const payload = {
         rfqId: Number(selectedRfq),
-        companyId: header.companyId,
-        branchId: header.branchId,
+        companyId:
+          header.companyId || null,
+
+        branchId:
+          header.branchId || null,
+
+        rfqType:
+          header.rfqType,
         place: header.place,
         proposal_date: header.date,
         billing_address: header.billingAddress,
@@ -128,7 +146,7 @@ const Page = ({ onBack, rfqId }) => {
 
   const handleDownloadPdf = () => {
     if (!selectedRfq) return showError("Select RFQ first");
-     if (!proposalId) return showError("⚠️ Please save the proposal first before downloading PDF");
+    if (!proposalId) return showError("⚠️ Please save the proposal first before downloading PDF");
 
 
     window.open(`/api/proposals/pdf/${proposalId}`, "_blank");
@@ -170,11 +188,78 @@ const Page = ({ onBack, rfqId }) => {
     }
   };
 
-useEffect(() => {
-  if (!rfqId || acceptedRfqs.length === 0) return;
+  useEffect(() => {
+    if (!rfqId || acceptedRfqs.length === 0) return;
 
-  const loadRfq = async () => {
-    const res = await fetchWithLoader(`/api/rfqs/${rfqId}/details`);
+    const loadRfq = async () => {
+      const res = await fetchWithLoader(`/api/rfqs/${rfqId}/details`);
+      const data = await res.json();
+      if (!res.ok) return;
+
+      const companyId = data.header.companyId;
+
+      // charges
+      let loadedCharges = [];
+      const proposalChargesRes = await fetchWithLoader(`/api/proposals/${rfqId}/charges`);
+      const proposalChargesData = await proposalChargesRes.json();
+
+      if (proposalChargesData.success && proposalChargesData.charges?.length) {
+        loadedCharges = proposalChargesData.charges;
+      } else {
+        const companyRes = await fetchWithLoader(`/api/companies/${companyId}/charges`);
+        const companyData = await companyRes.json();
+        loadedCharges = companyData.charges || [];
+      }
+
+      setCharges(
+        loadedCharges.map(c => ({
+          label: c.label,
+          amount: Number(c.amount),
+          taxPercent: Number(c.taxPercent || 0),
+          hsnCode: c.hsnCode || c.hsn_code || ""
+        }))
+      );
+
+      // ✅ CORRECT QUOTATION SOURCE
+      const selected = acceptedRfqs.find(x => x.id == rfqId);
+      setHeader({
+        quotationNo: selected?.proposalNumber || "",
+        date: new Date().toISOString().slice(0, 10),
+        clientName: data.header.clientName,
+        clientPhone: data.header.clientPhone,
+        clientEmail: data.header.clientEmail,
+        company: data.header.company,
+        gstin: data.header.gstin,
+        billingAddress: data.header.billing_address,
+        shippingAddress: data.header.shipping_address,
+        companyId,
+        branchId: data.header.branchId,
+        rfqType:
+          data.header.rfqType || "",
+      });
+      setProposalId(selected?.proposalId || null);
+
+      setItems(data.items || []);
+    };
+
+    loadRfq();
+  }, [rfqId, acceptedRfqs]);   // ✅ IMPORTANT
+
+  const handleCreateInvoice = () => {
+    if (!selectedRfq) return showError("Please select RFQ first");
+    if (!proposalId) return showError(" Please send the proposal to the client before creating an invoice");
+    router.push(`/admin/invoice/create?proposalId=${proposalId}`);
+  };
+
+
+
+  const handleRfqSelect = async (e) => {
+    const newId = Number(e.target.value);
+    setSelectedRfq(newId);
+
+    if (!newId) return;
+
+    const res = await fetchWithLoader(`/api/rfqs/${newId}/details`);
     const data = await res.json();
     if (!res.ok) return;
 
@@ -182,7 +267,7 @@ useEffect(() => {
 
     // charges
     let loadedCharges = [];
-    const proposalChargesRes = await fetchWithLoader(`/api/proposals/${rfqId}/charges`);
+    const proposalChargesRes = await fetchWithLoader(`/api/proposals/${newId}/charges`);
     const proposalChargesData = await proposalChargesRes.json();
 
     if (proposalChargesData.success && proposalChargesData.charges?.length) {
@@ -198,95 +283,31 @@ useEffect(() => {
         label: c.label,
         amount: Number(c.amount),
         taxPercent: Number(c.taxPercent || 0),
-         hsnCode: c.hsnCode || c.hsn_code || ""
+        hsnCode: c.hsnCode || c.hsn_code || ""
       }))
     );
 
-    // ✅ CORRECT QUOTATION SOURCE
-    const selected = acceptedRfqs.find(x => x.id == rfqId);
-  setHeader({
-    quotationNo: selected?.proposalNumber || "",
-    date: new Date().toISOString().slice(0, 10),
-    clientName: data.header.clientName,
-    clientPhone: data.header.clientPhone,
-    clientEmail: data.header.clientEmail,
-    company: data.header.company,
-    gstin: data.header.gstin,
-    billingAddress: data.header.billing_address,
-    shippingAddress: data.header.shipping_address,
-    companyId,
-    branchId: data.header.branchId,
-  });
+    const selected = acceptedRfqs.find(x => x.id == newId);
+    console.log("selected page ", selected)
+    setHeader({
+      quotationNo: selected?.proposalNumber || "",
+      date: new Date().toISOString().slice(0, 10),
+      clientName: data.header.clientName,
+      clientPhone: data.header.clientPhone,
+      clientEmail: data.header.clientEmail,
+      company: data.header.company,
+      gstin: data.header.gstin,
+      billingAddress: data.header.billing_address,
+      shippingAddress: data.header.shipping_address,
+      companyId,
+      branchId: data.header.branchId,
+      rfqType: data.header.rfqType || "",
+    });
+
     setProposalId(selected?.proposalId || null);
 
     setItems(data.items || []);
   };
-
-  loadRfq();
-}, [rfqId, acceptedRfqs]);   // ✅ IMPORTANT
-
-const handleCreateInvoice = () => {
-  if (!selectedRfq) return showError("Please select RFQ first");
-  if (!proposalId) return showError(" Please send the proposal to the client before creating an invoice");
-  router.push(`/admin/invoice/create?proposalId=${proposalId}`);
-};
-
-
-
-const handleRfqSelect = async (e) => {
-  const newId = Number(e.target.value);
-  setSelectedRfq(newId);
-
-  if (!newId) return;
-
-  const res = await fetchWithLoader(`/api/rfqs/${newId}/details`);
-  const data = await res.json();
-  if (!res.ok) return;
-
-  const companyId = data.header.companyId;
-
-  // charges
-  let loadedCharges = [];
-  const proposalChargesRes = await fetchWithLoader(`/api/proposals/${newId}/charges`);
-  const proposalChargesData = await proposalChargesRes.json();
-
-  if (proposalChargesData.success && proposalChargesData.charges?.length) {
-    loadedCharges = proposalChargesData.charges;
-  } else {
-    const companyRes = await fetchWithLoader(`/api/companies/${companyId}/charges`);
-    const companyData = await companyRes.json();
-    loadedCharges = companyData.charges || [];
-  }
-
-  setCharges(
-    loadedCharges.map(c => ({
-      label: c.label,
-      amount: Number(c.amount),
-      taxPercent: Number(c.taxPercent || 0),
-      hsnCode: c.hsnCode || c.hsn_code || ""
-    }))
-  );
-
-  const selected = acceptedRfqs.find(x => x.id == newId);
-  console.log("selected page ",selected)
-  setHeader({
-    quotationNo: selected?.proposalNumber || "",
-    date: new Date().toISOString().slice(0, 10),
-    clientName: data.header.clientName,
-    clientPhone: data.header.clientPhone,
-    clientEmail: data.header.clientEmail,
-    company: data.header.company,
-    gstin: data.header.gstin,
-    billingAddress: data.header.billing_address,
-    shippingAddress: data.header.shipping_address,
-    companyId,
-    branchId: data.header.branchId,
-  });
-
-  setProposalId(selected?.proposalId || null); 
-
-  setItems(data.items || []);
-};
 
 
   const calcAmount = (item) => {
@@ -348,24 +369,38 @@ const handleRfqSelect = async (e) => {
 
 
       <div className="row invoice-edit">
-   <div className="mb-4">
-            <label className="form-label">Select Accepted RFQ</label>
-            <select
-              className="form-select"
-              value={selectedRfq}
-              onChange={handleRfqSelect}
-            >
-              <option value="">-- Select RFQ --</option>
-              {acceptedRfqs.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.rfqNumber} — {r.company}
-                </option>
-              ))}
+        <div className="mb-4">
+          <label className="form-label">Select Accepted RFQ</label>
+          <select
+            className="form-select"
+            value={selectedRfq}
+            onChange={handleRfqSelect}
+          >
+            <option value="">-- Select RFQ --</option>
+            {acceptedRfqs.map((r) => {
 
-            </select>
-          </div>
+              const isB2CRfq =
+                r.rfqType === "B2C";
+
+              return (
+                <option
+                  key={r.id}
+                  value={r.id}
+                >
+                  {isB2CRfq
+
+                    ? `${r.rfqNumber} — ${r.clientName || r.customerName}`
+
+                    : `${r.rfqNumber} — ${r.company}`
+                  }
+                </option>
+              );
+            })}
+
+          </select>
+        </div>
         <div className="col-lg-9 col-12 mb-lg-0 mb-6">
-       
+
           <div className="card invoice-preview-card p-sm-12 p-6">
 
             {/* ================= SELLER HEADER (GREY ROW) ================= */}
@@ -417,12 +452,21 @@ const handleRfqSelect = async (e) => {
                   <p className="mb-1">
                     <strong>Customer Email:</strong> {header.clientEmail}
                   </p>
-                  <p className="mb-1">
-                    <strong>Company Name:</strong> {header.company}
-                  </p>
-                  <p className="mb-1">
-                    <strong>GSTIN:</strong> {header.gstin}
-                  </p>
+                  {!isB2C && (
+                    <>
+                      <p className="mb-1">
+                        <strong>Company Name:</strong>
+                        {" "}
+                        {header.company}
+                      </p>
+
+                      <p className="mb-1">
+                        <strong>GSTIN:</strong>
+                        {" "}
+                        {header.gstin}
+                      </p>
+                    </>
+                  )}
                   <p className="mb-1">
                     <strong>Place of Supply:</strong> {header.place}
                   </p>
@@ -527,44 +571,44 @@ const handleRfqSelect = async (e) => {
               </div>
             </div>
 
-        {charges.length > 0 && (
-  <div className="mb-3">
-    <h6>Additional Charges</h6>
+            {charges.length > 0 && (
+              <div className="mb-3">
+                <h6>Additional Charges</h6>
 
-    <div className="table-responsive">
-      <table className="table table-bordered table-sm">
-        <thead className="table-light">
-          <tr>
-            <th>Charge</th>
-            <th>HSN Code</th>
-            <th>Amount</th>
-            <th>Tax %</th>
-            <th>Total</th>
-          </tr>
-        </thead>
+                <div className="table-responsive">
+                  <table className="table table-bordered table-sm">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Charge</th>
+                        <th>HSN Code</th>
+                        <th>Amount</th>
+                        <th>Tax %</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
 
-        <tbody>
-          {charges.map((c, i) => {
-            const amt = Number(c.amount || 0);
-            const tax =
-              (amt * Number(c.taxPercent || 0)) / 100;
-            const total = amt + tax;
+                    <tbody>
+                      {charges.map((c, i) => {
+                        const amt = Number(c.amount || 0);
+                        const tax =
+                          (amt * Number(c.taxPercent || 0)) / 100;
+                        const total = amt + tax;
 
-            return (
-              <tr key={i}>
-                <td>{c.label}</td>
-                <td>{c.hsnCode || "-"}</td>
-                <td>₹ {amt.toFixed(2)}</td>
-                <td>{c.taxPercent || 0}%</td>
-                <td>₹ {total.toFixed(2)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
+                        return (
+                          <tr key={i}>
+                            <td>{c.label}</td>
+                            <td>{c.hsnCode || "-"}</td>
+                            <td>₹ {amt.toFixed(2)}</td>
+                            <td>{c.taxPercent || 0}%</td>
+                            <td>₹ {total.toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
 
             {/* Totals */}
@@ -638,50 +682,50 @@ const handleRfqSelect = async (e) => {
         </div>
 
         {/* Actions */}
-         <div className="col-lg-3 ">
-              <div className="card shadow-sm p-3">
-              <button
-                className="btn mb-3 w-100"
-                style={{
-                  border: "1px solid #f29e46",
-                  color: "#f29e46",
-                  background: "#fff",
-                  borderRadius: "8px",
-                  fontWeight: 500
-                }}
-                onClick={onBack}
-              >
-                ← Back to Edit
-              </button>
-              {/* SAVE */}
-              <button
-                className="btn w-100 mb-3"
-                style={{
-                  background: "#F29E46",
-                  color: "#fff",
-                  borderRadius: "8px",
-                  fontWeight: 500
-                }}
-                onClick={handleSaveProposal}
-                disabled={saving}
-              >
-                {saving ? "Sending..." : "Send Proposal"}
-              </button>
+        <div className="col-lg-3 ">
+          <div className="card shadow-sm p-3">
+            <button
+              className="btn mb-3 w-100"
+              style={{
+                border: "1px solid #f29e46",
+                color: "#f29e46",
+                background: "#fff",
+                borderRadius: "8px",
+                fontWeight: 500
+              }}
+              onClick={onBack}
+            >
+              ← Back to Edit
+            </button>
+            {/* SAVE */}
+            <button
+              className="btn w-100 mb-3"
+              style={{
+                background: "#F29E46",
+                color: "#fff",
+                borderRadius: "8px",
+                fontWeight: 500
+              }}
+              onClick={handleSaveProposal}
+              disabled={saving}
+            >
+              {saving ? "Sending..." : "Send Proposal"}
+            </button>
 
-              {/* DOWNLOAD PROPOSAL PDF */}
-              <button
-                className="btn w-100 mb-3"
-                style={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px",
-                  color: "#444",
-                  background: "#fff"
-                }}
-                onClick={handleDownloadPdf}
-              >
-                Download PDF
-              </button>
-              {/* 
+            {/* DOWNLOAD PROPOSAL PDF */}
+            <button
+              className="btn w-100 mb-3"
+              style={{
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+                color: "#444",
+                background: "#fff"
+              }}
+              onClick={handleDownloadPdf}
+            >
+              Download PDF
+            </button>
+            {/* 
               EMAIL PROPOSAL
               <button
                 className="btn w-100 mb-2"
@@ -697,22 +741,22 @@ const handleRfqSelect = async (e) => {
                 {sendingProposal ? "Sending..." : "Email Proposal"}
               </button> */}
 
-              {/* DOWNLOAD INVOICE */}
-              <button
-        className="btn w-100 mb-3"
-        style={{
-          border: "1px solid #2e7d32",
-          color: "#2e7d32",
-          borderRadius: "8px",
-          background: "#fff"
-        }}
-        onClick={handleCreateInvoice}
-      >
-        Create Invoice
-      </button>
+            {/* DOWNLOAD INVOICE */}
+            <button
+              className="btn w-100 mb-3"
+              style={{
+                border: "1px solid #2e7d32",
+                color: "#2e7d32",
+                borderRadius: "8px",
+                background: "#fff"
+              }}
+              onClick={handleCreateInvoice}
+            >
+              Create Invoice
+            </button>
 
-            </div>
           </div>
+        </div>
 
 
       </div>

@@ -1,8 +1,7 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { db } from "../../../../db";
-
+import db from "../../../../db";
 
 /* ================= NUMBER TO WORDS ================= */
 function numberToWords(num){
@@ -34,20 +33,38 @@ function buildHTML(data) {
     totalTax, grandTotal, formattedDate,  isInterState , isSEZ
   } = data;
 
-const isSelf = proposal.billing_type === "Self";
+const isSelf =
+  proposal.billing_type
+    ?.toLowerCase() === "self";
 
 const companyName = proposal.company || "";
 const clientName = proposal.client_name || "";
-
+const isB2C =
+  proposal.rfq_type === "B2C";
 const hasFormatted = companyName.includes("(");
 
-const displayCompany = isSelf
-  ? (hasFormatted
-      ? companyName
-      : (clientName
-          ? `${clientName} (${companyName})`
-          : companyName))
-  : companyName;
+const displayCompany =
+
+  isB2C
+
+    ? clientName
+
+    : (
+
+        isSelf
+
+          ? (
+              hasFormatted
+                ? companyName
+                : (
+                    clientName
+                      ? `${clientName} (${companyName})`
+                      : companyName
+                  )
+            )
+
+          : companyName
+      );
 
 /* ================= STATE LOGIC ================= */
 
@@ -503,9 +520,24 @@ State: ${senderStateName} | State Code: ${senderStateCode}
 <div class="sec">
 Contact Person: ${proposal.client_name}<br>
 Contact Number: ${proposal.client_phone}<br>
-Company name: ${displayCompany}<br>
+${
+  isB2C
+
+    ? `Customer Name: ${displayCompany}<br>`
+
+    : `Company Name: ${displayCompany}<br>`
+}
 Address: ${proposal.billing_address}<br>
-<b>GSTIN: ${isSelf ? "" : (proposal.gstin || "")}</b><br>
+${
+  isB2C
+
+    ? ""
+
+    : `<b>
+        GSTIN:
+        ${isSelf ? "" : (proposal.gstin || "")}
+      </b><br>`
+}
 State: ${clientStateName} | State Code: ${clientStateCode}</div>
 </div>
 <table>
@@ -657,23 +689,65 @@ export async function GET(req, { params }) {
 
     /* ================= FETCH DATA ================= */
     const [[proposal]] = await db.query(`
-      SELECT 
-        p.id,
-        p.company_id,
-        p.proposal_number,
-        p.proposal_date,
-        p.billing_address,
-        c.company_name AS company,
-        cb.gstin,
-        cb.sez_type,
-        r.client_name,
-        r.client_phone,
-        r.billing_type
-      FROM proposals p
-      JOIN rfqs r ON r.id = p.rfq_id
-      JOIN companies c ON c.id = r.company_id
-        JOIN company_branches cb ON cb.id = r.branch_id
-      WHERE p.id = ?
+    SELECT
+
+  p.id,
+
+  p.company_id,
+
+  p.customer_id,
+
+  p.proposal_number,
+
+  p.proposal_date,
+
+  p.billing_address,
+
+  p.shipping_address,
+
+  r.rfq_type,
+
+  CASE
+
+    WHEN r.rfq_type = 'B2C'
+    THEN r.client_name
+
+    WHEN r.billing_type = 'self'
+    THEN p.company_name
+
+    ELSE c.company_name
+
+  END AS company,
+
+  CASE
+
+    WHEN r.rfq_type = 'B2C'
+    THEN NULL
+
+    ELSE cb.gstin
+
+  END AS gstin,
+
+  cb.sez_type,
+
+  r.client_name,
+
+  r.client_phone,
+
+  r.billing_type
+
+FROM proposals p
+
+JOIN rfqs r
+  ON r.id = p.rfq_id
+
+LEFT JOIN companies c
+  ON c.id = r.company_id
+
+LEFT JOIN company_branches cb
+  ON cb.id = r.branch_id
+
+WHERE p.id = ?
     `, [proposalId]);
 
     if (!proposal)
@@ -692,7 +766,16 @@ export async function GET(req, { params }) {
 const isSEZ = (sezType || "").toUpperCase() === "SEZ";
     const clientStateCode = proposal.gstin?.substring(0, 2) || "";
     const senderStateCode = sender.gstin?.substring(0, 2) || "";
-    const isInterState = clientStateCode !== senderStateCode;
+  const isInterState =
+
+  proposal.rfq_type === "B2C"
+
+    ? false
+
+    : (
+        clientStateCode !==
+        senderStateCode
+      );
 
     /* ================= ITEMS ================= */
     const [items] = await db.query(`
@@ -704,10 +787,20 @@ const isSEZ = (sezType || "").toUpperCase() === "SEZ";
         pi.sgst_rate,
         pi.igst_rate,
         pr.base_price,
-       CASE 
-  WHEN cpp.prefix IS NOT NULL AND cpp.prefix != ''
-  THEN CONCAT(cpp.prefix, ' | ', pr.product_name)
+  CASE
+
+  WHEN ? = 'B2B'
+   AND cpp.prefix IS NOT NULL
+   AND cpp.prefix != ''
+
+  THEN CONCAT(
+    cpp.prefix,
+    ' | ',
+    pr.product_name
+  )
+
   ELSE pr.product_name
+
 END AS description,
         pr.hsn
       FROM proposal_items pi
@@ -719,7 +812,15 @@ END AS description,
 
       WHERE pi.proposal_id = ?
       ORDER BY pi.id
-    `,  [proposal.company_id, proposal.id] );
+    `,  [
+
+  proposal.rfq_type,
+
+  proposal.company_id || 0,
+
+  proposal.id
+
+]);
 
     /* ================= CHARGES ================= */
     const [companyCharges] = await db.query(`
