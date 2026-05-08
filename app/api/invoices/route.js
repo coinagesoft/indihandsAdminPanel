@@ -56,7 +56,9 @@ export async function GET() {
         GROUP BY proposal_id
       ) ch ON ch.proposal_id = p.id
 
-WHERE p.status IN ('Sent','Approved')
+WHERE
+  p.status IN ('Sent','Approved')
+  AND r.rfq_type = 'B2B'
       ORDER BY p.id DESC
     `);
 

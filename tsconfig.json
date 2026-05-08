@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "app/layout.js", "app/page.js", "components/layout/Header.js", "components/layout/Sidebar.js", "components/ui/EmptyState.js", "components/ui/Loaderui.js", "app/admin/layout.js", "app/login/page.js", "app/admin/proposals/page.js", "app/admin/pricing/page.js", "app/api/auth/route.js", "app/api/companies/route.js", "app/api/dashboard/route.js", "app/api/pricing/route.js", "app/api/proposals/route.js", "app/api/rfqs/route.js", "lib/auth.js", "lib/clients.js", "lib/dashboardLib.js", "lib/db.js", "lib/pricingLib.js", "lib/products.js", "lib/proposalsLib.js", "lib/rfqs.js", "app/admin/dashboard/page.js", "app/admin/rfqs/page.js", "app/middlewear.ts", "app/middleware.js", "next.config.js"  ],
+, "app/layout.js", "app/page.js", "components/layout/Header.js", "components/layout/Sidebar.js", "components/ui/EmptyState.js", "components/ui/Loaderui.js", "app/admin/layout.js", "app/login/page.js", "app/admin/proposals/page.js", "app/admin/pricing/page.js", "app/api/auth/route.js", "app/api/companies/route.js", "app/api/dashboard/route.js", "app/api/cust_pricing/route.js", "app/api/proposals/route.js", "app/api/rfqs/route.js", "lib/auth.js", "lib/clients.js", "lib/dashboardLib.js", "lib/db.js", "lib/pricingLib.js", "lib/products.js", "lib/proposalsLib.js", "lib/rfqs.js", "app/admin/dashboard/page.js", "app/admin/rfqs/page.js", "app/middlewear.ts", "app/middleware.js", "next.config.js"  ],
   "exclude": ["node_modules"]
 }
