@@ -272,12 +272,16 @@ const Page = ({ onBack, rfqId }) => {
 
     loadRfq();
   }, [rfqId]);
+
+
   const calcAmount = (item) => {
     return item.qty * item.rate;
   };
 
+
   const calcTax = (amount, percent) =>
     (amount * (percent || 0)) / 100;
+
 
   const totals = items.reduce(
     (acc, item) => {
@@ -323,6 +327,8 @@ const Page = ({ onBack, rfqId }) => {
     if (!res.ok) return alert("❌ " + data.message);
     setAcceptedRfqs(data.rfqs || []);
   };
+
+
   useEffect(() => {
     if (selectedRfq) {
       handleRfqSelect({ target: { value: selectedRfq } });
@@ -332,10 +338,7 @@ const Page = ({ onBack, rfqId }) => {
   return (
 
     <div className="row g-4">
-
-
       <div className="row invoice-edit">
-
         <div className="col-lg-9 col-12 mb-lg-0 mb-6">
           <div className="mb-4">
             <label className="form-label">Select Accepted RFQ</label>
@@ -434,7 +437,6 @@ const Page = ({ onBack, rfqId }) => {
                     <strong>Date:</strong> {header.date}
                   </p>
                 </div>
-
               </div>
             </div>
 
@@ -651,6 +653,7 @@ const Page = ({ onBack, rfqId }) => {
               >
                 Download Proposal
               </button>
+              
               {/* 
               EMAIL PROPOSAL
               <button

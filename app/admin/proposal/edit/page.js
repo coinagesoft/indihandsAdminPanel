@@ -348,8 +348,11 @@ rfqType:
 
         company: data.header.company,
         gstin: data.header.gstin,
-        billingAddress: data.header.billing_address,
-        shippingAddress: data.header.shipping_address,
+        billingAddress:
+    data.header.billing_address || "",
+
+  shippingAddress:
+    data.header.shipping_address || "",
       }));
 
       setItems(data.items || []);
@@ -405,11 +408,16 @@ rfqType:
     fetchAcceptedRfqs();
   }, []);
 
+
+
   useEffect(() => {
-    if (rfqIdFromUrl) {
-      loadRfqById(rfqIdFromUrl);
-    }
-  }, [rfqIdFromUrl]);
+  if (
+    rfqIdFromUrl &&
+    acceptedRfqs.length > 0
+  ) {
+    loadRfqById(rfqIdFromUrl);
+  }
+}, [rfqIdFromUrl, acceptedRfqs]);
 
 useEffect(() => {
   if (!rfqSearch) return;
