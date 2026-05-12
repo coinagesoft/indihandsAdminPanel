@@ -64,6 +64,9 @@ export async function GET(req, { params }) {
         cb.gstin,
 
         cb.sez_type,
+        cb.billing_address AS branchBillingAddress,
+
+        cb.shipping_address AS branchShippingAddress,
 
         cb.branch_name AS branchName,
 
@@ -224,6 +227,10 @@ export async function GET(req, { params }) {
 
             p.hsn,
 
+            p.featured_image AS featuredImage,
+
+            p.barcode,
+
             pi.quantity AS qty,
 
             pi.rate,
@@ -293,6 +300,12 @@ export async function GET(req, { params }) {
 
           hsn:
             x.hsn,
+
+          featuredImage:
+            x.featuredImage,
+
+          barcode:
+            x.barcode,
 
           uom: "No",
 
@@ -501,15 +514,17 @@ export async function GET(req, { params }) {
     const companyName =
       header.company || "";
 
-    const address =
-      proposalData?.billing_address ||
-      header.billing_address ||
-      "";
+  const address =
+  proposalData?.billing_address ||
+  header.billing_address ||
+  header.branchBillingAddress ||
+  "";
 
-    const shippingAddress =
-      proposalData?.shipping_address ||
-      header.shipping_address ||
-      "";
+const shippingAddress =
+  proposalData?.shipping_address ||
+  header.shipping_address ||
+  header.branchShippingAddress ||
+  "";
 
     const isSelf =
       header.billing_type === "Self";
