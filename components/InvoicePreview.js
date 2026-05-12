@@ -17,8 +17,32 @@ const Page = ({ onBack, rfqId }) => {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [charges, setCharges] = useState([]);
+  const [showJobOrderModal, setShowJobOrderModal] = useState(false);
+
+const [jobOrderData, setJobOrderData] =
+  useState({
+
+    deliveryDate: "",
+
+    companyName: "",
+
+    location: "",
+
+    deliveryInstructions: "",
+
+    clientNames: [],
+
+    preparedBy: "",
+
+    checkedBy: "",
+
+    approvedBy: "",
+
+    includeLogo: "yes"
+  });
   const [header, setHeader] = useState({
     quotationNo: "",
+    rfqNumber: "",
     date: "",
     clientName: "",
     clientPhone: "",
@@ -143,7 +167,6 @@ const Page = ({ onBack, rfqId }) => {
     }
   };
 
-
   const handleDownloadPdf = () => {
     if (!selectedRfq) return showError("Select RFQ first");
     if (!proposalId) return showError("⚠️ Please save the proposal first before downloading PDF");
@@ -226,6 +249,7 @@ const Page = ({ onBack, rfqId }) => {
         quotationNo: selected?.proposalNumber || "",
         date: new Date().toISOString().slice(0, 10),
         clientName: data.header.clientName,
+        rfqNumber: selected?.rfqNumber || "",
         clientPhone: data.header.clientPhone,
         clientEmail: data.header.clientEmail,
         company: data.header.company,
@@ -251,7 +275,144 @@ const Page = ({ onBack, rfqId }) => {
     router.push(`/admin/invoice/create?proposalId=${proposalId}`);
   };
 
+const openJobOrderModal = async () => {
 
+  try {
+
+    /* FETCH EXISTING JOB ORDER */
+  if (!selectedRfq) {
+
+    showError(
+      "Please select RFQ first"
+    );
+
+    return;
+  }
+    const res = await fetch(
+      `/api/job-orders/${selectedRfq}`
+    );
+
+    const data = await res.json();
+
+    /* EXISTING */
+
+    if (data.success && data.jobOrder) {
+
+      setJobOrderData({
+
+        deliveryDate:
+          data.jobOrder.delivery_date || "",
+
+        companyName:
+          data.jobOrder.company_name || "",
+
+        location:
+          data.jobOrder.location || "",
+
+        deliveryInstructions:
+          data.jobOrder.delivery_instructions || "",
+
+        clientNames:
+          data.jobOrder.clientNames || [],
+
+        preparedBy:
+          data.jobOrder.prepared_by || "",
+
+        checkedBy:
+          data.jobOrder.checked_by || "",
+
+        approvedBy:
+          data.jobOrder.approved_by || "",
+
+        includeLogo:
+          data.jobOrder.include_logo || "yes"
+      });
+
+    }
+
+    /* NEW */
+
+    else {
+
+      setJobOrderData({
+
+        deliveryDate: "",
+
+        companyName:
+          header.company || "",
+
+        location:
+          header.billingAddress || "",
+
+        deliveryInstructions: "",
+
+        clientNames: [],
+
+        preparedBy: "",
+
+        checkedBy: "",
+
+        approvedBy: "",
+
+        includeLogo: "yes"
+      });
+    }
+
+    setShowJobOrderModal(true);
+
+  } catch (err) {
+
+    console.error(err);
+
+    showError(
+      "Failed to load job order"
+    );
+  }
+};
+
+const handleSaveJobOrder = async () => {
+
+  try {
+
+    const payload = {
+
+      rfqId: selectedRfq,
+
+      proposalId,
+
+      ...jobOrderData
+    };
+
+    const res = await fetch(
+      "/api/job-orders",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.message
+      );
+    }
+
+    showSuccess(
+      "Job order saved"
+    );
+
+  } catch (err) {
+
+    showError(err.message);
+
+  }
+};
 
   const handleRfqSelect = async (e) => {
     const newId = Number(e.target.value);
@@ -293,6 +454,7 @@ const Page = ({ onBack, rfqId }) => {
       quotationNo: selected?.proposalNumber || "",
       date: new Date().toISOString().slice(0, 10),
       clientName: data.header.clientName,
+      rfqNumber: selected?.rfqNumber || "",
       clientPhone: data.header.clientPhone,
       clientEmail: data.header.clientEmail,
       company: data.header.company,
@@ -354,6 +516,44 @@ const Page = ({ onBack, rfqId }) => {
     fetchAcceptedRfqs();
   }, []);
 
+const handleDownloadJobOrder = async () => {
+
+  try {
+
+    await handleSaveJobOrder();
+
+    window.open(
+      `/api/job-orders/pdf/${selectedRfq}`,
+      "_blank"
+    );
+
+  } catch (err) {
+
+    showError(err.message);
+
+  }
+
+};
+
+const validateJobOrder = () => {
+
+  if (!jobOrderData.deliveryDate) {
+
+    showError("Delivery date is required");
+
+    return false;
+  }
+
+  if (!jobOrderData.companyName?.trim()) {
+
+    showError("Company name is required");
+
+    return false;
+  }
+
+  return true;
+};
+
   const fetchAcceptedRfqs = async () => {
     const res = await fetchWithLoader("/api/proposals/accepted-rfqs");
     const data = await res.json();
@@ -362,9 +562,22 @@ const Page = ({ onBack, rfqId }) => {
     setAcceptedRfqs(data.rfqs || []);
   };
 
+  useEffect(() => {
+
+  if (showJobOrderModal) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "";
+  }
+
+  return () => {
+    document.body.style.overflow = "";
+  };
+
+}, [showJobOrderModal]);
   /* ================= UI ================= */
   return (
-
+<>
     <div className="row g-4">
 
 
@@ -383,10 +596,12 @@ const Page = ({ onBack, rfqId }) => {
                 r.rfqType === "B2C";
 
               return (
-                <option
-                  key={r.id}
-                  value={r.id}
-                >
+             <option
+  key={r.id}
+  value={r.id}
+  disabled={r.rfqType === "B2C"}
+>
+                
                   {isB2CRfq
 
                     ? `${r.rfqNumber} — ${r.clientName || r.customerName}`
@@ -743,6 +958,7 @@ const Page = ({ onBack, rfqId }) => {
 
             {/* DOWNLOAD INVOICE */}
            {!isB2C && (
+            <>
   <button
     className="btn w-100 mb-3"
     style={{
@@ -755,6 +971,20 @@ const Page = ({ onBack, rfqId }) => {
   >
     Create Invoice
   </button>
+
+  <button
+  className="btn w-100 mb-3"
+  style={{
+    border: "1px solid #1565c0",
+    color: "#1565c0",
+    borderRadius: "8px",
+    background: "#fff"
+  }}
+ onClick={openJobOrderModal}
+>
+  Create Job Order
+</button>
+</>
 )}
 
           </div>
@@ -763,9 +993,546 @@ const Page = ({ onBack, rfqId }) => {
 
       </div>
     </div>
+  {showJobOrderModal && (
 
+<>
+  <div
+    className="modal d-block"
+    style={{
+      background: "rgba(0,0,0,0.45)"
+    }}
+  >
 
+    <div
+      className="modal-dialog modal-lg modal-dialog-scrollable"
+      style={{ maxWidth: "900px" }}
+    >
+
+      <div
+        className="modal-content border-0"
+        style={{ borderRadius: "14px" }}
+      >
+
+        {/* HEADER */}
+
+        <div className="modal-header">
+
+          <div>
+
+            <h5 className="mb-1">
+              Internal Job Order
+            </h5>
+
+            <div className="text-muted small">
+              {header.quotationNo}
+            </div>
+
+          </div>
+
+          <button
+            className="btn-close"
+            onClick={() =>
+              setShowJobOrderModal(false)
+            }
+          />
+
+        </div>
+
+        {/* BODY */}
+
+        <div className="modal-body">
+
+          {/* TOP SECTION */}
+
+          <div className="row g-3 mb-4">
+
+            <div className="col-md-4">
+              <label className="form-label">
+                Job Order No
+              </label>
+
+              <input
+                className="form-control"
+                value={header.rfqNumber}
+                disabled
+              />
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">
+                Date
+              </label>
+
+              <input
+                className="form-control"
+                value={new Date()
+                  .toISOString()
+                  .slice(0,10)}
+                disabled
+              />
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">
+                Delivery Date
+              </label>
+
+              <input
+                type="date"
+                className="form-control"
+                value={jobOrderData.deliveryDate}
+                onChange={(e)=>
+                  setJobOrderData({
+                    ...jobOrderData,
+                    deliveryDate: e.target.value
+                  })
+                }
+              />
+            </div>
+
+          </div>
+
+          {/* CLIENT DETAILS */}
+
+          <div className="border rounded p-3 mb-4">
+
+            <h6 className="mb-3">
+              Client Details
+            </h6>
+
+            <div className="row g-3">
+
+              <div className="col-md-6">
+
+                <label className="form-label">
+                  Contact Person
+                </label>
+
+                <input
+                  className="form-control"
+                  value={header.clientName}
+                  disabled
+                />
+
+              </div>
+
+              <div className="col-md-6">
+
+                <label className="form-label">
+                  Company Name
+                </label>
+
+                <input
+                  className="form-control"
+                  value={jobOrderData.companyName}
+                  onChange={(e)=>
+                    setJobOrderData({
+                      ...jobOrderData,
+                      companyName:e.target.value
+                    })
+                  }
+                />
+
+              </div>
+
+              <div className="col-md-6">
+
+                <label className="form-label">
+                  Location
+                </label>
+
+                <input
+                  className="form-control"
+                  value={jobOrderData.location}
+                  onChange={(e)=>
+                    setJobOrderData({
+                      ...jobOrderData,
+                      location:e.target.value
+                    })
+                  }
+                />
+
+              </div>
+
+              <div className="col-md-6">
+
+                <label className="form-label">
+                  Company Logo
+                </label>
+
+                <div className="d-flex gap-4 mt-2">
+
+                  <div className="form-check">
+
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={
+                        jobOrderData.includeLogo === "yes"
+                      }
+                      onChange={()=>
+                        setJobOrderData({
+                          ...jobOrderData,
+                          includeLogo:"yes"
+                        })
+                      }
+                    />
+
+                    <label className="form-check-label">
+                      Yes
+                    </label>
+
+                  </div>
+
+                  <div className="form-check">
+
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={
+                        jobOrderData.includeLogo === "no"
+                      }
+                      onChange={()=>
+                        setJobOrderData({
+                          ...jobOrderData,
+                          includeLogo:"no"
+                        })
+                      }
+                    />
+
+                    <label className="form-check-label">
+                      No
+                    </label>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="col-12">
+
+                <label className="form-label">
+                  Delivery Instructions
+                </label>
+
+                <textarea
+                  rows="3"
+                  className="form-control"
+                  value={
+                    jobOrderData.deliveryInstructions
+                  }
+                  onChange={(e)=>
+                    setJobOrderData({
+                      ...jobOrderData,
+                      deliveryInstructions:
+                        e.target.value
+                    })
+                  }
+                />
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* PRODUCTS */}
+
+          <div className="border rounded p-3 mb-4">
+
+            <div className="d-flex justify-content-between mb-3">
+
+              <h6 className="mb-0">
+                Product Details
+              </h6>
+
+              <div className="fw-semibold">
+                Total Items:
+                {" "}
+                {items.reduce(
+                  (a,b)=>a + Number(b.qty || 0),
+                  0
+                )}
+              </div>
+
+            </div>
+
+            <div className="table-responsive">
+
+              <table className="table table-bordered">
+
+                <thead>
+
+                  <tr>
+                    <th>Image</th>
+                    <th>Product</th>
+                    <th>Code</th>
+                    <th>Qty</th>
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {items.map((item,index)=>(
+
+                    <tr key={index}>
+
+                      <td width="90">
+
+                        <img
+                          src={
+                            item.featuredImage ||
+                            "/no-image.png"
+                          }
+                          alt=""
+                          style={{
+                            width:"60px",
+                            height:"60px",
+                            objectFit:"cover",
+                            borderRadius:"6px"
+                          }}
+                        />
+
+                      </td>
+
+                      <td>
+                        {item.description}
+                      </td>
+
+                      <td>
+                       {item.barcode || "-"}
+                      </td>
+
+                      <td>
+                        {item.qty}
+                      </td>
+
+                    </tr>
+
+                  ))}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+<div className="border rounded p-3 mb-4">
+
+  <div className="d-flex justify-content-between align-items-center mb-3">
+
+    <h6 className="mb-0">
+      Client Names
+    </h6>
+
+    <button
+      type="button"
+      className="btn btn-sm btn-outline-primary"
+      onClick={() => {
+
+        setJobOrderData({
+
+          ...jobOrderData,
+
+          clientNames: [
+            ...jobOrderData.clientNames,
+            ""
+          ]
+        });
+
+      }}
+    >
+      + Add Name
+    </button>
+
+  </div>
+
+  <div className="row g-2">
+
+    {jobOrderData.clientNames.map((name, index) => (
+
+      <div
+        className="col-md-4"
+        key={index}
+      >
+
+        <div className="input-group">
+
+          <span className="input-group-text">
+            {index + 1}
+          </span>
+
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter client name"
+            value={name}
+            onChange={(e) => {
+
+              const updated = [
+                ...jobOrderData.clientNames
+              ];
+
+              updated[index] = e.target.value;
+
+              setJobOrderData({
+                ...jobOrderData,
+                clientNames: updated
+              });
+
+            }}
+          />
+
+          <button
+            type="button"
+            className="btn btn-outline-danger"
+            onClick={() => {
+
+              const updated =
+                jobOrderData.clientNames.filter(
+                  (_, i) => i !== index
+                );
+
+              setJobOrderData({
+                ...jobOrderData,
+                clientNames: updated
+              });
+
+            }}
+          >
+            ×
+          </button>
+
+        </div>
+
+      </div>
+
+    ))}
+
+  </div>
+
+</div>
+          {/* APPROVAL */}
+
+          <div className="border rounded p-3">
+
+            <h6 className="mb-3">
+              Approval
+            </h6>
+
+            <div className="row g-3">
+
+              <div className="col-md-4">
+
+                <label className="form-label">
+                  Prepared By
+                </label>
+
+                <input
+                  className="form-control"
+                  value={jobOrderData.preparedBy}
+                  onChange={(e)=>
+                    setJobOrderData({
+                      ...jobOrderData,
+                      preparedBy:e.target.value
+                    })
+                  }
+                />
+
+              </div>
+
+              <div className="col-md-4">
+
+                <label className="form-label">
+                  Checked By
+                </label>
+
+                <input
+                  className="form-control"
+                  value={jobOrderData.checkedBy}
+                  onChange={(e)=>
+                    setJobOrderData({
+                      ...jobOrderData,
+                      checkedBy:e.target.value
+                    })
+                  }
+                />
+
+              </div>
+
+              <div className="col-md-4">
+
+                <label className="form-label">
+                  Approved By
+                </label>
+
+                <input
+                  className="form-control"
+                  value={jobOrderData.approvedBy}
+                  onChange={(e)=>
+                    setJobOrderData({
+                      ...jobOrderData,
+                      approvedBy:e.target.value
+                    })
+                  }
+                />
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* FOOTER */}
+
+        <div className="modal-footer">
+
+          <button
+            className="btn btn-light"
+            onClick={() =>
+              setShowJobOrderModal(false)
+            }
+          >
+            Cancel
+          </button>
+<button
+  className="btn btn-outline-primary"
+  onClick={handleSaveJobOrder}
+>
+  Save
+</button>
+
+         <button
+  className="btn btn-primary"
+  onClick={() => {
+
+    if (!validateJobOrder()) return;
+
+    handleDownloadJobOrder();
+
+  }}
+>
+  Download PDF
+</button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</>
+
+)}
+</>
   );
+
 };
 
 export default Page;
