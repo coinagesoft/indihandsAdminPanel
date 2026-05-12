@@ -18,7 +18,12 @@ const RFQPageInner = () => {
   const [selectedProduct, setSelectedProduct] = useState("all");
   const [statusLoading, setStatusLoading] = useState(null);
   const searchParams = useSearchParams();
+  const [showEditModal, setShowEditModal] = useState(false);
+const [editingRFQ, setEditingRFQ] = useState(null);
   const rfqIdFromUrl = searchParams.get("rfqId");
+  const [productSearch, setProductSearch] = useState("");
+const [searchResults, setSearchResults] = useState([]);
+const [showProductSearch, setShowProductSearch] = useState(false);
   const fetchWithLoader = useFetchWithLoader();
   const router = useRouter();
   /* ---------------- API ---------------- */
@@ -65,6 +70,26 @@ const RFQPageInner = () => {
   //   );
   // };
 
+  const searchProducts = async (value) => {
+
+  setProductSearch(value);
+
+  try {
+
+    const res = await fetch(
+      `/api/products/search?search=${value}`
+    );
+
+    const data = await res.json();
+
+    setSearchResults(data.products || []);
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+};
   const updateStatus = async (rfqId, status) => {
     const key = `${rfqId}-${status}`;
     setStatusLoading(key);
@@ -99,7 +124,14 @@ const RFQPageInner = () => {
 
   };
   /* ---------------- FILTER HELPERS ---------------- */
+const openEditModal = (rfq) => {
 
+  setEditingRFQ(
+    JSON.parse(JSON.stringify(rfq))
+  );
+
+  setShowEditModal(true);
+};
   const allProducts = useMemo(() => {
     const map = new Map();
     rfqs.forEach((r) =>
@@ -130,6 +162,48 @@ const RFQPageInner = () => {
     return orgMatch && branchMatch && statusMatch && productMatch;
   });
 
+  const saveRFQChanges = async () => {
+
+  try {
+
+    const res = await fetch(
+      `/api/rfqs/${editingRFQ.id}/update-products`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          client_name: editingRFQ.clientName,
+          client_phone: editingRFQ.clientPhone,
+          client_email: editingRFQ.clientEmail,
+          products: editingRFQ.products.map(p => ({
+            product_id: p.id,
+            quantity: p.quantity,
+            quoted_price: p.rate
+          }))
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message);
+    }
+
+    showSuccess("RFQ updated");
+
+    setShowEditModal(false);
+
+    fetchRfqs();
+
+  } catch (err) {
+
+    showError(err.message);
+
+  }
+};
   const statusBadgeClass = (status) => {
     switch (status) {
       case "Submitted":
@@ -144,7 +218,69 @@ const RFQPageInner = () => {
         return "bg-label-secondary";
     }
   };
+const addProductToRFQ = (product) => {
 
+  const alreadyExists =
+    editingRFQ.products.some(
+      x => x.id === product.id
+    );
+
+  if (alreadyExists) {
+
+    showError("Product already added");
+
+    return;
+  }
+
+  setEditingRFQ({
+
+    ...editingRFQ,
+
+    products: [
+
+      ...editingRFQ.products,
+
+      {
+
+        id: product.id,
+
+        name: product.product_name,
+
+        quantity: 1,
+
+        rate: product.base_price || 0,
+
+        hsn: product.hsn,
+
+        code: product.barcode
+      }
+    ]
+  });
+
+  /* OPTIONAL UX */
+
+  setProductSearch("");
+
+  setSearchResults([]);
+};
+
+  const addEmptyProduct = () => {
+
+  setEditingRFQ({
+    ...editingRFQ,
+
+    products: [
+      ...editingRFQ.products,
+
+      {
+        id: "",
+        name: "",
+        quantity: 1,
+        rate: 0
+      }
+    ]
+  });
+};
   /* ---------------- UI ---------------- */
 
   return (
@@ -300,6 +436,12 @@ const RFQPageInner = () => {
     >
       Cancel RFQ
     </button>
+    <button
+  className="btn btn-outline-primary btn-sm"
+  onClick={() => openEditModal(rfq)}
+>
+  Edit RFQ
+</button>
 
   </div>
 )}
@@ -342,6 +484,292 @@ const RFQPageInner = () => {
             </div>
           </div>
         ))}
+
+        {showEditModal && editingRFQ && (
+
+  <div className="modal d-block">
+  <div
+  className="modal-dialog modal-lg modal-dialog-scrollable"
+  style={{ maxWidth: "850px",marginLeft:"340px" }}
+>
+      <div className="modal-content">
+
+        {/* HEADER */}
+
+        <div className="modal-header">
+
+          <h5 className="modal-title">
+            Edit RFQ
+          </h5>
+
+          <button
+            className="btn-close"
+            onClick={() =>
+              setShowEditModal(false)
+            }
+          />
+        </div>
+
+        {/* BODY */}
+
+        <div className="modal-body">
+
+          {/* CLIENT INFO */}
+
+          <div className="row g-3 mb-4">
+
+            <div className="col-md-4">
+              <label className="form-label">
+                Client Name
+              </label>
+
+              <input
+                className="form-control"
+                value={editingRFQ.clientName || ""}
+                onChange={(e) =>
+                  setEditingRFQ({
+                    ...editingRFQ,
+                    clientName: e.target.value
+                  })
+                }
+              />
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">
+                Phone
+              </label>
+
+              <input
+                className="form-control"
+                value={editingRFQ.clientPhone || ""}
+                onChange={(e) =>
+                  setEditingRFQ({
+                    ...editingRFQ,
+                    clientPhone: e.target.value
+                  })
+                }
+              />
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">
+                Email
+              </label>
+
+              <input
+                className="form-control"
+                value={editingRFQ.clientEmail || ""}
+                onChange={(e) =>
+                  setEditingRFQ({
+                    ...editingRFQ,
+                    clientEmail: e.target.value
+                  })
+                }
+              />
+            </div>
+
+          </div>
+
+          {/* PRODUCTS */}
+<div className="d-flex justify-content-between align-items-center mb-3">
+
+  <h6 className="mb-0">
+    Products
+  </h6>
+
+  <button
+    className="btn btn-sm btn-outline-primary"
+   onClick={() =>
+  setShowProductSearch(
+    !showProductSearch
+  )
+}
+  >
+    {showProductSearch
+    ? "Close Search"
+    : "+ Add Product"
+  }
+  </button>
+
+</div>
+{showProductSearch && (
+
+  <div className="border rounded p-3 mb-3 bg-light">
+
+    {/* SEARCH INPUT */}
+
+    <input
+      type="text"
+      className="form-control mb-3"
+      placeholder="Search product name / SKU / barcode"
+      value={productSearch}
+      onChange={(e) =>
+        searchProducts(e.target.value)
+      }
+    />
+
+    {/* RESULTS */}
+
+    <div
+      style={{
+        maxHeight: "250px",
+        overflowY: "auto"
+      }}
+    >
+
+      {searchResults.length === 0 && (
+
+        <div className="text-muted small">
+          No products found
+        </div>
+
+      )}
+
+      {searchResults.map(product => (
+
+        <div
+          key={product.id}
+          className="border rounded p-2 mb-2 bg-white cursor-pointer"
+          style={{
+            cursor: "pointer"
+          }}
+          onClick={() =>
+            addProductToRFQ(product)
+          }
+        >
+
+          <div className="fw-semibold">
+            {product.product_name}
+          </div>
+
+          <div className="small text-muted">
+
+            SKU:
+            {product.barcode || "-"}
+
+            {" • "}
+
+            Stock:
+            {product.stock_qty || 0}
+
+          </div>
+
+        </div>
+
+      ))}
+
+    </div>
+
+  </div>
+
+)}
+          <div className="table-responsive">
+
+            <table className="table table-bordered">
+
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th width="120">Qty</th>
+                  <th width="100">Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                {editingRFQ.products.map((p, index) => (
+
+                  <tr key={p.id}>
+
+                    <td>{p.name}</td>
+
+                    <td>
+
+                      <input
+                        type="number"
+                        min="1"
+                        className="form-control"
+                        value={p.quantity}
+                        onChange={(e) => {
+
+                          const updated = [
+                            ...editingRFQ.products
+                          ];
+
+                          updated[index].quantity =
+                            Number(e.target.value);
+
+                          setEditingRFQ({
+                            ...editingRFQ,
+                            products: updated
+                          });
+                        }}
+                      />
+
+                    </td>
+
+                    <td>
+
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => {
+
+                          const updated =
+                            editingRFQ.products.filter(
+                              (_, i) => i !== index
+                            );
+
+                          setEditingRFQ({
+                            ...editingRFQ,
+                            products: updated
+                          });
+                        }}
+                      >
+                        Delete
+                      </button>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+        {/* FOOTER */}
+
+        <div className="modal-footer">
+
+          <button
+            className="btn btn-secondary"
+            onClick={() =>
+              setShowEditModal(false)
+            }
+          >
+            Cancel
+          </button>
+
+          <button
+            className="btn btn-primary"
+            onClick={saveRFQChanges}
+          >
+            Save Changes
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+)}
       </div>
     </ProtectedRoute>
   );
