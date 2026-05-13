@@ -19,8 +19,8 @@ export default function ProposalStatusPage() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState(true);
-const [activeTab, setActiveTab] =
-  useState("B2B");
+  const [activeTab, setActiveTab] =
+    useState("B2B");
   /* ================= LOAD ================= */
   useEffect(() => {
     Promise.all([
@@ -51,10 +51,10 @@ const [activeTab, setActiveTab] =
     let data = [...list];
 
     data = data.filter(
-  x =>
-    (x.proposal_type || "B2B")
-      === activeTab
-);
+      x =>
+        (x.proposal_type || "B2B")
+        === activeTab
+    );
     // 🔍 SEARCH FILTER
     if (search) {
       const s = search.toLowerCase();
@@ -91,32 +91,32 @@ const [activeTab, setActiveTab] =
     }
 
     setFiltered(data);
- }, [
-  search,
-  companyId,
-  branchId,
-  status,
-  fromDate,
-  toDate,
-  list,
-  activeTab
-]);
+  }, [
+    search,
+    companyId,
+    branchId,
+    status,
+    fromDate,
+    toDate,
+    list,
+    activeTab
+  ]);
 
-useEffect(() => {
+  useEffect(() => {
 
-  setCompanyId("");
+    setCompanyId("");
 
-  setBranchId("");
+    setBranchId("");
 
-  setSearch("");
+    setSearch("");
 
-  setStatus("");
+    setStatus("");
 
-  setFromDate("");
+    setFromDate("");
 
-  setToDate("");
+    setToDate("");
 
-}, [activeTab]);
+  }, [activeTab]);
   /* ================= BADGE ================= */
   const badge = (s) => {
     if (s === "Approved") return "bg-success";
@@ -132,35 +132,33 @@ useEffect(() => {
       <div className="container-xxl container-p-y ">
 
         <h4 className="mb-4 text-primary">Proposal History</h4>
-      <div className="mb-3 d-flex gap-2">
+        <div className="mb-3 d-flex gap-2">
 
-  <button
-    className={`btn ${
-      activeTab === "B2B"
-        ? "btn-orange"
-        : "btn-outline-orange"
-    }`}
-    onClick={() =>
-      setActiveTab("B2B")
-    }
-  >
-    Company Proposal History
-  </button>
+          <button
+            className={`btn ${activeTab === "B2B"
+                ? "btn-orange"
+                : "btn-outline-orange"
+              }`}
+            onClick={() =>
+              setActiveTab("B2B")
+            }
+          >
+            Company Proposal History
+          </button>
 
-  <button
-    className={`btn ${
-      activeTab === "B2C"
-        ? "btn-orange"
-        : "btn-outline-orange"
-    }`}
-    onClick={() =>
-      setActiveTab("B2C")
-    }
-  >
-    Customer Proposal History
-  </button>
+          <button
+            className={`btn ${activeTab === "B2C"
+                ? "btn-orange"
+                : "btn-outline-orange"
+              }`}
+            onClick={() =>
+              setActiveTab("B2C")
+            }
+          >
+            Customer Proposal History
+          </button>
 
-</div>
+        </div>
         <div className="card p-3 mb-3">
 
           <div className="row g-3 align-items-end">
@@ -176,44 +174,44 @@ useEffect(() => {
             </div>
             {/* ORG */}
             {activeTab === "B2B" && (
-  <>
-            <div className="col-md-3">
-              <label className="form-label mb-1">Organization</label>
-              <select
-                className="form-select"
-                value={companyId}
-                onChange={(e) => {
-                  setCompanyId(e.target.value);
-                  setBranchId("");
-                }}
-              >
-                <option value="">All Organizations</option>
-                {companies.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.companyName}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <>
+                <div className="col-md-3">
+                  <label className="form-label mb-1">Organization</label>
+                  <select
+                    className="form-select"
+                    value={companyId}
+                    onChange={(e) => {
+                      setCompanyId(e.target.value);
+                      setBranchId("");
+                    }}
+                  >
+                    <option value="">All Organizations</option>
+                    {companies.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.companyName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            {/* BRANCH */}
-            <div className="col-md-2">
-              <label className="form-label mb-1">Branch</label>
-              <select
-                className="form-select"
-                value={branchId}
-                onChange={e => setBranchId(e.target.value)}
-                disabled={!companyId}
-              >
-                <option value="">All Branches</option>
-                {branches.map(b => (
-                  <option key={b.id} value={b.id}>
-                    {b.branchName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            </>
+                {/* BRANCH */}
+                <div className="col-md-2">
+                  <label className="form-label mb-1">Branch</label>
+                  <select
+                    className="form-select"
+                    value={branchId}
+                    onChange={e => setBranchId(e.target.value)}
+                    disabled={!companyId}
+                  >
+                    <option value="">All Branches</option>
+                    {branches.map(b => (
+                      <option key={b.id} value={b.id}>
+                        {b.branchName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
             )}
 
 
@@ -268,21 +266,25 @@ useEffect(() => {
                   <th style={{ width: "120px" }}>Proposal</th>
                   <th style={{ width: "150px" }}>RFQ</th>
                   <th style={{ width: "220px" }}>Client</th>
-                 {activeTab === "B2B" && (
-  <>
-    <th style={{ width: "250px" }}>
-      Company
-    </th>
+                  {activeTab === "B2B" && (
+                    <>
+                      <th style={{ width: "250px" }}>
+                        Company
+                      </th>
 
-    <th style={{ width: "200px" }}>
-      Branch
-    </th>
-  </>
-)}
+                      <th style={{ width: "200px" }}>
+                        Branch
+                      </th>
+                    </>
+                  )}
                   <th style={{ width: "120px" }}>Date</th>
                   <th style={{ width: "120px" }}>Total</th>
                   <th style={{ width: "120px" }}>Status</th>
-                  <th style={{ width: "150px" }}>Next Step</th>
+                  {activeTab === "B2B" && (
+                    <th style={{ width: "150px" }}>
+                      Next Step
+                    </th>
+                  )}
                 </tr>
               </thead>
 
@@ -303,30 +305,30 @@ useEffect(() => {
                     </td>
 
                     {activeTab === "B2B" && (
-  <>
-    <td
-      style={{
-        fontSize: "14px",
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis"
-      }}
-    >
-      {p.company_name}
-    </td>
+                      <>
+                        <td
+                          style={{
+                            fontSize: "14px",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                          }}
+                        >
+                          {p.company_name}
+                        </td>
 
-    <td
-      style={{
-        fontSize: "14px",
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis"
-      }}
-    >
-      {p.branch_name}
-    </td>
-  </>
-)}
+                        <td
+                          style={{
+                            fontSize: "14px",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                          }}
+                        >
+                          {p.branch_name}
+                        </td>
+                      </>
+                    )}
 
                     <td style={{ fontSize: "14px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} >
                       {p.proposal_date
@@ -345,32 +347,40 @@ useEffect(() => {
                         {p.status}
                       </span>
                     </td>
-                    <td style={{ fontSize: "14px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} >
-                      {(p.status === "Approved" || p.status === "Sent") ? (
-                        <button
-                          className="btn btn-sm btn-outline-orange"
-                          onClick={() =>
-                            router.push(`/admin/invoice/create?proposalId=${p.id}`)
-                          }
-                          style={{ fontSize: "12px" }}
-                        >
-                          Create Invoice
-                        </button>
-                      ) : (
-                        <span className="text-muted small">Not Available</span>
-                      )}
-                    </td>
-
+                    {activeTab === "B2B" && (
+                      <td
+                        style={{
+                          fontSize: "14px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis"
+                        }}
+                      >
+                        {(p.status === "Approved" || p.status === "Sent") ? (
+                          <button
+                            className="btn btn-sm btn-outline-orange"
+                            onClick={() =>
+                              router.push(`/admin/invoice/create?proposalId=${p.id}`)
+                            }
+                            style={{ fontSize: "12px" }}
+                          >
+                            Create Invoice
+                          </button>
+                        ) : (
+                          <span className="text-muted small">Not Available</span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
 
                 {filtered.length === 0 && (
                   <tr>
-                    <td  colSpan={
-    activeTab === "B2B"
-      ? 9
-      : 7
-  } className="text-center py-4">
+                    <td colSpan={
+                      activeTab === "B2B"
+                        ? 9
+                        : 7
+                    } className="text-center py-4">
                       No proposals found
                     </td>
                   </tr>
@@ -382,7 +392,7 @@ useEffect(() => {
         </div>
 
       </div>
-      
+
     </ProtectedRoute>
   );
 }

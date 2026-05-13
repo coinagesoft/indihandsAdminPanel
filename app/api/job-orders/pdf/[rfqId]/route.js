@@ -37,16 +37,6 @@ function buildJobOrderHTML({ rfq, jobOrder, products, clientNames, sender }) {
       (p, i) => `
 <tr>
   <td style="text-align:center;">${i + 1}</td>
-  <td style="text-align:center; padding:4px;">
-    ${
-      p.featured_image
-        ? `<img
-            src="${p.featured_image}"
-            style="width:38px; height:38px; object-fit:cover; border-radius:3px; display:block; margin:auto;"
-          />`
-        : `<div style="width:38px;height:38px;background:#f0f0f0;border-radius:3px;margin:auto;"></div>`
-    }
-  </td>
   <td class="left">${p.product_name || ""}</td>
   <td style="text-align:center;">${p.barcode || "-"}</td>
   <td style="text-align:center;">${p.quantity}</td>
@@ -332,7 +322,6 @@ body {
       <thead>
         <tr>
           <th style="width:30px;">Sr</th>
-          <th style="width:60px;">Image</th>
           <th class="left">Product Name</th>
           <th style="width:90px;">Code</th>
           <th style="width:40px;">Qty</th>
@@ -341,7 +330,7 @@ body {
       <tbody>
         ${productRows}
         <tr class="total-row">
-          <td colspan="4" style="text-align:right;">Total Quantity</td>
+          <td colspan="3" style="text-align:right;">Total Quantity</td>
           <td style="text-align:center;">${totalQty}</td>
         </tr>
       </tbody>
@@ -349,7 +338,19 @@ body {
 
     <!-- Client Names -->
     <div class="sec-hdr">Client Names</div>
-    <div class="cn-wrap">${clientList}</div>
+${clientList &&
+  clientList.trim() !== "-" &&
+  clientList.trim() !== ""
+  ? `
+      <div class="cn-wrap" style="height:40px;">
+        ${clientList}
+      </div>
+    `
+  : `
+      <div style="height:40px;"></div>
+      
+    `
+}
 
     <!-- Company Logo -->
     <div class="sec-hdr">Company Logo</div>

@@ -20,7 +20,9 @@ export async function GET(req, { params }) {
       vehicle_number,
       challan_number,
       DATE_FORMAT(challan_date, '%Y-%m-%d') as challan_date,
-      reverse_charge
+      reverse_charge,
+       client_name,
+      contact_phone
 
      FROM invoices 
      WHERE proposal_id = ?

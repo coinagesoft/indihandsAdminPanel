@@ -114,15 +114,15 @@ const PageInner = () => {
       setSaving(true);
 
       const payload = {
-        rfqId: Number(selectedRfq),
+       rfqId: Number(selectedRfq),
        companyId:
-  header.companyId || null,
+       header.companyId || null,
 
-branchId:
-  header.branchId || null,
+        branchId:
+        header.branchId || null,
 
-rfqType:
-  header.rfqType,
+        rfqType:
+        header.rfqType,
         proposal_date: header.date,
         place: header.place,
         billing_address: header.billingAddress,
@@ -290,7 +290,7 @@ rfqType:
   const addCharge = () => {
     setCharges([
       ...charges,
-      { label: "Delivery Charge", amount: 0, taxPercent: 18, hsnCode: "996812" }
+      { label: "Delivery Charges", amount: 0, taxPercent: 18, hsnCode: "996812" }
     ]);
   };
 
