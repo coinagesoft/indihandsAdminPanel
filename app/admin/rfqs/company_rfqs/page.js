@@ -25,6 +25,7 @@ const [editingRFQ, setEditingRFQ] = useState(null);
 const [searchResults, setSearchResults] = useState([]);
 const [showProductSearch, setShowProductSearch] = useState(false);
   const fetchWithLoader = useFetchWithLoader();
+  const [quotationSearch, setQuotationSearch] = useState("");
   const router = useRouter();
   /* ---------------- API ---------------- */
 
@@ -46,29 +47,6 @@ const [showProductSearch, setShowProductSearch] = useState(false);
     }
   };
 
-  // const updateStatus = async (rfqId, status) => {
-  //   const res = await fetch(`/api/rfqs/${rfqId}`, {
-  //     method: "PATCH",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ status }),
-  //   });
-
-  //   const data = await res.json();
-  //   if (!res.ok) return alert("❌ " + data.message);
-
-  //   // Show alert based on email sent status
-  //   if (data.emailSent) {
-  //     alert(`✅ Status updated to "${status}" and email sent to client (${data.clientEmail})`);
-  //   } else if (data.emailError) {
-  //     alert(`⚠️ Status updated to "${status}" but failed to send email: ${data.emailError}`);
-  //   } else {
-  //     alert(`✅ Status updated to "${status}"`);
-  //   }
-
-  //   setRfqs((prev) =>
-  //     prev.map((r) => (r.id === rfqId ? { ...r, status } : r))
-  //   );
-  // };
 
   const searchProducts = async (value) => {
 
@@ -149,18 +127,67 @@ const openEditModal = (rfq) => {
   }, [selectedOrg, organizations]);
 
 
-  const filteredRfqs = rfqs.filter((rfq) => {
-    const orgMatch = selectedOrg === "all" || rfq.orgId === Number(selectedOrg);
-    const branchMatch =
-      selectedBranch === "all" || rfq.branch === selectedBranch;
-    const statusMatch =
-      selectedStatus === "all" || rfq.status === selectedStatus;
-    const productMatch =
-      selectedProduct === "all" ||
-      rfq.products.some((p) => p.id === Number(selectedProduct));
+const filteredRfqs = rfqs.filter((rfq) => {
 
-    return orgMatch && branchMatch && statusMatch && productMatch;
-  });
+  const orgMatch =
+    selectedOrg === "all" ||
+    rfq.orgId === Number(selectedOrg);
+
+  const branchMatch =
+    selectedBranch === "all" ||
+    rfq.branch === selectedBranch;
+
+  const statusMatch =
+    selectedStatus === "all" ||
+    rfq.status === selectedStatus;
+
+  const productMatch =
+    selectedProduct === "all" ||
+    rfq.products.some(
+      (p) => p.id === Number(selectedProduct)
+    );
+
+  // ✅ only RFQs having quotation
+  const hasQuotation =
+    !!rfq.proposal_number;
+
+  // ✅ search by quotation number
+  const quotationNumberMatch =
+    !quotationSearch ||
+    (rfq.proposal_number || "")
+      .toLowerCase()
+      .includes(
+        quotationSearch.toLowerCase()
+      );
+
+  // ✅ search by client name
+  const clientNameMatch =
+    !quotationSearch ||
+    (rfq.clientName || "")
+      .toLowerCase()
+      .includes(
+        quotationSearch.toLowerCase()
+      );
+
+  // ✅ combined search
+  const quotationMatch =
+    quotationNumberMatch ||
+    clientNameMatch;
+
+  return (
+    orgMatch &&
+    branchMatch &&
+    statusMatch &&
+    productMatch &&
+    (
+      !quotationSearch ||
+      (
+        hasQuotation &&
+        quotationMatch
+      )
+    )
+  );
+});
 
   const saveRFQChanges = async () => {
 
@@ -289,7 +316,23 @@ const addProductToRFQ = (product) => {
         <h4 className="mb-4 text-primary">RFQ Management</h4>
 
         {/* Filters */}
+
         <div className="row mb-4 g-3">
+                  <div className="col-md-3">
+  <label className="form-label">
+    Search Quotation
+  </label>
+
+  <input
+    type="text"
+    className="form-control"
+    placeholder="Quotation No / Client Name"
+    value={quotationSearch}
+    onChange={(e) =>
+      setQuotationSearch(e.target.value)
+    }
+  />
+</div>
           <div className="col-md-3">
             <label className="form-label">Organization</label>
             <select

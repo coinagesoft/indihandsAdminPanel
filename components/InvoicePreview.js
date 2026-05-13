@@ -537,12 +537,7 @@ const handleDownloadJobOrder = async () => {
 
 const validateJobOrder = () => {
 
-  if (!jobOrderData.deliveryDate) {
-
-    showError("Delivery date is required");
-
-    return false;
-  }
+ 
 
   if (!jobOrderData.companyName?.trim()) {
 
