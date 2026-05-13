@@ -23,6 +23,7 @@ function numberToWords(num) {
 
 function getCopyLabel(type) {
   switch (type) {
+    case "normal":  return "";
     case "duplicate":  return "Duplicate for Transporter";
     case "triplicate": return "Triplicate";
     case "transport":  return "Extra";
@@ -167,7 +168,7 @@ body{ margin:0; padding:10mm; font-family:Segoe UI,Arial,sans-serif; }
 </div>
 <div class="box">
 <div class="strip">Challan cum Tax Invoice</div>
-<div class="copy-row">${copyLabel}</div>
+${copyLabel ? `<div class="copy-row">${copyLabel}</div>` : ""}
 <table class="meta">
 <tr>
   <td class="label">Invoice No:</td><td class="value">${invoice.invoice_number}</td>
@@ -191,11 +192,11 @@ body{ margin:0; padding:10mm; font-family:Segoe UI,Arial,sans-serif; }
 </tr>
 <tr>
   <td class="label">GSTIN:</td><td class="value">${sender.gstin || ""}</td>
-  <td class="label">Contact Person:</td><td class="value">${proposal.client_name || ""}</td>
+  <td class="label">Contact Person:</td><td class="value">${invoice.client_name || ""}</td>
 </tr>
 <tr>
   <td class="label">State:</td><td class="value">${senderStateName}</td>
-  <td class="label">Contact Number:</td><td class="value">${proposal.client_phone || ""}</td>
+  <td class="label">Contact Number:</td><td class="value">${invoice.contact_phone || ""}</td>
 </tr>
 </table>
 <table class="party">
@@ -264,15 +265,27 @@ ${chargeRows}
   </div>
 </div>
 <div class="bank">
-  <div class="bank-left">
-    <b>Bank Details</b><br>
-    Bank Name: ${sender.bank_name || "-"}<br>
-    A/C No: ${sender.bank_account || "-"}<br>
-    IFSC: ${sender.bank_ifsc || "-"}<br>
-    Branch: ${sender.bank_branch || "-"}<br><br>
-    Interest @24% Per Annum will be charged on overdue bills<br>
-    Contact: ${sender.phone || ""} | ${sender.email || ""}
+ <div class="bank-left">
+  <div style="display:flex; gap:10px; align-items:flex-start;">
+    <div>
+      <b>Bank Details</b><br>
+      Bank Name: ${sender.bank_name || "-"}<br>
+      A/C No: ${sender.bank_account || "-"}<br>
+      IFSC: ${sender.bank_ifsc || "-"}<br>
+      Branch: ${sender.bank_branch || "-"}<br>
+      Contact: ${sender.phone || ""} | ${sender.email || ""}<br>
+      Interest @24% Per Annum will be charged on overdue bills<br>
+    </div>
+    <div style="text-align:center; flex-shrink:0;">
+      <img 
+        src="https://res.cloudinary.com/dxb1whlam/image/upload/v1778664822/MTDS_QR_Code_g0cy25.jpg"
+        style="width:85px; height:85px; object-fit:contain; display:block;"
+        alt="Payment QR"
+      />
+     
+    </div>
   </div>
+</div>
   <div class="bank-right" style="position:relative;">
     <div style="text-align:center; font-weight:600;">For Manik Trifaley Design Studio Pvt Ltd</div>
     <div style="text-align:center; position:absolute; bottom:10px; width:100%;">Authorised Signatory & Stamp</div>
@@ -346,7 +359,9 @@ export async function GET(req, { params }) {
         challan_number,
         DATE_FORMAT(challan_date,  '%Y-%m-%d') AS challan_date,
         buyer_gstin,
-        seller_gstin
+        seller_gstin,
+         client_name,
+        contact_phone
       FROM invoices
       WHERE proposal_id = ?
       ${isSEZSplit && invoiceType ? "AND invoice_type = ?" : ""}
@@ -496,7 +511,7 @@ export async function GET(req, { params }) {
 
     const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
     const invoiceNo = invoice.invoice_number || `INV-${invoice.id}`;
-    const copyShortMap = { original: "OR", duplicate: "DUP", triplicate: "TRI", transport: "TRANS" };
+    const copyShortMap = { normal: "NORMAL" ,original: "OR", duplicate: "DUP", triplicate: "TRI", transport: "TRANS" };
     const copyShort = copyShortMap[copyType] || "OR";
 
     return new Response(pdfBuffer, {

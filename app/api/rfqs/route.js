@@ -20,24 +20,36 @@ export async function GET() {
 
     /* ================= RFQS ================= */
     const [rfqRows] = await db.query(`
-      SELECT 
-        r.id,
-        r.company_id AS orgId,
-        c.company_name AS orgName,
-        r.branch_id AS branchId,
-        b.branch_name AS branch,
-        r.submitted_at AS submittedAt,
-        r.status,
-        r.rfq_number,
-        r.notes,
-        r.client_name,
-        r.client_phone,
-        r.client_email
-      FROM rfqs r
-      JOIN companies c ON c.id = r.company_id
-      JOIN company_branches b ON b.id = r.branch_id
-      WHERE r.status != 'Draft'
-      ORDER BY r.id DESC
+     SELECT 
+  r.id,
+  r.company_id AS orgId,
+  c.company_name AS orgName,
+  r.branch_id AS branchId,
+  b.branch_name AS branch,
+  r.submitted_at AS submittedAt,
+  r.status,
+  r.rfq_number,
+  r.notes,
+  r.client_name,
+  r.client_phone,
+  r.client_email,
+
+  p.proposal_number
+
+FROM rfqs r
+
+JOIN companies c
+  ON c.id = r.company_id
+
+JOIN company_branches b
+  ON b.id = r.branch_id
+
+LEFT JOIN proposals p
+  ON p.rfq_id = r.id
+
+WHERE r.status != 'Draft'
+
+ORDER BY r.id DESC
     `);
 
     /* ================= PRODUCTS (UPDATED 🔥) ================= */
@@ -86,6 +98,8 @@ export async function GET() {
       orgName: r.orgName,
       branchId: r.branchId,
       branch: r.branch,
+      proposal_number:
+  r.proposal_number || "",
 
       rfqNumber: r.rfq_number || "",
       submittedAt: r.submittedAt,

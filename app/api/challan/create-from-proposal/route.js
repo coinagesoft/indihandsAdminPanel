@@ -75,7 +75,9 @@ export async function POST(req) {
             challan_date     = ?,
             reverse_charge   = ?,
             billing_address  = ?,
-            shipping_address = ?
+            shipping_address = ?,
+            client_name     = ?,
+            contact_phone    = ?
            WHERE id = ?`,
           [
             data.invoice_date,
@@ -90,6 +92,8 @@ export async function POST(req) {
             data.reverse_charge || false,
             proposal.billing_address,
             proposal.shipping_address,
+          data.client_name  || null,
+            data.contact_phone || null,
             existing.id
           ]
         );
@@ -156,8 +160,12 @@ export async function POST(req) {
     /* ── Insert one invoice ── */
     const createInvoice = async (type) => {
       // Only branch 27 gets -P / -C suffix
+    // Each invoice gets its own fresh sequential number
+      const [[latestBeforeThis]] = await db.query(
+        `SELECT invoice_number FROM invoices ORDER BY id DESC LIMIT 1`
+      );
       const invoiceNo = isSEZSplit
-        ? `${baseInvoiceNo}-${type === "product" ? "P" : "C"}`
+        ? generateInvoiceNumber(latestBeforeThis?.invoice_number)
         : baseInvoiceNo;
 
       const invoiceType = isSEZSplit ? type : (isSEZ ? "sez" : "combined");
@@ -196,6 +204,8 @@ export async function POST(req) {
         buyer_state_code: buyerStateCode,
         billing_address:  proposal.billing_address,
         shipping_address: proposal.shipping_address,
+        client_name:     data.client_name  || null,
+        contact_phone:    data.contact_phone || null,
         place_of_supply:  data.place_of_supply || null,
         po_number:        data.po_number       || null,
         po_date:          data.po_date         || null,

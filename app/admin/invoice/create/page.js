@@ -271,7 +271,7 @@ function DeliveryLabelModal({ proposalId }) {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const proposalIdFromUrl = searchParams.get("proposalId");
-  const [invoiceCopyType, setInvoiceCopyType] = useState("original");
+  const [invoiceCopyType, setInvoiceCopyType] = useState("normal");
   const emptyForm = {
     invoice_date: today,
     supply_date: today,
@@ -282,6 +282,8 @@ function DeliveryLabelModal({ proposalId }) {
     vehicle_number: "",
     challan_number: "",
     challan_date: "",
+    client_name: "",
+    contact_phone: "",
     reverse_charge: false
   };
 
@@ -327,6 +329,8 @@ function DeliveryLabelModal({ proposalId }) {
             vehicle_number:  latest.vehicle_number                 || "",
             challan_number:  latest.challan_number                 || "",
             challan_date:    latest.challan_date?.substring(0, 10) || "",
+            client_name:    latest.client_name                   || "",
+            contact_phone:   latest.contact_phone                  || "",
             reverse_charge:  !!latest.reverse_charge
           });
         } else {
@@ -460,6 +464,7 @@ function DeliveryLabelModal({ proposalId }) {
           <h6 className="text-orange mb-3">Invoice Details</h6>
          
           <div className="row g-3">
+            
             <div className="col-md-6">
               <label className="form-label">Invoice Date</label>
               <input type="date" name="invoice_date" className="form-control" readOnly value={form.invoice_date} onChange={handleChange} />
@@ -496,25 +501,40 @@ function DeliveryLabelModal({ proposalId }) {
               <label className="form-label">Challan Date</label>
               <input name="challan_date" type="date" className="form-control" value={form.challan_date || ""} onChange={handleChange} />
             </div>
+            
+
+            <div className="col-md-6">
+              <label className="form-label">Client Name</label>
+              <input name="client_name" className="form-control" placeholder={proposal?.client_name || "From proposal"} value={form.client_name || ""} onChange={handleChange} />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Contact Phone</label>
+              <input name="contact_phone" className="form-control" placeholder={proposal?.client_phone || "From proposal"} value={form.contact_phone} onChange={handleChange} />
+            </div>
+            
             <div className="col-md-6 d-flex align-items-center mt-4">
               <input type="checkbox" name="reverse_charge" className="form-check-input me-2" checked={form.reverse_charge} onChange={handleChange} />
               <label className="form-check-label">Reverse Charge</label>
             </div>
+            
           </div>
 
           {/* ── INVOICE ACTIONS ── */}
           <div className="mt-4 pt-3 border-top">
 
+            {proposalId && (
+              <>
             <div className="mb-3">
               <h6 className="fw-semibold mb-1">Invoice Actions</h6>
               <small className="text-muted">Choose copy type and download invoice</small>
             </div>
 
-            {/* Copy Type */}
+            
             <div className="mb-4 p-3 border rounded bg-light">
               <label className="form-label fw-semibold mb-3">Invoice Copy Type</label>
               <div className="d-flex flex-wrap gap-4 align-items-center">
                 {[
+                  { key: "normal",   label: "Normal" },
                   { key: "original",   label: "Original for Recipient" },
                   { key: "duplicate",  label: "Duplicate" },
                   { key: "triplicate", label: "Triplicate" },
@@ -536,6 +556,8 @@ function DeliveryLabelModal({ proposalId }) {
                 ))}
               </div>
             </div>
+            </>
+          )}
 
             {/* ── ACTION BAR ── */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 border rounded">
