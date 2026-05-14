@@ -19,11 +19,11 @@ const RFQPageInner = () => {
   const [statusLoading, setStatusLoading] = useState(null);
   const searchParams = useSearchParams();
   const [showEditModal, setShowEditModal] = useState(false);
-const [editingRFQ, setEditingRFQ] = useState(null);
+  const [editingRFQ, setEditingRFQ] = useState(null);
   const rfqIdFromUrl = searchParams.get("rfqId");
   const [productSearch, setProductSearch] = useState("");
-const [searchResults, setSearchResults] = useState([]);
-const [showProductSearch, setShowProductSearch] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showProductSearch, setShowProductSearch] = useState(false);
   const fetchWithLoader = useFetchWithLoader();
   const [quotationSearch, setQuotationSearch] = useState("");
   const router = useRouter();
@@ -101,15 +101,19 @@ const [showProductSearch, setShowProductSearch] = useState(false);
     }
 
   };
+
+
   /* ---------------- FILTER HELPERS ---------------- */
-const openEditModal = (rfq) => {
+  const openEditModal = (rfq) => {
 
   setEditingRFQ(
     JSON.parse(JSON.stringify(rfq))
   );
 
   setShowEditModal(true);
-};
+  };
+
+
   const allProducts = useMemo(() => {
     const map = new Map();
     rfqs.forEach((r) =>

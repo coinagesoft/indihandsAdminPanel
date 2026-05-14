@@ -35,12 +35,22 @@ function buildJobOrderHTML({ rfq, jobOrder, products, clientNames, sender }) {
   const productRows = products
     .map(
       (p, i) => `
-<tr>
+  <tr>
   <td style="text-align:center;">${i + 1}</td>
+  <td style="text-align:center;">
+  ${
+  p.featured_image
+    ? `<img 
+         src="${p.featured_image.replace("/upload/", "/upload/f_jpg/")}" 
+         style="height:40px;width:60px;object-fit:contain;" 
+       />`
+    : "-"
+}
+  </td>
   <td class="left">${p.product_name || ""}</td>
   <td style="text-align:center;">${p.barcode || "-"}</td>
   <td style="text-align:center;">${p.quantity}</td>
-</tr>`
+  </tr>`
     )
     .join("");
 
@@ -322,6 +332,7 @@ body {
       <thead>
         <tr>
           <th style="width:30px;">Sr</th>
+          <th style="width:60px;">Product Picture</th>
           <th class="left">Product Name</th>
           <th style="width:90px;">Code</th>
           <th style="width:40px;">Qty</th>
@@ -330,7 +341,7 @@ body {
       <tbody>
         ${productRows}
         <tr class="total-row">
-          <td colspan="3" style="text-align:right;">Total Quantity</td>
+          <td colspan="4" style="text-align:right;">Total Quantity</td>
           <td style="text-align:center;">${totalQty}</td>
         </tr>
       </tbody>
@@ -388,7 +399,7 @@ ${clientList &&
 
 </div>
 </body>
-</html>`;
+          </html>`;
 }
 
 /* ─────────────────────────────────────────
