@@ -153,6 +153,8 @@ body{ margin:0; padding:10mm; font-family:Segoe UI,Arial,sans-serif; }
 .bank-left{ padding:8px; border-right:1px dotted #b7b7b7; font-size:10px; line-height:15px; }
 .bank-right{ padding:8px; text-align:center; font-size:10px; }
 .footer-wrap{ margin-top:auto; }
+.party-row{ padding:4px 0; border-bottom:1px dotted #b7b7b7;}
+.party-row:last-child{border-bottom:none;}
 .thankyou{ text-align:center; margin:10px 0 4px 0; font-size:16px; font-weight:bold; }
 .copy-row{ text-align:right; font-size:10px; font-weight:600; padding:4px 8px; font-style:italic; border-bottom:1px solid #8c8c8c; }
 .footer{ background:#cfd84e; display:flex; align-items:center; justify-content:space-between; padding:15px 12px; font-size:10px; margin-left:-10mm; margin-right:-10mm; margin-bottom:-10mm; }
@@ -201,18 +203,54 @@ ${copyLabel ? `<div class="copy-row">${copyLabel}</div>` : ""}
 </table>
 <table class="party">
 <td>
-  <div class="title">Bill to Party</div>
-  Name: ${companyName}<br>
-  Address: ${billingAddress}<br>
-  GSTIN: ${isSelf ? "" : (proposal.gstin || "")}<br>
-  State: ${clientStateName} &nbsp;&nbsp;&nbsp; Code: ${clientStateCode}
+
+  <div class="title">
+    Bill to Party
+  </div>
+
+  <div class="party-row">
+    Name: ${companyName}
+  </div>
+
+  <div class="party-row">
+    Address: ${billingAddress}
+  </div>
+
+  <div class="party-row">
+    GSTIN:
+    ${isSelf ? "" : (proposal.gstin || "")}
+  </div>
+
+  <div class="party-row">
+    State:${clientStateName}&nbsp;&nbsp;&nbsp;Code:${clientStateCode}
+  </div>
+
 </td>
 <td>
-  <div class="title">Ship to Party</div>
-  Name: ${companyName}<br>
-  Address: ${shippingAddress}<br>
-  GSTIN: ${isSelf ? "" : (proposal.gstin || "")}<br>
-  State: ${clientStateName} &nbsp;&nbsp;&nbsp; Code: ${clientStateCode}
+
+  <div class="title">
+    Ship to Party
+  </div>
+
+  <div class="party-row">
+    Name:
+    ${companyName}
+  </div>
+
+  <div class="party-row">
+    Address:
+    ${shippingAddress}
+  </div>
+
+  <div class="party-row">
+    GSTIN:
+    ${isSelf ? "" : (proposal.gstin || "")}
+  </div>
+
+  <div class="party-row">
+    State:${clientStateName}&nbsp;&nbsp;&nbsp;Code:${clientStateCode}
+  </div>
+
 </td>
 </table>
 <table class="items">
@@ -360,7 +398,7 @@ export async function GET(req, { params }) {
         DATE_FORMAT(challan_date,  '%Y-%m-%d') AS challan_date,
         buyer_gstin,
         seller_gstin,
-         client_name,
+        client_name,
         contact_phone
       FROM invoices
       WHERE proposal_id = ?
