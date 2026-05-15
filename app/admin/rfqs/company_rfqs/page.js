@@ -124,6 +124,7 @@ const RFQPageInner = () => {
     return Array.from(map.values());
   }, [rfqs]);
 
+
   const availableBranches = useMemo(() => {
     if (selectedOrg === "all") return [];
     const org = organizations.find((o) => o.id === Number(selectedOrg));
@@ -235,6 +236,9 @@ const filteredRfqs = rfqs.filter((rfq) => {
 
   }
 };
+
+
+
   const statusBadgeClass = (status) => {
     switch (status) {
       case "Submitted":
@@ -249,6 +253,7 @@ const filteredRfqs = rfqs.filter((rfq) => {
         return "bg-label-secondary";
     }
   };
+
 const addProductToRFQ = (product) => {
 
   const alreadyExists =
@@ -522,12 +527,10 @@ const addProductToRFQ = (product) => {
         onClick={() => updateStatus(rfq.id, "Rejected")}
       >
         Reject
-      </button>
-    </>
-  )}
-
-
-</div>
+       </button>
+        </>
+      )}
+           </div>
             </div>
           </div>
         ))}
