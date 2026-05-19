@@ -20,6 +20,7 @@ const Page = ({ onBack, rfqId }) => {
   const [showJobOrderModal, setShowJobOrderModal] = useState(false);
 
 const [jobOrderData, setJobOrderData] =
+
   useState({
 
     deliveryDate: "",
@@ -40,6 +41,7 @@ const [jobOrderData, setJobOrderData] =
 
     includeLogo: "yes"
   });
+
   const [header, setHeader] = useState({
     quotationNo: "",
     rfqNumber: "",
@@ -56,6 +58,7 @@ const [jobOrderData, setJobOrderData] =
     branchId: null,
     rfqType: "",
   });
+  
   const fetchWithLoader = useFetchWithLoader();
 
   const isB2C =
@@ -592,10 +595,9 @@ const validateJobOrder = () => {
 
               return (
              <option
-  key={r.id}
-  value={r.id}
-  disabled={r.rfqType === "B2C"}
->
+               key={r.id}
+               value={r.id}
+             >
                 
                   {isB2CRfq
 

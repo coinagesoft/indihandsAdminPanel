@@ -152,7 +152,7 @@ const displayAddress = isSelf ? city : proposal.billing_address;
 <td class="tr">${x.qty}</td>
 <td class="tr">${x.basePrice.toFixed(2)}</td>
 <td class="tr">${x.unitDiscount.toFixed(2)}</td>
-<td class="tr">${x.rate.toFixed(2)}</td>
+<td class="tr">${x.basePrice !== x.rate? x.rate.toFixed(2): "0.00"}</td>
 <td class="tr">${x.totalAmount.toFixed(2)}</td>
 
 <td class="tr">${sgstRate}</td>

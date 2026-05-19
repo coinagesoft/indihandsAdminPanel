@@ -22,10 +22,10 @@ export const db = mysql.createPool({
   password: "wozvis-fipnez-kyvCe4",
   database: "u144125849_catalog",
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 10000,
+  enableKeepAlive: true,
   queueLimit: 0
 });
-
 
 // export const db = mysql.createPool({
 //   host: "217.21.74.127",

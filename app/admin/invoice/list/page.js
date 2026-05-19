@@ -11,43 +11,45 @@ export default function InvoiceList() {
   const [toDate, setToDate] = useState("");
   const [invoiceType, setInvoiceType] = useState("B2B");
 
-useEffect(() => {
-  const load = async () => {
-    try {
+  useEffect(() => {
+    const load = async () => {
+      try {
 
-      setInvoices([]);
+        setInvoices([]);
 
-      const apiUrl =
-        invoiceType === "B2B"
-          ? `/api/challan/invoiceList?search=${search}&fromDate=${fromDate}&toDate=${toDate}`
-          : `/api/challan/invoiceList/b2cList?search=${search}&fromDate=${fromDate}&toDate=${toDate}`;
+        const apiUrl =
+          invoiceType === "B2B"
+            ? `/api/challan/invoiceList?search=${search}&fromDate=${fromDate}&toDate=${toDate}`
+            : `/api/challan/invoiceList/b2cList?search=${search}&fromDate=${fromDate}&toDate=${toDate}`;
 
-      console.log("FETCHING API:", apiUrl);
+        console.log("FETCHING API:", apiUrl);
 
-      const res = await fetchWithLoader(apiUrl);
+        const res = await fetchWithLoader(apiUrl);
 
-      const data = await res.json();
+        const data = await res.json();
 
-      console.log("API DATA:", data);
+        console.log("API DATA:", data);
 
-      setInvoices(Array.isArray(data) ? data : []);
+        setInvoices(Array.isArray(data) ? data : []);
 
-    } catch (err) {
-      console.error("Invoice fetch error:", err);
-      setInvoices([]);
-    }
-  };
+      } catch (err) {
+        console.error("Invoice fetch error:", err);
+        setInvoices([]);
+      }
+    };
 
-  load();
+    load();
 
-}, [invoiceType, search, fromDate, toDate]);
+  }, [invoiceType, search, fromDate, toDate]);
+
+  
   /* ========= FILTER ========= */
   const filtered = invoices.filter(inv => {
     const s = search.toLowerCase();
 
     let match =
       (inv.invoice_number || "").toLowerCase().includes(s) ||
-    (inv.proposal_number || "").toLowerCase().includes(s)||
+      (inv.proposal_number || "").toLowerCase().includes(s) ||
       (inv.client_name || "").toLowerCase().includes(s);
 
     if (fromDate) {
@@ -61,37 +63,35 @@ useEffect(() => {
     return match;
   });
 
-  
+
   return (
     <ProtectedRoute>
       <div className="container-xxl py-4">
 
         <h4 className="mb-4 text-primary">Invoice List</h4>
-<div className="d-flex gap-2 mb-3">
+        <div className="d-flex gap-2 mb-3">
 
-  <button
-    className={`btn ${
-      invoiceType === "B2B"
-        ? "btn-orange"
-        : "btn-outline-orange"
-    }`}
-    onClick={() => setInvoiceType("B2B")}
-  >
-    Company Invoices
-  </button>
+          <button
+            className={`btn ${invoiceType === "B2B"
+                ? "btn-orange"
+                : "btn-outline-orange"
+              }`}
+            onClick={() => setInvoiceType("B2B")}
+          >
+            Company Invoices
+          </button>
 
-  <button
-    className={`btn ${
-      invoiceType === "B2C"
-        ? "btn-orange"
-        : "btn-outline-orange"
-    }`}
-    onClick={() => setInvoiceType("B2C")}
-  >
-    Customer Invoices
-  </button>
+          <button
+            className={`btn ${invoiceType === "B2C"
+                ? "btn-orange"
+                : "btn-outline-orange"
+              }`}
+            onClick={() => setInvoiceType("B2C")}
+          >
+            Customer Invoices
+          </button>
 
-</div>
+        </div>
         {/* FILTER BAR */}
         <div className="card p-3 mb-3">
           <div className="row g-2">
@@ -187,35 +187,35 @@ useEffect(() => {
                       ₹ {Number(inv.grand_total || 0).toFixed(2)}
                     </td>
 
-                   
+
 
                     <td className="text-center" style={{ fontSize: "14px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
 
                       {/* VIEW */}
-                    {invoiceType === "B2B" && (
-  <button
-    className="btn btn-sm btn-outline-orange me-2"
-    onClick={() =>
-      window.open(`/admin/invoice/create?proposalId=${inv.proposal_id}`)
-    }
-  >
-    Edit
-  </button>
-)}
+                      {invoiceType === "B2B" && (
+                        <button
+                          className="btn btn-sm btn-outline-orange me-2"
+                          onClick={() =>
+                            window.open(`/admin/invoice/create?proposalId=${inv.proposal_id}`)
+                          }
+                        >
+                          Edit
+                        </button>
+                      )}
 
                       {/* PDF */}
                       <button
-  className="btn btn-sm btn-outline-secondary"
-  onClick={() =>
-    window.open(
-      invoiceType === "B2B"
-        ? `/api/invoices/pdf/${inv.proposal_id}`
-        : `/api/challan/invoiceList/b2cList/pdf/${inv.id}`
-    )
-  }
->
-  PDF
-</button>
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={() =>
+                          window.open(
+                            invoiceType === "B2B"
+                              ? `/api/invoices/pdf/${inv.proposal_id}`
+                              : `/api/challan/invoiceList/b2cList/pdf/${inv.id}`
+                          )
+                        }
+                      >
+                        PDF
+                      </button>
 
                     </td>
 

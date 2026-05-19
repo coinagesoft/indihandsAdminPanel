@@ -568,7 +568,7 @@ function DeliveryLabelModal({ proposalId }) {
                 <div className="d-flex flex-wrap gap-2 align-items-center">
 
                   {/* Invoice buttons (existing) */}
-                  {proposal?.branch_sez_type?.toLowerCase() === "sez" && Number(proposal?.branch_id) === 27 ? (
+                {proposal?.branch_sez_type?.toLowerCase() === "sez" && [27, 28].includes(Number(proposal?.branch_id))? (
                     <div className="btn-group">
                       <button
                         className="btn btn-outline-secondary d-flex align-items-center gap-1"
