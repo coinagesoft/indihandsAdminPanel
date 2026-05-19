@@ -86,9 +86,46 @@ body { margin: 0; padding: 10mm; font-family: Segoe UI, Arial, sans-serif; }
 .meta td { border-bottom: 1px dotted #b7b7b7; padding: 4px 6px; }
 .meta td.label { width: 160px; font-weight: 600; }
 .meta td.value { width: 260px; }
-.party { width: 100%; border-collapse: collapse; font-size: 10px; }
-.party td { border-top: 1px dotted #b7b7b7; padding: 6px; vertical-align: top; }
-.party .title { font-weight: 700; margin-bottom: 2px; }
+.party{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  font-size:10px;
+}
+
+.party td{
+  width:50%;
+  vertical-align:top;
+  padding:6px;
+  border-top:1px dotted #b7b7b7;
+}
+
+/* middle vertical line */
+.party td:first-child{
+  border-right:1px dotted #b7b7b7;
+}
+
+/* fixed content area */
+.party-box{
+  min-height:105px;
+  display:flex;
+  flex-direction:column;
+}
+
+.party .title{
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.party-row{
+  padding:4px 0;
+  border-bottom:1px dotted #b7b7b7;
+  word-break:break-word;
+}
+
+.party-row:last-child{
+  border-bottom:none;
+}
 .items { width: 100%; border-collapse: collapse; font-size: 8.5px; }
 .items th, .items td { border-right: 1px dotted #b7b7b7; border-bottom: 1px dotted #b7b7b7; padding: 3px 4px; }
 .items th:last-child, .items td:last-child { border-right: none; }
@@ -137,28 +174,62 @@ body { margin: 0; padding: 10mm; font-family: Segoe UI, Arial, sans-serif; }
       </tr>
     </table>
 
-  <table class="party">
-  <tr>
-    <td style="width:50%;">
-      <div class="title">Bill to Party</div>
+<table class="party">
+<tr>
 
-      Name: ${payment.payer_name || ""}<br>
-      Address: ${proposal.billing_address || payment.billing_address || ""}<br>
-      GSTIN: ${customerGSTIN || "-"}<br>
-      State: ${clientState} | Code: ${clientStateCode}<br>
-  
-    </td>
+<td>
+  <div class="party-box">
 
-    <td style="width:50%;">
-      <div class="title">Ship to Party</div>
+    <div class="title">
+      Bill to Party
+    </div>
 
-      Name: ${payment.payer_name || ""}<br>
-      Address: ${proposal.shipping_address || payment.billing_address || ""}<br>
-      GSTIN: ${customerGSTIN || "-"}<br>
-      State: ${clientState} | Code: ${clientStateCode}<br>
-     
-    </td>
-  </tr>
+    <div class="party-row">
+      Name: ${payment.payer_name || ""}
+    </div>
+
+    <div class="party-row">
+      Address: ${proposal.billing_address || payment.billing_address || ""}
+    </div>
+
+    <div class="party-row">
+      GSTIN: ${customerGSTIN || "-"}
+    </div>
+
+    <div class="party-row">
+      State: ${clientState} | Code: ${clientStateCode}
+    </div>
+
+  </div>
+</td>
+
+<td>
+  <div class="party-box">
+
+    <div class="title">
+      Ship to Party
+    </div>
+
+    <div class="party-row">
+      Name: ${payment.payer_name || ""}
+    </div>
+
+    <div class="party-row">
+      Address: ${proposal.shipping_address || payment.billing_address || ""}
+    </div>
+
+    <div class="party-row">
+      GSTIN: ${customerGSTIN || "-"}
+    </div>
+
+    <div class="party-row">
+      State: ${clientState} | Code: ${clientStateCode}
+    </div>
+
+  </div>
+</td>
+
+</tr>
 </table>
 
     <table class="items">

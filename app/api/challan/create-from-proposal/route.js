@@ -1,7 +1,7 @@
 import { db } from "../../../db";
 
 // ✅ Only this branch gets two invoices (Product + Charges)
-const SEZ_SPLIT_BRANCH_ID = 27;
+const SEZ_SPLIT_BRANCH_IDS = [27, 28];
 
 function generateInvoiceNumber(lastNumber) {
   const now = new Date();
@@ -41,7 +41,9 @@ export async function POST(req) {
     // ✅ isSEZ = branch is SEZ type
     // ✅ isSEZSplit = ONLY branch 27 gets Product + Charges split
     const isSEZ      = proposal.sez_type?.toLowerCase() === "sez";
-    const isSEZSplit = isSEZ && Number(proposal.branch_id) === SEZ_SPLIT_BRANCH_ID;
+const isSEZSplit =
+  isSEZ &&
+  SEZ_SPLIT_BRANCH_IDS.includes(Number(proposal.branch_id));
 
     /* ================= SELLER ================= */
     const [[seller]] = await db.query(`SELECT * FROM company_info LIMIT 1`);
