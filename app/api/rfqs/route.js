@@ -98,9 +98,7 @@ ORDER BY r.id DESC
       orgName: r.orgName,
       branchId: r.branchId,
       branch: r.branch,
-      proposal_number:
-  r.proposal_number || "",
-
+      proposal_number:r.proposal_number || "",
       rfqNumber: r.rfq_number || "",
       submittedAt: r.submittedAt,
       status: r.status,
@@ -114,9 +112,9 @@ ORDER BY r.id DESC
         .filter((p) => p.rfqId === r.id)
         .map((p) => ({
           id: p.productId,
-          name: p.name,   // ✅ NOW PREFIX INCLUDED
+          name: p.name,  
           hsn: p.hsn,
-        code: p.barcode,
+          code: p.barcode,
           rate: p.quoted_price,
           quantity: p.quantity,
           totalAmount: p.quoted_price * p.quantity,

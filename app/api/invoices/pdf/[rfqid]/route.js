@@ -38,7 +38,7 @@ function formatDate(d) {
 }
 
 // ✅ Only THIS branch gets the two-invoice SEZ split (Product + Charges)
-const SEZ_SPLIT_BRANCH_ID = 27;
+const SEZ_SPLIT_BRANCH_IDS = [27, 28];
 
 /* ================= HTML TEMPLATE ================= */
 function buildHTML(data) {
@@ -133,9 +133,46 @@ body{ margin:0; padding:10mm; font-family:Segoe UI,Arial,sans-serif; }
 .meta td{ border-bottom:1px dotted #b7b7b7; padding:4px 6px; }
 .meta td.label{ width:160px; font-weight:600; }
 .meta td.value{ width:260px; }
-.party{ width:100%; border-collapse:collapse; font-size:10px; }
-.party td{ border-top:1px dotted #b7b7b7; padding:6px; vertical-align:top; }
-.party .title{ font-weight:700; margin-bottom:2px; }
+.party{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  font-size:10px;
+}
+
+.party td{
+  width:50%;
+  vertical-align:top;
+  padding:6px;
+  border-top:1px dotted #b7b7b7;
+}
+
+/* middle vertical line */
+.party td:first-child{
+  border-right:1px dotted #b7b7b7;
+}
+
+/* fixed content area */
+.party-box{
+  min-height:105px;
+  display:flex;
+  flex-direction:column;
+}
+
+.party .title{
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.party-row{
+  padding:4px 0;
+  border-bottom:1px dotted #b7b7b7;
+  word-break:break-word;
+}
+
+.party-row:last-child{
+  border-bottom:none;
+}
 .items{ width:100%; border-collapse:collapse; font-size:8.5px; }
 .items th,.items td{ border-right:1px dotted #b7b7b7; border-bottom:1px dotted #b7b7b7; padding:3px 4px; }
 .items th:last-child,.items td:last-child{ border-right:none; }
@@ -202,56 +239,63 @@ ${copyLabel ? `<div class="copy-row">${copyLabel}</div>` : ""}
 </tr>
 </table>
 <table class="party">
+<tr>
+
 <td>
+  <div class="party-box">
 
-  <div class="title">
-    Bill to Party
+    <div class="title">
+      Bill to Party
+    </div>
+
+    <div class="party-row">
+      Name: ${companyName}
+    </div>
+
+    <div class="party-row">
+      Address: ${billingAddress}
+    </div>
+
+    <div class="party-row">
+      GSTIN:
+      ${isSelf ? "" : (proposal.gstin || "")}
+    </div>
+
+    <div class="party-row">
+      State:${clientStateName}&nbsp;&nbsp;&nbsp;Code:${clientStateCode}
+    </div>
+
   </div>
-
-  <div class="party-row">
-    Name: ${companyName}
-  </div>
-
-  <div class="party-row">
-    Address: ${billingAddress}
-  </div>
-
-  <div class="party-row">
-    GSTIN:
-    ${isSelf ? "" : (proposal.gstin || "")}
-  </div>
-
-  <div class="party-row">
-    State:${clientStateName}&nbsp;&nbsp;&nbsp;Code:${clientStateCode}
-  </div>
-
 </td>
+
 <td>
+  <div class="party-box">
 
-  <div class="title">
-    Ship to Party
+    <div class="title">
+      Ship to Party
+    </div>
+
+    <div class="party-row">
+      Name: ${companyName}
+    </div>
+
+    <div class="party-row">
+      Address: ${shippingAddress}
+    </div>
+
+    <div class="party-row">
+      GSTIN:
+      ${isSelf ? "" : (proposal.gstin || "")}
+    </div>
+
+    <div class="party-row">
+      State:${clientStateName}&nbsp;&nbsp;&nbsp;Code:${clientStateCode}
+    </div>
+
   </div>
-
-  <div class="party-row">
-    Name:
-    ${companyName}
-  </div>
-
-  <div class="party-row">
-    Address:
-    ${shippingAddress}
-  </div>
-
-  <div class="party-row">
-    GSTIN:
-    ${isSelf ? "" : (proposal.gstin || "")}
-  </div>
-
-  <div class="party-row">
-    State:${clientStateName}&nbsp;&nbsp;&nbsp;Code:${clientStateCode}
-  </div>
-
 </td>
+
+</tr>
 </table>
 <table class="items">
 <thead>
@@ -378,7 +422,7 @@ export async function GET(req, { params }) {
     /* ================= SEZ SPLIT LOGIC ================= */
     // ✅ Only branch_id = 27 gets the two-invoice split (Product + Charges)
     // All other SEZ branches generate a single combined invoice
-    const isSEZSplit = Number(proposal.branch_id) === SEZ_SPLIT_BRANCH_ID;
+   const isSEZSplit = SEZ_SPLIT_BRANCH_IDS.includes(Number(proposal.branch_id));
     const isSEZ      = proposal.sez_type?.toLowerCase() === "sez";
 
     /* ================= FETCH INVOICE ================= */

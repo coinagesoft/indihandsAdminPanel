@@ -372,12 +372,12 @@ const statusBadgeClass = (status) => {
     >
       Cancel RFQ
     </button>
-{/* <button
-  className="btn btn-outline-primary btn-sm"
-  onClick={() => openEditModal(rfq)}
->
-  Edit RFQ
-</button> */}
+     <button
+       className="btn btn-outline-primary btn-sm"
+       onClick={() => openEditModal(rfq)}
+     >
+       Edit RFQ
+     </button>
   </div>
 )}
                <div className="d-flex gap-2 mt-3">
