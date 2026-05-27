@@ -48,14 +48,14 @@ const RFQPageInner = () => {
   };
 
 
-  const searchProducts = async (value) => {
+const searchProducts = async (value) => {
 
   setProductSearch(value);
 
   try {
 
     const res = await fetch(
-      `/api/products/search?search=${value}`
+      `/api/products/search?search=${value}&company_id=${editingRFQ.orgId}`
     );
 
     const data = await res.json();
@@ -197,7 +197,7 @@ const filteredRfqs = rfqs.filter((rfq) => {
   const saveRFQChanges = async () => {
 
   try {
-
+ console.log("editingRFQ",editingRFQ)
     const res = await fetch(
       `/api/rfqs/${editingRFQ.id}/update-products`,
       {
@@ -212,7 +212,11 @@ const filteredRfqs = rfqs.filter((rfq) => {
           products: editingRFQ.products.map(p => ({
             product_id: p.id,
             quantity: p.quantity,
-            quoted_price: p.rate
+            quoted_price: p.custom_price &&
+             Number(p.custom_price) > 0
+             ? p.custom_price
+             : p.rate || 0,
+            
           }))
         })
       }
@@ -255,7 +259,7 @@ const filteredRfqs = rfqs.filter((rfq) => {
   };
 
 const addProductToRFQ = (product) => {
-
+console.log("add product",product)
   const alreadyExists =
     editingRFQ.products.some(
       x => x.id === product.id
@@ -284,7 +288,11 @@ const addProductToRFQ = (product) => {
 
         quantity: 1,
 
-        rate: product.base_price || 0,
+        rate:
+             product.custom_price &&
+             Number(product.custom_price) > 0
+             ? product.custom_price
+             : product.base_price || 0,
 
         hsn: product.hsn,
 
@@ -645,7 +653,7 @@ const addProductToRFQ = (product) => {
 </div>
 {showProductSearch && (
 
-  <div className="border rounded p-3 mb-3 bg-light">
+  <div className="border rounded p-3 mb-3 ">
 
     {/* SEARCH INPUT */}
 
