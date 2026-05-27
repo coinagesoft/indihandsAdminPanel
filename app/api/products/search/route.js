@@ -1,5 +1,4 @@
 import { db } from "../../../db";
-
 export async function GET(req) {
 
   try {
@@ -8,6 +7,9 @@ export async function GET(req) {
 
     const search =
       searchParams.get("search") || "";
+
+    const companyId =
+      searchParams.get("company_id");
 
     const limit =
       parseInt(searchParams.get("limit")) || 20;
@@ -37,42 +39,50 @@ export async function GET(req) {
       );
     }
 
-    /* PRODUCTS */
+ const [products] = await db.query(
+  `
+  SELECT
 
-    const [products] = await db.query(
-      `
-      SELECT
+    p.id,
 
-        p.id,
+    p.product_name,
 
-        p.product_name,
+    p.barcode,
 
-        p.barcode,
+    p.hsn,
 
-        p.hsn,
+    p.stock_qty,
 
-        p.stock_qty,
+    p.base_price,
 
-        p.base_price,
+    cpp.custom_price,
 
-        p.featured_image,
+    p.featured_image,
 
-        p.cgst_rate,
+    p.cgst_rate,
 
-        p.sgst_rate,
+    p.sgst_rate,
 
-        p.igst_rate
+    p.igst_rate
 
-      FROM products p
+  FROM products p
 
-      ${where}
+  LEFT JOIN company_product_pricing cpp
+    ON cpp.product_id = p.id
+    AND cpp.company_id = ?
 
-      ORDER BY p.product_name ASC
+  ${where}
 
-      LIMIT ?
-      `,
-      [...values, limit]
-    );
+  ORDER BY p.product_name ASC
+
+  LIMIT ?
+  `,
+  [
+    companyId,
+    ...values,
+    limit
+  ]
+);
 
     return Response.json({
       products
