@@ -48,6 +48,7 @@ const PageInner = () => {
   const handleHeaderChange = (e) => {
     setHeader({ ...header, [e.target.name]: e.target.value });
   };
+  
   const updateCharge = (index, field, value) => {
     const updated = [...charges];
 

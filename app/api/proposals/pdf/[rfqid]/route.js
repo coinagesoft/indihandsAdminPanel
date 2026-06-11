@@ -38,6 +38,7 @@ const isSelf =
     ?.toLowerCase() === "self";
 
 const companyName = proposal.company || "";
+console.log("proposal company name=",companyName)
 const clientName = proposal.client_name || "";
 const isB2C =
   proposal.rfq_type === "B2C";
@@ -715,7 +716,7 @@ export async function GET(req, { params }) {
     WHEN r.billing_type = 'self'
     THEN p.company_name
 
-    ELSE c.company_name
+    ELSE p.company_name
 
   END AS company,
 
