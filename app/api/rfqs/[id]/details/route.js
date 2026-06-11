@@ -147,7 +147,15 @@ export async function GET(req, { params }) {
         header.gstin?.substring(0, 2) || "";
     }
 
-    const isInterState = isB2C
+
+const hasGSTIN =
+  !!header.gstin?.trim() &&
+  header.gstin.trim().toUpperCase() !== "NA";
+
+
+const isInterState = isB2C
+  ? false
+  : !hasGSTIN
       ? false
       : senderStateCode !== clientStateCode;
 

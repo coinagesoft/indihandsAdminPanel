@@ -62,10 +62,33 @@ function buildHTML(data) {
     "37": "Andhra Pradesh (New)", "38": "Ladakh"
   };
 
-  const clientStateCode = (invoice.buyer_gstin || proposal.gstin || "").substring(0, 2);
-  const senderStateCode = (invoice.seller_gstin || sender.gstin || "").substring(0, 2);
-  const isSelf = proposal.billing_type === "self";
+ const gstin =
+  (invoice.buyer_gstin || proposal.gstin || "")
+    .trim();
 
+const hasGSTIN =
+  gstin !== "" &&
+  gstin.toUpperCase() !== "NA";
+
+const clientStateCode =
+  hasGSTIN
+    ? gstin.substring(0, 2)
+    : "";
+
+const senderStateCode =
+  (invoice.seller_gstin || sender.gstin || "")
+    .substring(0, 2);
+
+const isIGST =
+  isSEZ ||
+  (
+    hasGSTIN &&
+    clientStateCode !== senderStateCode
+  );
+  
+
+
+  const isSelf = proposal.billing_type === "self";
   const companyName = proposal.company || "";
   const pureCompany = companyName.includes("(")
     ? companyName.split("(").pop().replace(")", "").trim()
@@ -76,7 +99,6 @@ function buildHTML(data) {
 
   const clientStateName = stateMap[clientStateCode] || "";
   const senderStateName = stateMap[senderStateCode] || "";
-  const isIGST = isSEZ || (clientStateCode !== senderStateCode);
 
   const itemRows = computedItems.map((x, i) => `
 <tr>
@@ -458,9 +480,29 @@ export async function GET(req, { params }) {
     const [[sender]] = await db.query(`SELECT * FROM company_info LIMIT 1`);
 
     /* ================= STATE / TAX LOGIC ================= */
-    const clientStateCode = invoice.buyer_gstin?.substring(0, 2) || "";
-    const senderStateCode = invoice.seller_gstin?.substring(0, 2) || "";
-    const isInterState    = clientStateCode !== senderStateCode;
+  /* ================= STATE / TAX LOGIC ================= */
+
+const gstin =
+  (invoice.buyer_gstin || proposal.gstin || "")
+    .trim();
+
+const hasGSTIN =
+  gstin !== "" &&
+  gstin.toUpperCase() !== "NA";
+
+const clientStateCode =
+  hasGSTIN
+    ? gstin.substring(0, 2)
+    : "";
+
+const senderStateCode =
+  (invoice.seller_gstin || sender.gstin || "")
+    .substring(0, 2);
+
+const isInterState =
+  !hasGSTIN
+    ? false
+    : clientStateCode !== senderStateCode;
 
     /* ================= ITEMS ================= */
     const [items] = await db.query(`

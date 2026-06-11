@@ -5,9 +5,7 @@ import * as XLSX from "xlsx";
 export async function GET() {
 
   try {
-
     /* ================= PRODUCTS ================= */
-
     const [rows] = await db.query(`
       SELECT
 
