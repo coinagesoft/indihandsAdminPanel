@@ -764,18 +764,29 @@ WHERE p.id = ?
     /* ================= STATE LOGIC ================= */
     const sezType = proposal.sez_type || "NONE";
 const isSEZ = (sezType || "").toUpperCase() === "SEZ";
-    const clientStateCode = proposal.gstin?.substring(0, 2) || "";
-    const senderStateCode = sender.gstin?.substring(0, 2) || "";
-  const isInterState =
 
+
+const gstin =
+  proposal.gstin?.trim() || "";
+
+const hasGSTIN =
+  gstin !== "" &&
+  gstin.toUpperCase() !== "NA";
+
+const clientStateCode =
+  hasGSTIN
+    ? gstin.substring(0, 2)
+    : "";
+
+const senderStateCode =
+  sender.gstin?.substring(0, 2) || "";
+
+const isInterState =
   proposal.rfq_type === "B2C"
-
     ? false
-
-    : (
-        clientStateCode !==
-        senderStateCode
-      );
+    : !hasGSTIN
+        ? false
+        : clientStateCode !== senderStateCode;
 
     /* ================= ITEMS ================= */
     const [items] = await db.query(`
