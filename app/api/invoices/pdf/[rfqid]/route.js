@@ -423,7 +423,7 @@ export async function GET(req, { params }) {
         p.shipping_address,
         CASE 
           WHEN r.billing_type = 'self' THEN p.company_name
-          ELSE c.company_name
+          ELSE p.company_name
         END AS company,
         cb.gstin,
         cb.sez_type,
