@@ -282,14 +282,16 @@ export async function PATCH(req, { params }) {
 
       for (const item of oldItems) {
 
-        await connection.query(
-          `
-          UPDATE products
-          SET stock_qty = stock_qty + ?
-          WHERE id = ?
-          `,
-          [item.quantity, item.product_id]
-        );
+    await connection.query(
+  `
+  UPDATE products
+  SET
+      stock_qty = stock_qty + ?,
+      status = 'Available'
+  WHERE id = ?
+  `,
+  [item.quantity, item.product_id]
+);
       }
     }
 
@@ -384,17 +386,29 @@ export async function PATCH(req, { params }) {
 
       /* ===== REDUCE STOCK ===== */
 
-      if (rfq.status === "Accepted") {
+     /* ===== REDUCE STOCK ===== */
 
-        await connection.query(
-          `
-          UPDATE products
-          SET stock_qty = stock_qty - ?
-          WHERE id = ?
-          `,
-          [item.quantity, item.product_id]
-        );
-      }
+if (rfq.status === "Accepted") {
+
+  await connection.query(
+    `
+    UPDATE products
+    SET
+        stock_qty = stock_qty - ?,
+        status = CASE
+                    WHEN stock_qty - ? <= 0
+                    THEN 'Out of Stock'
+                    ELSE 'Available'
+                 END
+    WHERE id = ?
+    `,
+    [
+      item.quantity,
+      item.quantity,
+      item.product_id
+    ]
+  );
+}
     }
 
     /* ================= SYNC PROPOSAL ITEMS ================= */
