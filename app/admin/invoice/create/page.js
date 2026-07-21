@@ -305,40 +305,83 @@ function DeliveryLabelModal({ proposalId }) {
     window.open(`/api/invoices/pdf/${proposalId}?copyType=${invoiceCopyType}`, "_blank");
   };
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   if (!proposalId) { setProposal(null); setForm(emptyForm); return; }
+
+  //   fetchWithLoader(`/api/challan/proposal/${proposalId}`)
+  //     .then(r => r.json())
+  //     .then(setProposal);
+
+  //   fetchWithLoader(`/api/challan/invoice-by-proposal/${proposalId}`)
+  //     .then(r => r.json())
+  //     .then(data => {
+  //       if (Array.isArray(data) && data.length > 0) {
+  //         const ids = data.map(i => i.id);
+  //         setInvoiceIds(ids);
+  //         const latest = data[0];
+  //         setForm({
+  //           invoice_date:    latest.invoice_date?.slice(0, 10)     || today,
+  //           supply_date:     latest.supply_date?.slice(0, 10)      || today,
+  //           place_of_supply: latest.place_of_supply                || "",
+  //           po_number:       latest.po_number                      || "",
+  //           po_date:         latest.po_date?.substring(0, 10)      || "",
+  //           transport_mode:  latest.transport_mode                 || "",
+  //           vehicle_number:  latest.vehicle_number                 || "",
+  //           challan_number:  latest.challan_number                 || "",
+  //           challan_date:    latest.challan_date?.substring(0, 10) || "",
+  //           client_name:    latest.client_name                   || "",
+  //           contact_phone:   latest.contact_phone                  || "",
+  //           reverse_charge:  !!latest.reverse_charge
+  //         });
+  //       } else {
+  //         setInvoiceIds([]);
+  //         setForm(emptyForm);
+  //       }
+  //     })
+  //     .catch(() => setForm(emptyForm));
+  // }, [proposalId]);
+
+
+useEffect(() => {
     if (!proposalId) { setProposal(null); setForm(emptyForm); return; }
 
-    fetchWithLoader(`/api/challan/proposal/${proposalId}`)
-      .then(r => r.json())
-      .then(setProposal);
+    const loadProposalAndInvoice = async () => {
+      const proposalRes = await fetchWithLoader(`/api/challan/proposal/${proposalId}`);
+      const proposalData = await proposalRes.json();
+      setProposal(proposalData);
 
-    fetchWithLoader(`/api/challan/invoice-by-proposal/${proposalId}`)
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const ids = data.map(i => i.id);
-          setInvoiceIds(ids);
-          const latest = data[0];
-          setForm({
-            invoice_date:    latest.invoice_date?.slice(0, 10)     || today,
-            supply_date:     latest.supply_date?.slice(0, 10)      || today,
-            place_of_supply: latest.place_of_supply                || "",
-            po_number:       latest.po_number                      || "",
-            po_date:         latest.po_date?.substring(0, 10)      || "",
-            transport_mode:  latest.transport_mode                 || "",
-            vehicle_number:  latest.vehicle_number                 || "",
-            challan_number:  latest.challan_number                 || "",
-            challan_date:    latest.challan_date?.substring(0, 10) || "",
-            client_name:    latest.client_name                   || "",
-            contact_phone:   latest.contact_phone                  || "",
-            reverse_charge:  !!latest.reverse_charge
-          });
-        } else {
-          setInvoiceIds([]);
-          setForm(emptyForm);
-        }
-      })
-      .catch(() => setForm(emptyForm));
+      // ✅ company 19 always defaults place of supply to Pune
+      const defaultPlaceOfSupply =
+        Number(proposalData?.company_id) === 19 ? "Pune" : "";
+
+      const invoiceRes = await fetchWithLoader(`/api/challan/invoice-by-proposal/${proposalId}`);
+      const data = await invoiceRes.json();
+
+      if (Array.isArray(data) && data.length > 0) {
+        const ids = data.map(i => i.id);
+        setInvoiceIds(ids);
+        const latest = data[0];
+        setForm({
+          invoice_date:    latest.invoice_date?.slice(0, 10)     || today,
+          supply_date:     latest.supply_date?.slice(0, 10)      || today,
+          place_of_supply: latest.place_of_supply                || defaultPlaceOfSupply,
+          po_number:       latest.po_number                      || "",
+          po_date:         latest.po_date?.substring(0, 10)      || "",
+          transport_mode:  latest.transport_mode                 || "",
+          vehicle_number:  latest.vehicle_number                 || "",
+          challan_number:  latest.challan_number                 || "",
+          challan_date:    latest.challan_date?.substring(0, 10) || "",
+          client_name:    latest.client_name                   || "",
+          contact_phone:   latest.contact_phone                  || "",
+          reverse_charge:  !!latest.reverse_charge
+        });
+      } else {
+        setInvoiceIds([]);
+        setForm({ ...emptyForm, place_of_supply: defaultPlaceOfSupply });
+      }
+    };
+
+    loadProposalAndInvoice().catch(() => setForm(emptyForm));
   }, [proposalId]);
 
   const handleChange = e => {
