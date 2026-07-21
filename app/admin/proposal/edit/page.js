@@ -271,12 +271,10 @@ const PageInner = () => {
 
       companyId,
       branchId: data.header.branchId,
-      rfqType:
-  data.header.rfqType || "",
+      rfqType:data.header.rfqType || "",
       clientName: data.header.clientName,
       clientPhone: data.header.clientPhone,
       clientEmail: data.header.clientEmail,
-
       company: data.header.company,
       gstin: data.header.gstin,
       billingAddress: data.header.billing_address,
@@ -291,6 +289,7 @@ const PageInner = () => {
   const addCharge = () => {
     setCharges([
       ...charges,
+      { label: "Printing Charges", amount: 0, taxPercent: 18, hsnCode: "49111010" },
       { label: "Delivery Charges", amount: 0, taxPercent: 18, hsnCode: "996812" }
     ]);
   };
@@ -668,6 +667,7 @@ useEffect(() => {
                     >
                       + Add Charge
                     </button>
+                    
                     {charges.length === 0 ? (
                       <div className="text-muted">No additional charges</div>
                     ) : (
