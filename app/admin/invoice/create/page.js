@@ -351,8 +351,8 @@ useEffect(() => {
       setProposal(proposalData);
 
       // ✅ company 19 always defaults place of supply to Pune
-      const defaultPlaceOfSupply =
-        Number(proposalData?.company_id) === 19 ? "Pune" : "";
+   // ✅ Default place of supply for all companies
+const defaultPlaceOfSupply = "Pune";
 
       const invoiceRes = await fetchWithLoader(`/api/challan/invoice-by-proposal/${proposalId}`);
       const data = await invoiceRes.json();
