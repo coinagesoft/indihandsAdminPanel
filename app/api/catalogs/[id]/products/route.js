@@ -100,8 +100,8 @@ export async function DELETE(req, context) {
 
 export async function GET(req, context) {
   try {
-    const { params } = context;      // ✅ params promise आहे
-    const { id } = await params;     // ✅ MUST await
+    const { params } = context;
+    const { id } = await params;
 
     const catalogId = Number(id);
 
@@ -109,9 +109,50 @@ export async function GET(req, context) {
       return Response.json({ message: "Invalid catalogId" }, { status: 400 });
     }
 
+    // Get catalog
+    const [catalogRows] = await db.query(
+      `SELECT name FROM catalogs WHERE id = ?`,
+      [catalogId]
+    );
+
+    if (catalogRows.length === 0) {
+      return Response.json({ message: "Catalog not found" }, { status: 404 });
+    }
+
+    // ✅ Popular Products
+    if (catalogRows[0].name === "Popular Products") {
+      const [rows] = await db.query(`
+        SELECT
+          p.id,
+          p.product_name AS name,
+          p.sku,
+          p.stock_qty AS stock,
+          p.base_price AS price,
+          p.status,
+          p.featured_image AS featureImage,
+          SUM(ii.quantity) AS totalSold
+        FROM invoice_items ii
+        INNER JOIN products p
+          ON p.id = ii.product_id
+        WHERE ii.is_charge = 0
+        GROUP BY
+          p.id,
+          p.product_name,
+          p.sku,
+          p.stock_qty,
+          p.base_price,
+          p.status,
+          p.featured_image
+        ORDER BY totalSold DESC
+      `);
+
+      return Response.json({ products: rows }, { status: 200 });
+    }
+
+    // ✅ Existing logic for normal catalogs
     const [rows] = await db.query(
       `
-      SELECT 
+      SELECT
         p.id,
         p.product_name AS name,
         p.sku,
@@ -120,7 +161,8 @@ export async function GET(req, context) {
         p.status,
         p.featured_image AS featureImage
       FROM product_catalog_map pcm
-      INNER JOIN products p ON p.id = pcm.product_id
+      INNER JOIN products p
+        ON p.id = pcm.product_id
       WHERE pcm.catalog_id = ?
       ORDER BY p.id DESC
       `,
@@ -128,10 +170,15 @@ export async function GET(req, context) {
     );
 
     return Response.json({ products: rows }, { status: 200 });
+
   } catch (err) {
     console.error("GET /api/catalogs/[id]/products error:", err);
+
     return Response.json(
-      { message: "Server error", error: err.message },
+      {
+        message: "Server error",
+        error: err.message
+      },
       { status: 500 }
     );
   }

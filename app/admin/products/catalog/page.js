@@ -346,6 +346,8 @@ const getPagination = (current, total) => {
   return rangeWithDots;
 };
   const pages = getPagination(catPage, totalCatPages);
+  const isPopularCatalog =
+  selectedCatalog?.name === "Popular Products";
   /* ===================== UI ===================== */
   return (
     <ProtectedRoute>
@@ -489,7 +491,11 @@ const getPagination = (current, total) => {
 
     <button
       className="btn btn-orange btn-sm"
-      onClick={openAddExistingProductsModal}
+        disabled={isPopularCatalog}
+  onClick={() => {
+    if (isPopularCatalog) return;
+    openAddExistingProductsModal();
+  }}
     >
       Add Product to Catalog
     </button>
@@ -525,7 +531,11 @@ const getPagination = (current, total) => {
       <td>
         <button
           className="btn btn-sm btn-outline-danger"
-          onClick={() => removeProductFromCatalog(p.id)}
+           disabled={isPopularCatalog}
+  onClick={() => {
+    if (isPopularCatalog) return;
+    removeProductFromCatalog(p.id);
+  }}
         >
           Remove
         </button>
