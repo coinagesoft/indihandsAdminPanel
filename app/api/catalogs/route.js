@@ -4,16 +4,30 @@ import { db } from "../../db";
 
 export async function GET() {
   try {
-    const [rows] = await db.query(
-      `SELECT id, name, description, featured_image 
-       FROM catalogs 
-       ORDER BY id DESC`
-    );
+    const [rows] = await db.query(`
+      SELECT
+        id,
+        name,
+        description,
+        featured_image
+      FROM catalogs
+      ORDER BY
+        CASE
+          WHEN name = 'Popular Products' THEN 1
+          ELSE 0
+        END,
+        id DESC
+    `);
 
     return Response.json({ catalogs: rows }, { status: 200 });
+
   } catch (err) {
     console.error("GET /api/catalogs error:", err);
-    return Response.json({ message: "Server error" }, { status: 500 });
+
+    return Response.json(
+      { message: "Server error" },
+      { status: 500 }
+    );
   }
 }
 
