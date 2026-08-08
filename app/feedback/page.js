@@ -27,7 +27,7 @@ function FeedbackContent() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/public/invoice-feedback", {
+      const res = await fetch("/api/feedback/validate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
