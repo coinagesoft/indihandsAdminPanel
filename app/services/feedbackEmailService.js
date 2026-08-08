@@ -11,15 +11,26 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendFeedbackEmail(
+/**
+ * Sends the feedback-request email for an invoice.
+ *
+ * IMPORTANT: this now takes a single options object instead of 7
+ * positional args. That was the root cause of the B2B bug — a caller
+ * dropping/reordering one positional arg silently shifted every
+ * arg after it (feedbackUrl ended up undefined, invoiceNumber ended
+ * up holding the URL). With named keys, a missing/misnamed field is
+ * just `undefined` under its own correct name, and the explicit
+ * checks below throw immediately instead of sending a broken email.
+ */
+export async function sendFeedbackEmail({
   invoiceFor,
-   rfqId,
+  rfqId,
   companyId,
   branchId,
   customerId,
   invoiceNumber,
-  feedbackUrl
-) {
+  feedbackUrl,
+}) {
   try {
     console.log("======================================");
     console.log("SEND FEEDBACK EMAIL");
@@ -27,31 +38,42 @@ export async function sendFeedbackEmail(
     console.log("Type    :", invoiceFor);
     console.log("======================================");
 
+    // Fail loud instead of silently emailing broken content.
+    if (!invoiceNumber) {
+      throw new Error("sendFeedbackEmail: invoiceNumber is required.");
+    }
+    if (!feedbackUrl) {
+      throw new Error("sendFeedbackEmail: feedbackUrl is required.");
+    }
+    if (invoiceFor === "B2B" && !rfqId) {
+      throw new Error("sendFeedbackEmail: rfqId is required for B2B invoices.");
+    }
+    if (invoiceFor !== "B2B" && !customerId) {
+      throw new Error("sendFeedbackEmail: customerId is required for B2C invoices.");
+    }
+
     let email = "";
     let clientName = "";
 
-   if (invoiceFor === "B2B") {
+    if (invoiceFor === "B2B") {
+      const [[rfq]] = await db.query(
+        `
+        SELECT
+          client_name,
+          client_email
+        FROM rfqs
+        WHERE id = ?
+        `,
+        [rfqId]
+      );
 
-  const [[rfq]] = await db.query(
-    `
-    SELECT
-      client_name,
-      client_email
-    FROM rfqs
-    WHERE id = ?
-    `,
-    [rfqId]
-  );
+      console.log("RFQ:", rfq);
 
-  console.log("RFQ:", rfq);
+      if (!rfq) throw new Error("RFQ not found.");
 
-  if (!rfq)
-    throw new Error("RFQ not found.");
-
-  email = rfq.client_email;
-  clientName = rfq.client_name;
-
-} else {
+      email = rfq.client_email;
+      clientName = rfq.client_name;
+    } else {
       const [[customer]] = await db.query(
         `
         SELECT
@@ -65,8 +87,7 @@ export async function sendFeedbackEmail(
 
       console.log("Customer:", customer);
 
-      if (!customer)
-        throw new Error("Customer not found.");
+      if (!customer) throw new Error("Customer not found.");
 
       email = customer.email;
       clientName = customer.username;
@@ -159,9 +180,7 @@ export async function sendFeedbackEmail(
     console.log("Message Id:", info.messageId);
 
     return true;
-
   } catch (error) {
-
     console.error("sendFeedbackEmail Error:");
     console.error(error);
 
