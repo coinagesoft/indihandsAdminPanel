@@ -163,6 +163,10 @@ const isInterState = isB2C
       ? false
       : sezType === "SEZ";
 
+const isNoneWithoutGSTIN =
+  !hasGSTIN &&
+  sezType.toUpperCase() === "NONE";
+
     /* ================= PROPOSAL ================= */
 
     const [[proposalRow]] =
@@ -329,21 +333,21 @@ const isInterState = isB2C
             ),
 
           cgst:
-            isSEZ
+           isSEZ || isNoneWithoutGSTIN
               ? 0
               : isInterState
                 ? 0
                 : cgstRate,
 
           sgst:
-            isSEZ
+            isSEZ || isNoneWithoutGSTIN
               ? 0
               : isInterState
                 ? 0
                 : sgstRate,
 
           igst:
-            isSEZ
+             isSEZ || isNoneWithoutGSTIN
               ? igstRate
               : isInterState
                 ? igstRate
@@ -491,21 +495,21 @@ const isInterState = isB2C
             ),
 
           cgst:
-            isSEZ
+            isSEZ || isNoneWithoutGSTIN
               ? 0
               : isInterState
                 ? 0
                 : cgstRate,
 
           sgst:
-            isSEZ
+            isSEZ || isNoneWithoutGSTIN
               ? 0
               : isInterState
                 ? 0
                 : sgstRate,
 
           igst:
-            isSEZ
+            isSEZ || isNoneWithoutGSTIN
               ? igstRate
               : isInterState
                 ? igstRate

@@ -45,7 +45,7 @@ function buildHTML(data) {
   const {
     invoice, proposal, sender, computedItems, charges: computedCharges,
     subtotal, cgstTotal, sgstTotal, igstTotal,
-    totalTax, grandTotal, isSEZ, copyLabel,
+    totalTax, grandTotal, isSEZ, copyLabel,  isNoneWithoutGSTIN,
   } = data;
 
   const stateMap = {
@@ -81,6 +81,7 @@ const senderStateCode =
 
 const isIGST =
   isSEZ ||
+   isNoneWithoutGSTIN ||
   (
     hasGSTIN &&
     clientStateCode !== senderStateCode
@@ -490,6 +491,13 @@ const hasGSTIN =
   gstin !== "" &&
   gstin.toUpperCase() !== "NA";
 
+  const sezType =
+  proposal.sez_type || "NONE";
+
+const isNoneWithoutGSTIN =
+  !hasGSTIN &&
+  sezType.toUpperCase() === "NONE";
+
 const clientStateCode =
   hasGSTIN
     ? gstin.substring(0, 2)
@@ -551,7 +559,7 @@ const isInterState =
       const igstRate = (+i.igst_rate || 0) || ((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
       let cg = 0, sg = 0, ig = 0;
 
-      if (isInterState || isSEZ) {
+      if (isInterState || isSEZ || isNoneWithoutGSTIN) {
         ig = taxable * igstRate / 100;
       } else {
         cg = taxable * (+i.cgst_rate || 0) / 100;
@@ -567,7 +575,7 @@ const isInterState =
       const taxRate = +c.taxPercent || 0;
       let cg = 0, sg = 0, ig = 0;
 
-      if (isInterState || isSEZ) {
+      if (isInterState || isSEZ || isNoneWithoutGSTIN) {
         ig = amt * taxRate / 100;
       } else {
         cg = amt * (taxRate / 2) / 100;
@@ -619,6 +627,7 @@ const isInterState =
       igstTotal:  finalIgst,
       totalTax,
       grandTotal,
+      isNoneWithoutGSTIN,
       isSEZ,
       copyLabel: getCopyLabel(copyType),
     });

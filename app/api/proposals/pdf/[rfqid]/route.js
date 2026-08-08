@@ -30,7 +30,7 @@ function buildHTML(data) {
   const {
     proposal, sender, computedItems, charges: computedCharges,
     subtotal, cgstTotal, sgstTotal, igstTotal,
-    totalTax, grandTotal, formattedDate,  isInterState , isSEZ
+    totalTax, grandTotal, formattedDate,  isInterState , isSEZ, isNoneWithoutGSTIN
   } = data;
 
 const isSelf =
@@ -123,9 +123,9 @@ const displayCompany =
 
 
 const itemRows = computedItems.map((x, i) => {
-const sgstRate = (isInterState || isSEZ) ? 0 : (x.sgst_rate || 0);
-const cgstRate = (isInterState || isSEZ) ? 0 : (x.cgst_rate || 0);
-const igstRate = (isInterState || isSEZ) ? (x.igstRate || 0) : 0;
+const sgstRate = (isInterState || isSEZ || isNoneWithoutGSTIN) ? 0 : (x.sgst_rate || 0);
+const cgstRate = (isInterState || isSEZ || isNoneWithoutGSTIN) ? 0 : (x.cgst_rate || 0);
+const igstRate = (isInterState || isSEZ || isNoneWithoutGSTIN) ? (x.igstRate || 0) : 0;
 
 const getCityFromAddress = (address) => {
   if (!address) return "";
@@ -170,9 +170,9 @@ const displayAddress = isSelf ? city : proposal.billing_address;
 }).join("");
 
 const chargeRows = computedCharges.map(c => {
-const sgstRate = (isInterState || isSEZ) ? 0 : c.taxPercent / 2;
-const cgstRate = (isInterState || isSEZ) ? 0 : c.taxPercent / 2;
-const igstRate = (isInterState || isSEZ) ? c.taxPercent : 0;
+const sgstRate = (isInterState || isSEZ || isNoneWithoutGSTIN) ? 0 : c.taxPercent / 2;
+const cgstRate = (isInterState || isSEZ || isNoneWithoutGSTIN) ? 0 : c.taxPercent / 2;
+const igstRate = (isInterState || isSEZ || isNoneWithoutGSTIN) ? c.taxPercent : 0;
 
   return `
 <tr>
@@ -774,6 +774,10 @@ const hasGSTIN =
   gstin !== "" &&
   gstin.toUpperCase() !== "NA";
 
+  const isNoneWithoutGSTIN =
+  !hasGSTIN &&
+  sezType.toUpperCase() === "NONE";
+
 const clientStateCode =
   hasGSTIN
     ? gstin.substring(0, 2)
@@ -874,7 +878,7 @@ const igstRate =
 ((+i.cgst_rate || 0) + (+i.sgst_rate || 0));
 
 const basePrice = +i.base_price || 0;
-if (isSEZ) {
+if (isSEZ || (!hasGSTIN && sezType === "NONE")) {
   ig = taxable * igstRate / 100;
 } 
 else if (isInterState) {
@@ -915,7 +919,7 @@ else {
 
   let cg = 0, sg = 0, ig = 0;
 
-if (isSEZ) {
+if (isSEZ || (!hasGSTIN && sezType === "NONE")) {
   ig = amt * taxRate / 100;
 }
 else if (isInterState) {
@@ -994,7 +998,8 @@ else {
       grandTotal,
       formattedDate,
         isInterState,
-         isSEZ 
+         isSEZ ,
+         isNoneWithoutGSTIN
     });
 
     /* ================= PDFSHIFT ================= */
