@@ -69,7 +69,7 @@ if (existing) {
     );
 
     const feedbackUrl =
-`${process.env.NEXT_PUBLIC_APP_URL}/feedback?token=${existing.feedback_token}`;
+`${process.env.NEXT_PUBLIC_Feedback_APP_URL}/feedback?token=${existing.feedback_token}`;
 
     await sendFeedbackEmail(
         invoice.invoice_for,

@@ -59,7 +59,7 @@ const menuItems = [
   {
   title: "Feedback",
   icon: "ri-feedback-line",
-  path: "/admin/feedback",
+  path: "/feedback",
 },
   {
     title: "Settings",
