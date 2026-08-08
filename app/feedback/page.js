@@ -1,11 +1,11 @@
+
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import styles from "./feedback.module.css";
 
-export default function InvoiceFeedbackPage() {
-
+function FeedbackContent() {
   const searchParams = useSearchParams();
 
   const token = searchParams.get("token");
@@ -24,11 +24,9 @@ export default function InvoiceFeedbackPage() {
   ];
 
   const submitFeedback = async () => {
-
     setLoading(true);
 
     try {
-
       const res = await fetch("/api/public/invoice-feedback", {
         method: "POST",
         headers: {
@@ -44,25 +42,18 @@ export default function InvoiceFeedbackPage() {
       if (res.ok) {
         setSubmitted(true);
       }
-
     } catch (err) {
       console.error(err);
     }
 
     setLoading(false);
-
   };
 
   return (
-
     <div className={styles.page}>
-
       <div className={styles.card}>
-
         {!submitted ? (
-
           <>
-
             <img
               src="/materialize/assets/img/favicon/favicon.png"
               className={styles.logo}
@@ -76,11 +67,10 @@ export default function InvoiceFeedbackPage() {
             </p>
 
             <div className={styles.emojiRow}>
-
               {emojis.map((item) => (
-
                 <button
                   key={item.id}
+                  type="button"
                   className={`${styles.emojiBtn} ${
                     rating === item.id ? styles.active : ""
                   }`}
@@ -88,67 +78,46 @@ export default function InvoiceFeedbackPage() {
                 >
                   {item.icon}
                 </button>
-
               ))}
-
             </div>
 
             <textarea
-
               rows={5}
-
               placeholder="Share your feedback..."
-
               className={styles.textarea}
-
               value={comments}
-
-              onChange={(e) =>
-                setComments(e.target.value)
-              }
-
+              onChange={(e) => setComments(e.target.value)}
             />
 
             <button
-
+              type="button"
               className={styles.submitBtn}
-
               disabled={loading}
-
               onClick={submitFeedback}
-
             >
-
-              {loading
-                ? "Submitting..."
-                : "Submit Feedback"}
-
+              {loading ? "Submitting..." : "Submit Feedback"}
             </button>
-
           </>
-
         ) : (
-
           <>
-
-            <div className={styles.successEmoji}>
-              😊
-            </div>
+            <div className={styles.successEmoji}>😊</div>
 
             <h2>Thank You!</h2>
 
             <p className={styles.subtitle}>
               Your feedback has been submitted successfully.
             </p>
-
           </>
-
         )}
-
       </div>
-
     </div>
-
   );
+}
 
+export default function InvoiceFeedbackPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FeedbackContent />
+    </Suspense>
+  );
 }
