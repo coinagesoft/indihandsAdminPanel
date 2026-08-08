@@ -377,7 +377,10 @@ export default function FeedbackPage() {
                                                 minWidth: "170px",
                                             }}>{item.proposal_number || "-"}</td>
 
-                                            <td>{item.invoice_number || "-"}</td>
+                                            <td style={{
+                                                whiteSpace: "nowrap",
+                                                minWidth: "170px",
+                                            }}>{item.invoice_number || "-"}</td>
 
                                             <td style={{
                                                 whiteSpace: "nowrap",
