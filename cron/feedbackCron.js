@@ -73,7 +73,7 @@ if (existing) {
 
     await sendFeedbackEmail(
         invoice.invoice_for,
-            invoice.rfq_id,
+        invoice.rfq_id,
         invoice.buyer_company_id,
         invoice.buyer_branch_id,
         invoice.customer_id,
@@ -106,7 +106,7 @@ WHERE id=?
 
     const feedbackToken = crypto.randomUUID();
    const feedbackUrl =
-  `${process.env.NEXT_PUBLIC_APP_URL}/feedback?token=${feedbackToken}`;
+  `${process.env.NEXT_PUBLIC_Feedback_APP_URL}/feedback?token=${feedbackToken}`;
 
     const clientType =
       invoice.invoice_for === "B2B"
