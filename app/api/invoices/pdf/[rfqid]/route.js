@@ -646,7 +646,21 @@ const isInterState =
     const invoiceNo = invoice.invoice_number || `INV-${invoice.id}`;
     const copyShortMap = { normal: "NORMAL" ,original: "OR", duplicate: "DUP", triplicate: "TRI", transport: "TRANS" };
     const copyShort = copyShortMap[copyType] || "OR";
+await db.query(
+  `
+  UPDATE invoices
+  SET
+    download_count = COALESCE(download_count, 0) + 1,
+    status = 'Issued',
+    updated_at = NOW()
+  WHERE id = ?
+  `,
+  [invoice.id]
+);
 
+console.log(
+  `Invoice ${invoice.invoice_number} marked as Issued and download count updated`
+);
     return new Response(pdfBuffer, {
       headers: {
         "Content-Type":        "application/pdf",

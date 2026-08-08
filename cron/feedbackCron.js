@@ -157,6 +157,7 @@ WHERE id=?
 
 await sendFeedbackEmail(
   invoice.invoice_for,
+   invoice.rfq_id,
   invoice.buyer_company_id,
   invoice.buyer_branch_id,
   invoice.customer_id,
