@@ -48,9 +48,11 @@ export async function sendFeedbackEmail({
     if (invoiceFor === "B2B" && !rfqId) {
       throw new Error("sendFeedbackEmail: rfqId is required for B2B invoices.");
     }
-    if (invoiceFor !== "B2B" && !customerId) {
-      throw new Error("sendFeedbackEmail: customerId is required for B2C invoices.");
-    }
+  if (invoiceFor === "B2C" && !rfqId) {
+  throw new Error(
+    "sendFeedbackEmail: rfqId is required for B2C invoices."
+  );
+}
 
     let email = "";
     let clientName = "";
@@ -74,24 +76,26 @@ export async function sendFeedbackEmail({
       email = rfq.client_email;
       clientName = rfq.client_name;
     } else {
-      const [[customer]] = await db.query(
-        `
-        SELECT
-          username,
-          email
-        FROM customers
-        WHERE id = ?
-        `,
-        [customerId]
-      );
+  const [[rfq]] = await db.query(
+    `
+    SELECT
+      client_name,
+      client_email
+    FROM rfqs
+    WHERE id = ?
+    `,
+    [rfqId]
+  );
 
-      console.log("Customer:", customer);
+  console.log("B2C RFQ:", rfq);
 
-      if (!customer) throw new Error("Customer not found.");
+  if (!rfq) {
+    throw new Error(`RFQ not found for B2C invoice. RFQ ID: ${rfqId}`);
+  }
 
-      email = customer.email;
-      clientName = customer.username;
-    }
+  email = rfq.client_email;
+  clientName = rfq.client_name;
+}
 
     if (!email) {
       throw new Error("Recipient email not found.");
