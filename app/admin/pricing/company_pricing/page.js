@@ -12,7 +12,6 @@ const OrgPricingPage = () => {
   const [pricing, setPricing] = useState([]);
   const fetchWithLoader = useFetchWithLoader();
   const [selectedOrg, setSelectedOrg] = useState("all");
-  const [selectedProduct, setSelectedProduct] = useState("all");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,6 +20,7 @@ const OrgPricingPage = () => {
   const [confirmMsg, setConfirmMsg] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [productSearch, setProductSearch] = useState("");
   const PAGE_SIZE = 5;
 
   useEffect(() => {
@@ -30,7 +30,7 @@ const OrgPricingPage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedProduct, minPrice, maxPrice]);
+  }, [productSearch, minPrice, maxPrice]);
 
 
 
@@ -181,14 +181,29 @@ const getOrgPrice = (orgId, productId) => {
   const filteredOrgs =
     selectedOrg === "all" ? orgs : orgs.filter((o) => o.id === Number(selectedOrg));
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      if (selectedProduct !== "all" && p.id !== Number(selectedProduct)) return false;
-      if (minPrice !== "" && Number(p.basePrice) < Number(minPrice)) return false;
-      if (maxPrice !== "" && Number(p.basePrice) > Number(maxPrice)) return false;
-      return true;
-    });
-  }, [products, selectedProduct, minPrice, maxPrice]);
+ const filteredProducts = useMemo(() => {
+  return products.filter((p) => {
+    // Product name search
+    if (
+      productSearch.trim() !== "" &&
+      !p.name?.toLowerCase().includes(productSearch.trim().toLowerCase())
+    ) {
+      return false;
+    }
+
+    // Minimum price
+    if (minPrice !== "" && Number(p.basePrice) < Number(minPrice)) {
+      return false;
+    }
+
+    // Maximum price
+    if (maxPrice !== "" && Number(p.basePrice) > Number(maxPrice)) {
+      return false;
+    }
+
+    return true;
+  });
+}, [products, productSearch, minPrice, maxPrice]);
 
   const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE) || 1;
 
@@ -290,21 +305,33 @@ const getOrgPrice = (orgId, productId) => {
             </select>
           </div>
 
-          <div className="col-md-4">
-            <label className="form-label">Product</label>
-            <select
-              className="form-select"
-              value={selectedProduct}
-              onChange={(e) => setSelectedProduct(e.target.value)}
-            >
-              <option value="all">All Products</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
+    <div className="col-md-4">
+  <label className="form-label">Product</label>
+
+  <div className="input-group">
+    {/* <span className="input-group-text">
+      <i className="bx bx-search"></i>
+    </span> */}
+
+    <input
+      type="text"
+      className="form-control"
+      placeholder="Search product..."
+      value={productSearch}
+      onChange={(e) => setProductSearch(e.target.value)}
+    />
+
+    {productSearch && (
+      <button
+        type="button"
+        className="btn btn-outline-secondary"
+        onClick={() => setProductSearch("")}
+      >
+        ×
+      </button>
+    )}
+  </div>
+</div>
 
 
           <div className="col-md-2">
