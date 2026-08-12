@@ -1,23 +1,13 @@
-import cron from "node-cron";
 import { db } from "../app/db.js";
 import crypto from "crypto";
 import { sendFeedbackEmail } from "../app/services/feedbackEmailService.js";
 
-export function startFeedbackCron() {
-  // VERSION MARKER — if you don't see this exact line in your server
-  // logs on restart, the process is running a different copy of this
-  // file (stale build output, wrong path, or a process that didn't
-  // actually restart). Find and fix that before touching the logic
-  // below.
-  console.log("✅ Feedback Cron Started — VERSION: 2026-08-08-fix1");
-
-  // For testing: runs every minute
-  cron.schedule("* * * * *", async () => {
-    try {
-      console.log("==================================");
-      console.log("Running Feedback Email Cron...");
-      console.log(new Date().toLocaleString());
-      console.log("==================================");
+export async function runFeedbackCron() {
+  try {
+    console.log("==================================");
+    console.log("Running Feedback Email Cron...");
+    console.log(new Date().toLocaleString());
+    console.log("==================================");
 
       const [invoices] = await db.query(`
         SELECT
@@ -195,8 +185,15 @@ export function startFeedbackCron() {
       if (invoices.length > 0) {
         console.table(invoices);
       }
-    } catch (err) {
-      console.error("Feedback Cron Error:", err);
-    }
-  });
-}
+
+    return {
+      success: true,
+      count: invoices.length,
+    };
+
+  } catch (err) {
+    console.error("Feedback Cron Error:", err);
+    throw err;
+  }
+
+  };
