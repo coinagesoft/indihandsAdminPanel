@@ -34,6 +34,8 @@ export function startFeedbackCron() {
         WHERE
           status = 'Issued'
           AND feedback_email_sent = 0
+          AND issued_at IS NOT NULL
+          AND issued_at <= DATE_SUB(NOW(), INTERVAL 3 DAY)
       `);
 
       for (const invoice of invoices) {
