@@ -1,34 +1,134 @@
 export const runtime = "nodejs";
 
 import { db } from "../../db";
-import cloudinary from "../../../lib/cloudinary";
 
-async function uploadBase64ToCloudinary(base64, folder = "products") {
-  if (!base64 || typeof base64 !== "string") {
-    throw new Error("Invalid image file");
+
+// ======================================================
+// UPLOAD BASE64 IMAGE TO VPS STORAGE
+// ======================================================
+
+async function uploadBase64ToStorage(
+  base64Image,
+  originalFileName
+) {
+  // Validate image
+  if (!base64Image?.startsWith("data:image/")) {
+    throw new Error("Invalid image");
   }
 
-  // ✅ Allow all image types (jpg, png, webp, gif, svg, etc.)
-  if (!base64.startsWith("data:image/")) {
-    throw new Error("Invalid image file");
+  // Validate original filename
+  if (!originalFileName) {
+    throw new Error("Original file name is required");
   }
 
-  const uploadResult = await cloudinary.uploader.upload(file, {
-    folder: "products",
-    quality: "auto",
-    fetch_format: "auto"
-  });
+
+  // ======================================================
+  // CONVERT BASE64 TO BLOB
+  // ======================================================
+
+  const response = await fetch(base64Image);
+
+  if (!response.ok) {
+    throw new Error("Failed to process image");
+  }
+
+  const blob = await response.blob();
 
 
-  return uploadResult.secure_url;
+  // ======================================================
+  // CREATE FORM DATA
+  // ======================================================
+
+  const formData = new FormData();
+
+  // Send original filename to VPS
+  formData.append(
+    "image",
+    blob,
+    originalFileName
+  );
+
+
+  // ======================================================
+  // UPLOAD TO VPS
+  // ======================================================
+
+  const uploadResponse = await fetch(
+    "https://storage.indihands.com/api/upload/product",
+    {
+      method: "POST",
+      body: formData
+    }
+  );
+
+
+  // ======================================================
+  // READ RESPONSE
+  // ======================================================
+
+  let result;
+
+  try {
+    result = await uploadResponse.json();
+  }
+  catch (error) {
+
+    console.error(
+      "Invalid VPS response:",
+      error
+    );
+
+    throw new Error(
+      "Invalid response from VPS storage server"
+    );
+  }
+
+
+  console.log(
+    "VPS UPLOAD RESULT:",
+    result
+  );
+
+
+  // ======================================================
+  // VALIDATE RESPONSE
+  // ======================================================
+
+  if (
+    !uploadResponse.ok ||
+    !result?.success
+  ) {
+
+    throw new Error(
+      result?.message ||
+      "Image upload failed"
+    );
+  }
+
+
+  if (!result.imageUrl) {
+
+    throw new Error(
+      "VPS storage did not return image URL"
+    );
+  }
+
+
+  // Return VPS image URL
+  return result.imageUrl;
 }
 
 
-
+// ======================================================
+// CREATE PRODUCT
+// ======================================================
 
 export async function POST(req) {
+
   try {
+
     const data = await req.json();
+
 
     const {
       product_name,
@@ -43,18 +143,246 @@ export async function POST(req) {
       hsn,
       size,
       weight,
-        cgst_rate,
-  sgst_rate,
-  igst_rate
+      cgst_rate,
+      sgst_rate,
+      igst_rate
     } = data;
 
 
-    const cleanDescription = description?.replace(/\r\n/g, "\n");
+    // ======================================================
+    // CLEAN DESCRIPTION
+    // ======================================================
+
+    const cleanDescription =
+      description?.replace(/\r\n/g, "\n");
+
+
+    // ======================================================
+    // FEATURED IMAGE
+    // ======================================================
+
+   // ======================================================
+// FEATURED IMAGE
+// ======================================================
+
+let featuredImageUrl = null;
+
+console.log("FEATURED IMAGE RECEIVED:");
+console.log(featuredImage);
+console.log("TYPE:", typeof featuredImage);
+
+
+if (featuredImage) {
+
+  // Get base64 from possible frontend properties
+  const base64Image =
+    typeof featuredImage === "object"
+      ? (
+          featuredImage.base64 ||
+          featuredImage.preview ||
+          featuredImage.dataUrl
+        )
+      : null;
+
+
+  // Get original filename
+  const originalFileName =
+    typeof featuredImage === "object"
+      ? (
+          featuredImage.fileName ||
+          featuredImage.name
+        )
+      : null;
+
+
+  // ================================================
+  // NEW IMAGE → UPLOAD TO VPS
+  // ================================================
+
+  if (
+    base64Image &&
+    base64Image.startsWith("data:image/")
+  ) {
+
+    featuredImageUrl =
+      await uploadBase64ToStorage(
+        base64Image,
+        originalFileName
+      );
+
+  }
+
+
+  // ================================================
+  // ALREADY VPS URL
+  // ================================================
+
+  else if (
+    typeof featuredImage === "string" &&
+    (
+      featuredImage.startsWith(
+        "https://storage.indihands.com/"
+      ) ||
+      featuredImage.startsWith(
+        "http://storage.indihands.com/"
+      )
+    )
+  ) {
+
+    featuredImageUrl = featuredImage;
+
+  }
+
+
+  // ================================================
+  // INVALID
+  // ================================================
+
+  else {
+
+    console.log(
+      "INVALID FEATURED IMAGE:",
+      JSON.stringify(featuredImage, null, 2)
+    );
+
+    throw new Error(
+      "Invalid featured image format"
+    );
+
+  }
+}
+
+  // ======================================================
+// GALLERY IMAGES
+// ======================================================
+
+const uploadedImages = [];
+
+if (
+  Array.isArray(images) &&
+  images.length > 0
+) {
+
+  for (const image of images) {
+
+    if (!image) {
+      continue;
+    }
+
+
+    console.log("GALLERY IMAGE RECEIVED:", image);
+
+
+    // Get base64 from possible frontend properties
+    const base64Image =
+      typeof image === "object"
+        ? (
+            image.base64 ||
+            image.preview ||
+            image.dataUrl
+          )
+        : null;
+
+
+    // Get original filename
+    const originalFileName =
+      typeof image === "object"
+        ? (
+            image.fileName ||
+            image.name
+          )
+        : null;
+
+
+    // ================================================
+    // NEW IMAGE → UPLOAD TO VPS
+    // ================================================
+
+    if (
+      base64Image &&
+      base64Image.startsWith("data:image/")
+    ) {
+
+      const imageUrl =
+        await uploadBase64ToStorage(
+          base64Image,
+          originalFileName
+        );
+
+      uploadedImages.push(imageUrl);
+
+      continue;
+    }
+
+
+    // ================================================
+    // EXISTING VPS URL
+    // ================================================
+
+    if (
+      typeof image === "string" &&
+      (
+        image.startsWith(
+          "https://storage.indihands.com/"
+        ) ||
+        image.startsWith(
+          "http://storage.indihands.com/"
+        )
+      )
+    ) {
+
+      uploadedImages.push(image);
+
+      continue;
+    }
+
+
+    // ================================================
+    // INVALID
+    // ================================================
+
+    console.log(
+      "INVALID GALLERY IMAGE:",
+      JSON.stringify(image, null, 2)
+    );
+
+    throw new Error(
+      "Invalid gallery image format"
+    );
+  }
+}
+
+
+    // ======================================================
+    // INSERT PRODUCT
+    // ======================================================
 
     const [result] = await db.query(
-      `INSERT INTO products 
-  (product_name, sku, barcode, description, hsn, size, weight, stock_qty, base_price, status, featured_image,cgst_rate, sgst_rate , igst_rate)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+
+      `
+      INSERT INTO products
+      (
+        product_name,
+        sku,
+        barcode,
+        description,
+        hsn,
+        size,
+        weight,
+        stock_qty,
+        base_price,
+        status,
+        featured_image,
+        cgst_rate,
+        sgst_rate,
+        igst_rate
+      )
+      VALUES
+      (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      )
+      `,
+
       [
         product_name,
         sku,
@@ -66,31 +394,105 @@ export async function POST(req) {
         stock,
         price,
         status,
-        featuredImage || null,
-Number(cgst_rate ?? 0),
-Number(sgst_rate ?? 0),
-Number(igst_rate ?? 0)
+        featuredImageUrl,
+        Number(cgst_rate ?? 0),
+        Number(sgst_rate ?? 0),
+        Number(igst_rate ?? 0)
       ]
     );
 
 
-    const productId = result.insertId;
+    const productId =
+      result.insertId;
 
-    if (Array.isArray(images) && images.length > 0) {
-      const values = images.map((url) => [productId, url]);
+
+    // ======================================================
+    // SAVE GALLERY IMAGES
+    // ======================================================
+
+    if (
+      uploadedImages.length > 0
+    ) {
+
+      const values =
+        uploadedImages.map(
+          (imageUrl) => [
+
+            productId,
+            imageUrl
+
+          ]
+        );
+
 
       await db.query(
-        `INSERT INTO product_gallery_images (product_id, image_url) VALUES ?`,
+
+        `
+        INSERT INTO product_gallery_images
+        (
+          product_id,
+          image_url
+        )
+        VALUES ?
+        `,
+
         [values]
       );
     }
 
-    return Response.json({ message: "Product created", productId }, { status: 201 });
-  } catch (err) {
-    console.error("❌ POST ERROR:", err);
+
+    // ======================================================
+    // SUCCESS RESPONSE
+    // ======================================================
+
     return Response.json(
-      { message: "Server error", error: err.message },
-      { status: 500 }
+      {
+
+        success: true,
+
+        message:
+          "Product created successfully",
+
+        productId,
+
+        featuredImage:
+          featuredImageUrl,
+
+        images:
+          uploadedImages
+
+      },
+
+      {
+        status: 201
+      }
+    );
+
+  }
+  catch (err) {
+
+    console.error(
+      "❌ POST ERROR:",
+      err
+    );
+
+
+    return Response.json(
+      {
+
+        success: false,
+
+        message:
+          "Server error",
+
+        error:
+          err.message
+
+      },
+
+      {
+        status: 500
+      }
     );
   }
 }

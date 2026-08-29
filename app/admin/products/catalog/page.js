@@ -38,44 +38,75 @@ const Page = () => {
 
 
 
-  /* ===================== HANDLERS ===================== */
-  const openEditCatalogModal = (catalog) => {
-    setEditingCatalog(catalog);
-    setCatalogName(catalog.name);
-    setCatalogDesc(catalog.desc || "");
-    setCatalogImagePreview(catalog.image || null);
-    setIsCatalogModalOpen(true);
-  };
-  const handleCatalogImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+/* ===================== HANDLERS ===================== */
 
-    setCatalogImageFile(file);
-    setCatalogImagePreview(URL.createObjectURL(file));
-  };
-  const uploadCatalogToCloudinary = async (file) => {
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", "catalogs"); // must be unsigned
+const openEditCatalogModal = (catalog) => {
+  setEditingCatalog(catalog);
 
-      const res = await fetchWithLoader(
-        "https://api.cloudinary.com/v1_1/dxb1whlam/image/upload",
-        { method: "POST", body: fd }
-      );
+  setCatalogName(catalog.name);
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData?.error?.message || "Upload failed");
-      }
+  setCatalogDesc(catalog.desc || "");
 
-      const data = await res.json();
-      return data.secure_url;
-    } catch (err) {
-      console.error("Cloudinary upload failed:", err);
-      throw err;
+  // Existing VPS image URL
+  setCatalogImagePreview(catalog.image || null);
+
+  // Important: clear previous selected file
+  setCatalogImageFile(null);
+
+  setIsCatalogModalOpen(true);
+};
+
+
+const handleCatalogImageChange = (e) => {
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  setCatalogImageFile(file);
+
+  setCatalogImagePreview(URL.createObjectURL(file));
+};
+
+
+/* ===================== VPS IMAGE UPLOAD ===================== */
+
+const uploadCatalogToStorage = async (file) => {
+  try {
+    if (!file) {
+      throw new Error("Image file is required");
     }
-  };
+
+    const fd = new FormData();
+
+    // Must match:
+    // upload.single("image")
+    fd.append("image", file, file.name);
+
+    const res = await fetchWithLoader(
+      "https://storage.indihands.com/api/upload/category",
+      {
+        method: "POST",
+        body: fd,
+      }
+    );
+
+    const data = await res.json();
+
+    console.log("VPS Catalog Upload Response:", data);
+
+    if (!res.ok || !data.success) {
+      throw new Error(
+        data?.message || "Catalog image upload failed"
+      );
+    }
+
+    return data.imageUrl;
+
+  } catch (err) {
+    console.error("VPS catalog upload failed:", err);
+    throw err;
+  }
+};
 
 
   useEffect(() => {
@@ -86,58 +117,117 @@ const Page = () => {
   }, [selectedCatalog]);
 
   const saveCatalog = async () => {
-    try {
-      if (!catalogName.trim()) return showError("❌ Catalog name required");
-
-      let imageUrl = editingCatalog?.image || null;
-
-      // ✅ upload only if new file selected
-      if (catalogImageFile instanceof File) {
-        imageUrl = await uploadCatalogToCloudinary(catalogImageFile);
-      }
-
-      const body = {
-        name: catalogName,
-        description: catalogDesc || null,
-        featured_image: imageUrl,
-      };
-
-      let res;
-
-      if (editingCatalog) {
-        // ✅ PATCH
-        res = await fetchWithLoader(`/api/products/${editingCatalog.id}/catalogs`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      } else {
-        // ✅ POST
-        res = await fetchWithLoader("/api/catalogs", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      }
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Save failed");
-
-      showSuccess("Catalog saved successfully!");
-
-      await fetchCatalogs();
-
-      setIsCatalogModalOpen(false);
-      setEditingCatalog(null);
-      setCatalogName("");
-      setCatalogDesc("");
-      setCatalogImagePreview(null);
-      setCatalogImageFile(null);
-    } catch (err) {
-      console.error("Save catalog error:", err);
-      showError("❌ " + err.message);
+  try {
+    if (!catalogName.trim()) {
+      return showError("❌ Catalog name required");
     }
-  };
+
+    // Keep existing image when editing
+    let imageUrl = editingCatalog?.image || null;
+
+    // ============================================
+    // UPLOAD NEW IMAGE TO VPS
+    // ============================================
+
+    if (catalogImageFile instanceof File) {
+      imageUrl = await uploadCatalogToStorage(
+        catalogImageFile
+      );
+    }
+
+    // ============================================
+    // REQUEST BODY
+    // ============================================
+
+    const body = {
+      name: catalogName.trim(),
+      description: catalogDesc?.trim() || null,
+      featured_image: imageUrl,
+    };
+
+    let res;
+
+    // ============================================
+    // UPDATE CATALOG
+    // ============================================
+
+    if (editingCatalog) {
+      res = await fetchWithLoader(
+        `/api/products/${editingCatalog.id}/catalogs`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      );
+    }
+
+    // ============================================
+    // CREATE CATALOG
+    // ============================================
+
+    else {
+      res = await fetchWithLoader(
+        "/api/catalogs",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      );
+    }
+
+    // ============================================
+    // HANDLE RESPONSE
+    // ============================================
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data?.message ||
+        data?.error ||
+        "Save failed"
+      );
+    }
+
+    showSuccess(
+      editingCatalog
+        ? "Catalog updated successfully!"
+        : "Catalog created successfully!"
+    );
+
+    // Refresh catalog list
+    await fetchCatalogs();
+
+    // Close modal
+    setIsCatalogModalOpen(false);
+
+    // Reset state
+    setEditingCatalog(null);
+    setCatalogName("");
+    setCatalogDesc("");
+    setCatalogImagePreview(null);
+    setCatalogImageFile(null);
+
+  } catch (err) {
+
+    console.error(
+      "Save catalog error:",
+      err
+    );
+
+    showError(
+      "❌ " +
+      (err.message || "Failed to save catalog")
+    );
+
+  }
+};
 
 
   /* ===================== ADD EXISTING PRODUCTS ===================== */

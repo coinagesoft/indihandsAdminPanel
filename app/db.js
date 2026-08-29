@@ -6,10 +6,10 @@ dotenv.config();
 
 
 // export const db = mysql.createPool({
-//   host: "localhost",   //  IMPORTANT (not live server)
+//   host: "localhost",  
 //   user: "root",
-//   password: "NewPassword123!", // or "" if none
-//   database: "indihand_backup",     
+//   password: "NewPassword123!", 
+//   database: "indihand__test_local_backup",    
 //   waitForConnections: true,
 //   connectionLimit: 10,
 //   queueLimit: 0

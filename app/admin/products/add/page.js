@@ -40,32 +40,47 @@ const Page = () => {
     const file = e.target.files[0];
     if (file) setExcelFile(file);
   };
-  const uploadToCloudinary = async (file) => {
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", "products");
-
-      console.log("➡️ Cloudinary request start...");
-
-      const res = await fetchWithLoader("https://api.cloudinary.com/v1_1/dxb1whlam/image/upload", {
-        method: "POST",
-        body: fd,
-      });
-
-      console.log("✅ Cloudinary status:", res.status);
-
-      const data = await res.json();
-      console.log("✅ Cloudinary response:", data);
-
-      if (!res.ok) throw new Error(data?.error?.message || "Cloudinary upload failed");
-
-      return data.secure_url;
-    } catch (err) {
-      console.error("❌ Cloudinary upload failed:", err);
-      throw err;
+const uploadToVPS = async (file) => {
+  try {
+    if (!file) {
+      throw new Error("Image file is required");
     }
-  };
+
+    const formData = new FormData();
+
+    // "image" must match upload.single("image") in your VPS server
+    // file.name preserves the ORIGINAL filename
+    formData.append("image", file, file.name);
+
+    console.log("➡️ VPS upload starting:", file.name);
+
+    const res = await fetchWithLoader(
+      "https://storage.indihands.com/api/upload/product",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    console.log("VPS upload status:", res.status);
+
+    const data = await res.json();
+
+    console.log("VPS upload response:", data);
+
+    if (!res.ok || !data.success) {
+      throw new Error(
+        data?.message || "VPS image upload failed"
+      );
+    }
+
+    return data.imageUrl;
+
+  } catch (err) {
+    console.error("❌ VPS upload failed:", err);
+    throw err;
+  }
+};
 
   const handleStatusChange = (e) => {
     const value = e.target.value;
@@ -93,107 +108,278 @@ const Page = () => {
 
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (publishing) return;
-    setPublishing(true);
+  if (publishing) return;
 
-    try {
-      const form = e.target;
+  setPublishing(true);
 
-      const status = form.status.value;
+  try {
+    const form = e.target;
 
-      const rawStock = form.stockQty.value;
-      const stockQty = rawStock === "" ? null : Number(rawStock);
+    // ============================================
+    // STATUS & STOCK VALIDATION
+    // ============================================
 
-      if (status === "Available" && (!stockQty || stockQty <= 0)) {
-        showError("If status is Available, inventory must be greater than 0");
-        return;
-      }
+    const status = form.status.value;
 
-      if (status === "Out of Stock" && stockQty > 0) {
-        showError("If status is Out of Stock, inventory must be 0");
-        return;
-      }
+    const rawStock = form.stockQty.value;
+    const stockQty =
+      rawStock === ""
+        ? null
+        : Number(rawStock);
 
-      let featuredImageUrl = null;
-      if (form.featuredImage.files[0]) {
-        featuredImageUrl = await uploadToCloudinary(form.featuredImage.files[0]);
-      }
-
-      const galleryUrls = [];
-      for (const file of Array.from(form.galleryImages.files)) {
-        const url = await uploadToCloudinary(file);
-        galleryUrls.push(url);
-      }
-
-      const price = form.basePrice.value.trim();
-
-      // strict validation
-      const finalRegex = /^\d+(-\d+)?$/;
-
-      if (!price) {
-        showError("Price is required");
-        setPublishing(false);
-        return;
-      }
-
-      if (!finalRegex.test(price)) {
-        showError("Enter valid price (e.g. 100 or 100-200)");
-        setPublishing(false);
-        return;
-      }
-
-
-      const body = {
-        product_name: form.productName.value.trim(),
-        sku: form.sku.value.trim(),
-        barcode: form.barcode.value.trim(),
-        description: form.description.value,
-        hsn: form.hsn.value.trim(),
-        size: form.size.value.trim(),
-        weight: form.weight.value.trim(),
-        stock: Number(form.stockQty.value),
-        price: form.basePrice.value.trim(),
-        status: form.status.value,
-        featuredImage: featuredImageUrl,
-        images: galleryUrls,
-
-        // ✅ ADD THIS
-        cgst_rate: Number(form.cgst.value || 0),
-        sgst_rate: Number(form.sgst.value || 0),
-        igst_rate: Number(form.igst.value || 0),
-      };
-
-      const res = await fetchWithLoader("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        showError("❌ " + (data?.message || data?.error || "Failed to create product"));
-        return;
-      }
-
-      showSuccess("Product created");
-
-      e.target.reset();
-      setFeaturedPreview(null);
-      setGalleryPreviews([]);
-      setStockQty(0);
-      setStatus("Available");
-      setBasePrice("");
-
-    } catch (err) {
-      console.error(err);
-      showError("❌ Failed to publish");
-    } finally {
-      setPublishing(false);  // ✅ enable button again
+    if (
+      status === "Available" &&
+      (!stockQty || stockQty <= 0)
+    ) {
+      showError(
+        "If status is Available, inventory must be greater than 0"
+      );
+      return;
     }
-  };
+
+    if (
+      status === "Out of Stock" &&
+      stockQty > 0
+    ) {
+      showError(
+        "If status is Out of Stock, inventory must be 0"
+      );
+      return;
+    }
+
+    // ============================================
+    // PRICE VALIDATION
+    // ============================================
+
+    const price =
+      form.basePrice.value.trim();
+
+    const finalRegex =
+      /^\d+(-\d+)?$/;
+
+    if (!price) {
+      showError("Price is required");
+      return;
+    }
+
+    if (!finalRegex.test(price)) {
+      showError(
+        "Enter valid price (e.g. 100 or 100-200)"
+      );
+      return;
+    }
+
+    // ============================================
+    // CONVERT FEATURED IMAGE TO BASE64
+    // Backend will upload it to VPS
+    // ============================================
+
+    let featuredImage = null;
+
+    const featuredFile =
+      form.featuredImage.files[0];
+
+    if (featuredFile) {
+      const base64 =
+        await fileToBase64(featuredFile);
+
+      featuredImage = {
+        base64: base64,
+
+        // Original filename will be used in VPS
+        fileName: featuredFile.name
+      };
+    }
+
+    // ============================================
+    // CONVERT GALLERY IMAGES TO BASE64
+    // Backend will upload them to VPS
+    // ============================================
+
+    const images = [];
+
+    const galleryFiles =
+      Array.from(
+        form.galleryImages.files
+      );
+
+    for (const file of galleryFiles) {
+
+      const base64 =
+        await fileToBase64(file);
+
+      images.push({
+        base64: base64,
+
+        // Original filename will be used in VPS
+        fileName: file.name
+      });
+    }
+
+    // ============================================
+    // PRODUCT BODY
+    // ALL YOUR ORIGINAL PARAMETERS PRESERVED
+    // ============================================
+
+    const body = {
+
+      // Product details
+      product_name:
+        form.productName.value.trim(),
+
+      sku:
+        form.sku.value.trim(),
+
+      barcode:
+        form.barcode.value.trim(),
+
+      description:
+        form.description.value,
+
+      hsn:
+        form.hsn.value.trim(),
+
+      size:
+        form.size.value.trim(),
+
+      weight:
+        form.weight.value.trim(),
+
+      // Stock
+      stock:
+        Number(
+          form.stockQty.value
+        ),
+
+      // Price
+      price:
+        form.basePrice.value.trim(),
+
+      // Status
+      status:
+        form.status.value,
+
+      // Featured image
+      featuredImage:
+        featuredImage,
+
+      // Gallery images
+      images:
+        images,
+
+      // Tax rates
+      cgst_rate:
+        Number(
+          form.cgst.value || 0
+        ),
+
+      sgst_rate:
+        Number(
+          form.sgst.value || 0
+        ),
+
+      igst_rate:
+        Number(
+          form.igst.value || 0
+        )
+    };
+
+    console.log(
+      "PRODUCT REQUEST BODY:",
+      body
+    );
+
+    // ============================================
+    // CREATE PRODUCT
+    // Backend uploads images to VPS
+    // ============================================
+
+    const res =
+      await fetchWithLoader(
+        "/api/products",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify(body)
+        }
+      );
+
+    const data =
+      await res.json();
+
+    if (!res.ok) {
+
+      console.error(
+        "PRODUCT CREATE ERROR:",
+        data
+      );
+
+      showError(
+        "❌ " +
+        (
+          data?.message ||
+          data?.error ||
+          "Failed to create product"
+        )
+      );
+
+      return;
+    }
+
+    console.log(
+      "PRODUCT CREATED:",
+      data
+    );
+
+    // ============================================
+    // SUCCESS
+    // ============================================
+
+    showSuccess(
+      "Product created"
+    );
+
+    e.target.reset();
+
+    setFeaturedPreview(null);
+
+    setGalleryPreviews([]);
+
+    setStockQty(0);
+
+    setStatus("Available");
+
+    setBasePrice("");
+
+  } catch (err) {
+
+    console.error(
+      "❌ PRODUCT SUBMIT ERROR:",
+      err
+    );
+
+    showError(
+      "❌ " +
+      (
+        err.message ||
+        "Failed to publish"
+      )
+    );
+
+  } finally {
+
+    // Enable button again
+    setPublishing(false);
+  }
+};
 
   const handlePriceChange = (e) => {
     const value = e.target.value;

@@ -33,25 +33,41 @@ const Page = () => {
     setShowGalleryModal(true);
   };
 
-  const uploadToCloudinary = async (file) => {
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", "products"); // your preset name
+ // ============================================
+// UPLOAD FILE TO VPS STORAGE
+// ============================================
 
-    const res = await fetchWithLoader("https://api.cloudinary.com/v1_1/dxb1whlam/image/upload", {
+ const uploadToStorage = async (file) => {
+  if (!(file instanceof File)) {
+    throw new Error("Invalid image file");
+  }
+
+  const fd = new FormData();
+
+  // "image" must match:
+  // upload.single("image") in your Node.js VPS API
+  fd.append("image", file, file.name);
+
+  const res = await fetchWithLoader(
+    "https://storage.indihands.com/api/upload/product",
+    {
       method: "POST",
       body: fd,
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      console.log("Cloudinary Error:", data);
-      throw new Error(data?.error?.message || "Cloudinary upload failed");
     }
+  );
 
-    return data.secure_url;
-  };
+  const data = await res.json();
+
+  console.log("VPS Upload Response:", data);
+
+  if (!res.ok || !data.success) {
+    throw new Error(
+      data?.message || "VPS image upload failed"
+    );
+  }
+
+  return data.imageUrl;
+};
 
 
 
@@ -152,107 +168,251 @@ const Page = () => {
     setIsEditModalOpen(false);
   };
 
-  const saveChanges = async () => {
-    try {
-      if (!selectedProduct?.id) return;
-      // 🔐 FINAL INVENTORY vs STATUS VALIDATION (EDIT)
 
-     const stockQty = Number(selectedProduct.stock || 0);
-      const statusVal = selectedProduct.status;
 
-      // Out of Stock but stock > 0 ❌
-      if (statusVal === "Out of Stock" && stockQty > 0) {
-        showError("Stock must be 0 when status is Out of Stock");
-        return;
-      }
 
-      // Available but stock = 0 ❌
-      if (statusVal === "Available" && stockQty === 0) {
-        showError("Stock must be greater than 0 when status is Available");
-        return;
-      }
 
-      // ✅ Start from existing URL (keep old)
-      let featuredImageUrl =
-        typeof selectedProduct.featureImage === "string"
-          ? selectedProduct.featureImage
-          : null;
 
-      // ✅ if user selected new featured file -> upload
-      if (selectedProduct.featureImage instanceof File) {
-        featuredImageUrl = await uploadToCloudinary(selectedProduct.featureImage);
-      }
+// ============================================
+// SAVE PRODUCT CHANGES
+// ============================================
 
-      // ✅ keep old gallery urls
-      const oldGalleryUrls = (selectedProduct.images || []).filter(
-        (img) => typeof img === "string" && img.startsWith("http")
+const saveChanges = async () => {
+  try {
+    if (!selectedProduct?.id) return;
+
+    // ============================================
+    // INVENTORY + STATUS VALIDATION
+    // ============================================
+
+    const stockQty = Number(selectedProduct.stock || 0);
+    const statusVal = selectedProduct.status;
+
+    // Out of Stock but stock > 0
+    if (statusVal === "Out of Stock" && stockQty > 0) {
+      showError(
+        "Stock must be 0 when status is Out of Stock"
+      );
+      return;
+    }
+
+    // Available but stock = 0
+    if (statusVal === "Available" && stockQty === 0) {
+      showError(
+        "Stock must be greater than 0 when status is Available"
+      );
+      return;
+    }
+
+
+    // ============================================
+    // FEATURED IMAGE
+    // ============================================
+
+    let featuredImageUrl = null;
+
+    // Keep existing VPS/old image URL
+    if (
+      typeof selectedProduct.featureImage === "string" &&
+      selectedProduct.featureImage.trim()
+    ) {
+      featuredImageUrl = selectedProduct.featureImage;
+    }
+
+    // Upload new featured image to VPS
+    if (selectedProduct.featureImage instanceof File) {
+      featuredImageUrl =
+        await uploadToStorage(
+          selectedProduct.featureImage
+        );
+    }
+
+
+    // ============================================
+    // GALLERY IMAGES
+    // ============================================
+
+    const productImages =
+      selectedProduct.images || [];
+
+
+    // Keep existing image URLs
+    const oldGalleryUrls =
+      productImages.filter(
+        (img) =>
+          typeof img === "string" &&
+          img.trim()
       );
 
-      // ✅ upload new gallery files
-      const newGalleryFiles = (selectedProduct.images || []).filter(
+
+    // Get newly selected files
+    const newGalleryFiles =
+      productImages.filter(
         (img) => img instanceof File
       );
 
-      let newGalleryUrls = [];
-      if (newGalleryFiles.length > 0) {
-        for (const file of newGalleryFiles) {
-          const url = await uploadToCloudinary(file);
-          newGalleryUrls.push(url);
-        }
+
+    // Upload new files to VPS
+    const newGalleryUrls = [];
+
+    if (newGalleryFiles.length > 0) {
+
+      for (const file of newGalleryFiles) {
+
+        const imageUrl =
+          await uploadToStorage(file);
+
+        newGalleryUrls.push(imageUrl);
       }
-
-      // ✅ final gallery = old + new
-      const finalGallery = [...oldGalleryUrls, ...newGalleryUrls];
-
-      const body = {
-        name: selectedProduct.name,
-        sku: selectedProduct.sku,
-        hsn: selectedProduct.hsn,
-        size: selectedProduct.size,
-        barcode: selectedProduct.barcode,
-        weight: selectedProduct.weight,
-        stock: selectedProduct.stock,
-        price: selectedProduct.price,
-        status: selectedProduct.status,
-        description: selectedProduct.description,
-        featuredImage: featuredImageUrl,
-        images: finalGallery,
-        cgst_rate: selectedProduct.cgst_rate === "" ? null : Number(selectedProduct.cgst_rate),
-        sgst_rate: selectedProduct.sgst_rate === "" ? null : Number(selectedProduct.sgst_rate),
-        igst_rate: selectedProduct.igst_rate === "" ? null : Number(selectedProduct.igst_rate),
-      };
-
-      const res = await fetchWithLoader(`/api/products/${selectedProduct.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Update failed");
-
-      showSuccess("Product updated successfully!");
-
-      // ✅ refresh list
-      const params = new URLSearchParams({
-        page: currentPage,
-        limit: itemsPerPage,
-        search,
-        status,
-      });
-
-      const listRes = await fetchWithLoader(`/api/products?${params.toString()}`);
-      const listData = await listRes.json();
-      setProducts(listData.products);
-      setTotalPages(listData.pagination.totalPages);
-      console.log("products", products)
-
-      closeEditModal();
-    } catch (err) {
-      console.error("Update product error:", err);
-      showError("❌ " + err.message);
     }
-  };
+
+
+    // Final gallery = old URLs + newly uploaded VPS URLs
+    const finalGallery = [
+      ...oldGalleryUrls,
+      ...newGalleryUrls
+    ];
+
+
+    // ============================================
+    // PRODUCT BODY
+    // ============================================
+
+    const body = {
+      name: selectedProduct.name,
+      sku: selectedProduct.sku,
+
+      hsn: selectedProduct.hsn,
+
+      size: selectedProduct.size,
+
+      barcode: selectedProduct.barcode,
+
+      weight: selectedProduct.weight,
+
+      stock: Number(selectedProduct.stock),
+
+      price: selectedProduct.price,
+
+      status: selectedProduct.status,
+
+      description: selectedProduct.description,
+
+
+      // VPS featured image URL
+      featuredImage: featuredImageUrl,
+
+
+      // Existing + newly uploaded VPS images
+      images: finalGallery,
+
+
+      // Tax rates
+      cgst_rate:
+        selectedProduct.cgst_rate === ""
+          ? null
+          : Number(selectedProduct.cgst_rate),
+
+      sgst_rate:
+        selectedProduct.sgst_rate === ""
+          ? null
+          : Number(selectedProduct.sgst_rate),
+
+      igst_rate:
+        selectedProduct.igst_rate === ""
+          ? null
+          : Number(selectedProduct.igst_rate),
+    };
+
+
+    // ============================================
+    // UPDATE PRODUCT
+    // ============================================
+
+    const res = await fetchWithLoader(
+      `/api/products/${selectedProduct.id}`,
+      {
+        method: "PATCH",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify(body),
+      }
+    );
+
+
+    const data = await res.json();
+
+
+    if (!res.ok) {
+      throw new Error(
+        data.error ||
+        data.message ||
+        "Update failed"
+      );
+    }
+
+
+    showSuccess(
+      "Product updated successfully!"
+    );
+
+
+    // ============================================
+    // REFRESH PRODUCT LIST
+    // ============================================
+
+    const params = new URLSearchParams({
+      page: currentPage,
+      limit: itemsPerPage,
+      search,
+      status,
+    });
+
+
+    const listRes = await fetchWithLoader(
+      `/api/products?${params.toString()}`
+    );
+
+
+    const listData =
+      await listRes.json();
+
+
+    setProducts(
+      listData.products
+    );
+
+
+    setTotalPages(
+      listData.pagination.totalPages
+    );
+
+
+    console.log(
+      "Updated products:",
+      listData.products
+    );
+
+
+    closeEditModal();
+
+
+  } catch (err) {
+
+    console.error(
+      "Update product error:",
+      err
+    );
+
+    showError(
+      "❌ " + err.message
+    );
+
+  }
+};
 
 
 
