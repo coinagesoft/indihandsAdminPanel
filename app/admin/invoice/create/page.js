@@ -510,7 +510,7 @@ const defaultPlaceOfSupply = "Pune";
             
             <div className="col-md-6">
               <label className="form-label">Invoice Date</label>
-              <input type="date" name="invoice_date" className="form-control" readOnly value={form.invoice_date} onChange={handleChange} />
+              <input type="date" name="invoice_date" className="form-control"  value={form.invoice_date} onChange={handleChange} />
             </div>
             <div className="col-md-6">
               <label className="form-label">Supply Date</label>
