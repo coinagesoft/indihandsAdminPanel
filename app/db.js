@@ -16,16 +16,16 @@ dotenv.config();
 // });
 
 
-// export const db = mysql.createPool({
-//   host: "46.28.45.124",
-//   user: "u144125849_Indicat",
-//   password: "wozvis-fipnez-kyvCe4",
-//   database: "u144125849_catalog",
-//   waitForConnections: true,
-//   connectionLimit: 10000,
-//   enableKeepAlive: true,
-//   queueLimit: 0
-// });
+export const db = mysql.createPool({
+  host: "46.28.45.124",
+  user: "u144125849_Indicat",
+  password: "wozvis-fipnez-kyvCe4",
+  database: "u144125849_catalog",
+  waitForConnections: true,
+  connectionLimit: 10000,
+  enableKeepAlive: true,
+  queueLimit: 0
+});
 
 // export const db = mysql.createPool({
 //   host: "localhost",  
@@ -37,16 +37,16 @@ dotenv.config();
 //   queueLimit: 0
 // });
 
-export const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+// export const db = mysql.createPool({
+//   host: process.env.DB_HOST,
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   database: process.env.DB_NAME,
 
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+//   waitForConnections: true,
+//   connectionLimit: 10,
+//   queueLimit: 0
+// });
 
 // export const db = mysql.createPool({
 //   host: "217.21.74.127",

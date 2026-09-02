@@ -22,27 +22,106 @@ function todayDateParts() {
  * let a B2C invoice's sequence value bleed into B2B numbering and
  * collide with an existing B2B invoice_number for the same day.
  */
+// async function getNextB2BInvoiceNumber() {
+//   const { yyyymmdd } = todayDateParts();
+
+//   // Only match today's plain B2B format: INV-YYYYMMDD-NNN
+//   // (excludes INV-CUS-... and anything with a -P/-C suffix)
+//   const [rows] = await db.query(
+//     `SELECT invoice_number FROM invoices
+//      WHERE invoice_number REGEXP ?
+//      ORDER BY CAST(SUBSTRING_INDEX(invoice_number, '-', -1) AS UNSIGNED) DESC
+//      LIMIT 1`,
+//     [`^INV-${yyyymmdd}-[0-9]+$`]
+//   );
+
+//   let seq = 1;
+//   if (rows[0]?.invoice_number) {
+//     const parts = rows[0].invoice_number.split("-");
+//     const lastSeq = parseInt(parts[parts.length - 1], 10);
+//     if (!isNaN(lastSeq)) seq = lastSeq + 1;
+//   }
+
+//   return `INV-${yyyymmdd}-${String(seq).padStart(3, "0")}`;
+// }
+
+// async function getNextB2BInvoiceNumber() {
+//   const { yyyymmdd } = todayDateParts();
+
+//   // Find the highest sequence from ALL B2B invoices
+//   const [rows] = await db.query(
+//     `SELECT invoice_number
+//      FROM invoices
+//      WHERE invoice_number REGEXP '^INV-[0-9]{8}-[0-9]+$'
+//      ORDER BY CAST(SUBSTRING_INDEX(invoice_number, '-', -1) AS UNSIGNED) DESC
+//      LIMIT 1`
+//   );
+
+//   let seq = 1;
+
+//   if (rows[0]?.invoice_number) {
+//     const parts = rows[0].invoice_number.split("-");
+//     const lastSeq = parseInt(parts[parts.length - 1], 10);
+
+//     if (!isNaN(lastSeq)) {
+//       seq = lastSeq + 1;
+//     }
+//   }
+
+//   return `INV-${yyyymmdd}-${String(seq).padStart(3, "0")}`;
+// }
+
 async function getNextB2BInvoiceNumber() {
   const { yyyymmdd } = todayDateParts();
 
-  // Only match today's plain B2B format: INV-YYYYMMDD-NNN
-  // (excludes INV-CUS-... and anything with a -P/-C suffix)
+  // New B2B series starts from 001.
+  // Sequence continues only for invoices created in this new series.
   const [rows] = await db.query(
-    `SELECT invoice_number FROM invoices
-     WHERE invoice_number REGEXP ?
+    `SELECT invoice_number
+     FROM invoices
+     WHERE invoice_number REGEXP '^INV-[0-9]{8}-[0-9]+$'
+       AND invoice_number LIKE 'INV-20260902-%'
      ORDER BY CAST(SUBSTRING_INDEX(invoice_number, '-', -1) AS UNSIGNED) DESC
-     LIMIT 1`,
-    [`^INV-${yyyymmdd}-[0-9]+$`]
+     LIMIT 1`
   );
 
   let seq = 1;
+
   if (rows[0]?.invoice_number) {
     const parts = rows[0].invoice_number.split("-");
     const lastSeq = parseInt(parts[parts.length - 1], 10);
-    if (!isNaN(lastSeq)) seq = lastSeq + 1;
+
+    if (!isNaN(lastSeq)) {
+      seq = lastSeq + 1;
+    }
   }
 
   return `INV-${yyyymmdd}-${String(seq).padStart(3, "0")}`;
+}
+
+async function getNextB2CInvoiceNumber() {
+  const { yyyymmdd } = todayDateParts();
+
+  const [rows] = await db.query(
+    `SELECT invoice_number
+     FROM invoices
+     WHERE invoice_number REGEXP '^INV-CUS-[0-9]{8}-[0-9]+$'
+     ORDER BY CAST(SUBSTRING_INDEX(invoice_number, '-', -1) AS UNSIGNED) DESC
+     LIMIT 1`
+  );
+
+  let seq = 1;
+
+  if (rows[0]?.invoice_number) {
+    const parts = rows[0].invoice_number.split("-");
+    const lastSeq = parseInt(parts[parts.length - 1], 10);
+
+    if (!isNaN(lastSeq)) {
+      seq = lastSeq + 1;
+    }
+  }
+
+  return `INV-CUS-${yyyymmdd}-${String(seq).padStart(3, "0")}`;
 }
 
 export async function POST(req) {
