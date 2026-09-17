@@ -74,16 +74,16 @@ function todayDateParts() {
 async function getNextB2BInvoiceNumber() {
   const { yyyymmdd } = todayDateParts();
 
+  // Find the highest sequence number from ALL B2B invoices
   const [rows] = await db.query(
     `SELECT invoice_number
      FROM invoices
-     WHERE invoice_number REGEXP ?
+     WHERE invoice_number REGEXP '^INV-[0-9]{8}-[0-9]+$'
      ORDER BY CAST(
        SUBSTRING_INDEX(invoice_number, '-', -1)
        AS UNSIGNED
      ) DESC
-     LIMIT 1`,
-    [`^INV-${yyyymmdd}-[0-9]+$`]
+     LIMIT 1`
   );
 
   let seq = 1;
