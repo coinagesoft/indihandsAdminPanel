@@ -8,8 +8,9 @@ import { db } from "../../db";
 // ======================================================
 
 async function uploadBase64ToStorage(
-  base64Image,
-  originalFileName
+    base64Image,
+    originalFileName,
+    productName
 ) {
   // Validate image
   if (!base64Image?.startsWith("data:image/")) {
@@ -40,6 +41,9 @@ async function uploadBase64ToStorage(
   // ======================================================
 
   const formData = new FormData();
+
+  formData.append("productName", productName);
+
 
   // Send original filename to VPS
   formData.append(
@@ -74,18 +78,18 @@ async function uploadBase64ToStorage(
   catch (error) {
 
     console.error(
-      "Invalid VPS response:",
+      "Invalid  response:",
       error
     );
 
     throw new Error(
-      "Invalid response from VPS storage server"
+      "Invalid response from storage server"
     );
   }
 
 
   console.log(
-    "VPS UPLOAD RESULT:",
+    "UPLOAD RESULT:",
     result
   );
 
@@ -109,7 +113,7 @@ async function uploadBase64ToStorage(
   if (!result.imageUrl) {
 
     throw new Error(
-      "VPS storage did not return image URL"
+      "storage did not return image URL"
     );
   }
 
@@ -205,10 +209,11 @@ if (featuredImage) {
   ) {
 
     featuredImageUrl =
-      await uploadBase64ToStorage(
-        base64Image,
-        originalFileName
-      );
+  await uploadBase64ToStorage(
+    base64Image,
+    originalFileName,
+    product_name
+);
 
   }
 
@@ -224,7 +229,7 @@ if (featuredImage) {
         "https://storage.indihands.com/"
       ) ||
       featuredImage.startsWith(
-        "http://storage.indihands.com/"
+        "https://storage.indihands.com/"
       )
     )
   ) {
@@ -304,10 +309,11 @@ if (
     ) {
 
       const imageUrl =
-        await uploadBase64ToStorage(
-          base64Image,
-          originalFileName
-        );
+      await uploadBase64ToStorage(
+    base64Image,
+    originalFileName,
+    product_name
+);
 
       uploadedImages.push(imageUrl);
 
@@ -326,7 +332,7 @@ if (
           "https://storage.indihands.com/"
         ) ||
         image.startsWith(
-          "http://storage.indihands.com/"
+          "https://storage.indihands.com/"
         )
       )
     ) {
