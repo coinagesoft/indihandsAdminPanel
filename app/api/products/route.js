@@ -8,9 +8,8 @@ import { db } from "../../db";
 // ======================================================
 
 async function uploadBase64ToStorage(
-    base64Image,
-    originalFileName,
-    productName
+  base64Image,
+  originalFileName
 ) {
   // Validate image
   if (!base64Image?.startsWith("data:image/")) {
@@ -41,9 +40,6 @@ async function uploadBase64ToStorage(
   // ======================================================
 
   const formData = new FormData();
-
-  formData.append("productName", productName);
-
 
   // Send original filename to VPS
   formData.append(
@@ -209,11 +205,10 @@ if (featuredImage) {
   ) {
 
     featuredImageUrl =
-  await uploadBase64ToStorage(
-    base64Image,
-    originalFileName,
-    product_name
-);
+      await uploadBase64ToStorage(
+        base64Image,
+        originalFileName
+      );
 
   }
 
@@ -309,11 +304,10 @@ if (
     ) {
 
       const imageUrl =
-      await uploadBase64ToStorage(
-    base64Image,
-    originalFileName,
-    product_name
-);
+        await uploadBase64ToStorage(
+          base64Image,
+          originalFileName
+        );
 
       uploadedImages.push(imageUrl);
 

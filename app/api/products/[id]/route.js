@@ -16,9 +16,8 @@ const PRODUCT_IMAGE_BASE_URL =
 
 
 async function uploadBase64ToStorage(
-    base64Image,
-    originalFileName,
-    productName
+  base64Image,
+  originalFileName
 ) {
   if (!base64Image?.startsWith("data:image/")) {
     throw new Error("Invalid image");
@@ -39,15 +38,11 @@ async function uploadBase64ToStorage(
   const formData =
     new FormData();
 
-  formData.append("productName", productName);
-
-
   formData.append(
     "image",
     blob,
     originalFileName
   );
-
 
   const uploadResponse =
     await fetch(
@@ -347,11 +342,10 @@ export async function PATCH(
 
 
         featuredImageUrl =
-         await uploadBase64ToStorage(
-    featuredImage.base64,
-    featuredImage.fileName,
-    name
-);
+          await uploadBase64ToStorage(
+            featuredImage.base64,
+            featuredImage.fileName
+          );
 
 
         console.log(
@@ -443,11 +437,10 @@ if (Array.isArray(images)) {
       );
 
       const imageUrl =
-     await uploadBase64ToStorage(
-    image.base64,
-    image.fileName,
-    name
-);
+        await uploadBase64ToStorage(
+          image.base64,
+          image.fileName
+        );
 
       console.log(
         "NEW VPS GALLERY IMAGE URL:",
